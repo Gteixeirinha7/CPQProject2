@@ -1,10 +1,13 @@
 import { LightningElement, track, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { CurrentPageReference, NavigationMixin } from 'lightning/navigation';
+import FORM_FACTOR from '@salesforce/client/formFactor';
 
+import getCheckoutData from '@salesforce/apex/ProductScreenController.getCheckoutData';
 import getStructures from '@salesforce/apex/ProductScreenController.getStructures';
 import getResources from '@salesforce/apex/ProductScreenController.getResources';
 import getProducts from '@salesforce/apex/ProductScreenController.getProducts';
+import getExceptionProducts from '@salesforce/apex/ProductScreenController.getExceptionProducts';
 import saveQuoteLineItems from '@salesforce/apex/ProductScreenController.saveQuoteLineItems';
 import checkNextTypeResources from '@salesforce/apex/ProductScreenController.checkNextTypeResources';
 
@@ -19,24 +22,36 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	productMap = {};
 	@track
 	currentProductConfig = {};
+	@track
+	currentResourceActiveted = {};
 
 	structureMap = {};
 	delayProductCode = {};
+	addNewAccessory = {};
+	checkoutExceptionProductMap = {};
 
 	quoteId = '';
 	productCode = '';
 	grouper = '';
 	structureName = '';
 	currentStackTraceCode = '';
+	activatedResourceIndex = '0';
 
+	isWireConnectedLoading = true;
+	isConnectedLoading = true;
 	isLoading = true;
 	isLoadingModal = false;
+	isShowSeeMoreButton = false;
 	isShowStructures = true;
 	isShowProducts = false;
 	isShowResources = false;
 	isShowCheckout = false;
 	isShowSearchProduct = false;
 	isOpenConfigKit = false;
+	isOpenNewAccessoryModal = false;
+	isDesktop = false;
+	isMobile = false;
+	isTablet = false;
 
 	currentPageReference;
 	discountTypeOptionList = [
@@ -68,7 +83,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	}
 
 	@wire(CurrentPageReference)
-	async setCurrentPageReference(currentPageReference) {
+	setCurrentPageReference(currentPageReference) {
 		this.currentPageReference = currentPageReference;
 		const { state } = currentPageReference;
 
@@ -77,6 +92,23 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 
 		if (state) {
 			this.quoteId = state.c__quoteId;
+
+			getCheckoutData({ quoteId: this.quoteId })
+				.then(resolve => {
+					this.checkoutProductMap = resolve;
+				})
+				.catch(error => {
+					console.log('Error =>', error);
+					this.handlerDispatchToast('Erro!', 'Contate um administrador!!\n' + error, 'error');
+				})
+				.finally(() => {
+					this.isWireConnectedLoading = false;
+					this.handleLoadingConnected();
+				});
+		}
+		else {
+			this.isWireConnectedLoading = false;
+			this.handleLoadingConnected();
 		}
 	}
 
@@ -92,7 +124,18 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 				console.log('Error =>', error);
 				this.handlerDispatchToast('Erro!', 'Contate um administrador!!\n' + error, 'error');
 			})
-			.finally(() => this.isLoading = false);
+			.finally(() => {
+				this.isConnectedLoading = false;
+				this.handleLoadingConnected();
+			});
+
+		this.isDesktop = FORM_FACTOR == 'Large';
+		this.isMobile = FORM_FACTOR == 'Small';
+		this.isTablet = FORM_FACTOR == 'Medium';
+	}
+
+	handleLoadingConnected() {
+		if (!this.isConnectedLoading && !this.isWireConnectedLoading) this.isLoading = false;
 	}
 
 	async handleSelectStructure(event) {
@@ -106,14 +149,28 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		if (errorMessage) {
 			this.resourceList = [];
 
-			this.handlerDispatchToast('Atenção!', 'Nenhum os recursos desta estrutura não estão completos.', 'warning');
+			this.handlerDispatchToast('Atenção!', errorMessage, 'warning');
 
 			this.isLoading = false;
 			return;
 		}
 
-		this.resourceList[0].isShowResource = true;
-		this.resourceList[0].ComposicaoProduto__r.forEach(item => item.isShowType = true);
+		this.resourceList.forEach(item => {
+			item.class = "menu__title";
+			item.isResourceDisabled = true;
+			item.isSelected = false;
+		});
+
+		this.resourceList[0].class = "menu__title-current";
+		this.resourceList[0].isResourceDisabled = false;
+		this.resourceList[0].ComposicaoProduto__r.forEach(item => {
+			item.isShowType = true;
+			item.isSelected = false;
+			item.class = "slds-card";
+		});
+
+		this.currentResourceActiveted = this.resourceList[0];
+		this.activatedResourceIndex = '0';
 
 		this.selectedStructure = this.structureMap[id];
 		this.isShowStructures = false;
@@ -141,16 +198,70 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		return errorMessage;
 	}
 
-	async handleTypeResource(event) {
+	handleChooseResource(event) {
 		this.isLoading = true;
 
-		const checked = event.target.checked;
-		const { id, index, resourceIndex } = event.target.dataset;
-		const nextResourceIndex = Number(resourceIndex) + 1;
+		const { resourceId, currentResourceId } = event.detail;
 
-		this.clearAllNextTypes(Number(resourceIndex), id);
+		let chooseIndex = 0;
+		let chooseResource = this.resourceList.find((item, index) => {
+			if (item.Id === resourceId) {
+				chooseIndex = index;
+				return true;
+			}
+		});
 
-		this.resourceList[resourceIndex].ComposicaoProduto__r[index].isChecked = checked;
+		if (currentResourceId) {
+			let selectedResource = this.resourceList.find(item => item.Id === currentResourceId);
+			selectedResource.class = selectedResource.isSelected ? "menu__title-selected" : "menu__title";
+		}
+		chooseResource.class = "menu__title-current";
+
+		this.currentResourceActiveted = chooseResource;
+		this.activatedResourceIndex = String(chooseIndex);
+
+		this.isLoading = false;
+	}
+
+	async handleChooseTypeResource(event) {
+		this.isLoading = true;
+
+		const { resourceId, typeResourceId, hasResourceTypeSelected } = event.detail;
+
+		let hasNext = false;
+		let selectedResourceIndex = 0;
+		let nextResourceIndex = 0;
+		let selectedResource = this.resourceList.find((item, index) => {
+			if (item.Id === resourceId) {
+				selectedResourceIndex = index;
+				nextResourceIndex = index + 1;
+				return true;
+			}
+		});
+
+		if (hasResourceTypeSelected) {
+			selectedResource.ComposicaoProduto__r.forEach(item => {
+				item.isSelected = false;
+				item.class = "slds-card";
+			});
+		}
+
+		for (let i = nextResourceIndex; i < this.resourceList.length; i++) {
+			this.resourceList[i].ComposicaoProduto__r.forEach(item => {
+				item.isShowType = false;
+				item.isSelected = false;
+				item.class = "slds-card";
+			});
+			this.resourceList[i].isResourceDisabled = true;
+			this.resourceList[i].class = "menu__title";
+			hasNext = true;
+		}
+
+		let chooseTypeResource = selectedResource.ComposicaoProduto__r.find(item => item.Id === typeResourceId);
+		chooseTypeResource.isSelected = true;
+		chooseTypeResource.class = "slds-card container__header-green";
+
+		this.resourceList[selectedResourceIndex].isSelected = true;
 
 		this.fillStackTraceCode();
 
@@ -161,10 +272,19 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 				index: nextResourceIndex
 			});
 
-			this.resourceList[nextResourceIndex].isShowResource = true;
+			this.resourceList[nextResourceIndex].isResourceDisabled = false;
 			this.resourceList[nextResourceIndex].ComposicaoProduto__r.forEach(item => {
 				if (externalIdList.includes(item.ExternalId__c)) {
 					item.isShowType = true;
+				}
+			});
+		}
+
+		if (hasNext) {
+			this.handleChooseResource({
+				detail: {
+					resourceId: this.resourceList[nextResourceIndex].Id,
+					currentResourceId: resourceId
 				}
 			});
 		}
@@ -198,11 +318,11 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		}
 		else if (name === 'price') {
 			productData.discountCurrency = Number((productData.listPrice - productData.price).toFixed(2));
-			productData.discountPercent = Number((productData.discountCurrency / productData.listPrice).toFixed(2));
+			productData.discountPercent = Number(((productData.discountCurrency / productData.listPrice) * 100).toFixed(2));
 		}
 		else if (name === 'discountCurrency') {
 			productData.price = Number((productData.listPrice - productData.discountCurrency).toFixed(2));
-			productData.discountPercent = Number((productData.discountCurrency / productData.listPrice).toFixed(2));
+			productData.discountPercent = Number(((productData.discountCurrency / productData.listPrice) * 100).toFixed(2));
 		}
 		else if (name === 'discountPercent') {
 			productData.discountCurrency = Number(((productData.discountPercent / 100) * productData.listPrice).toFixed(2));
@@ -221,6 +341,10 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		this[name] = value;
 	}
 
+	onClickNewStructure() {
+		this.handleSearchProductCode();
+	}
+
 	handleSearchProductCode() {
 		this.clearAll(false);
 		this.isShowSearchProduct = true;
@@ -237,8 +361,9 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 			this.delayProductCode = setTimeout(() => {
 				this.productCodeLoading = false;
 				this.isLoading = true;
+				this.isLoadingModal = true;
 
-				getProducts({ quoteId: this.quoteId, structureId: null, productCode: this.productCode })
+				getExceptionProducts({ quoteId: this.quoteId, searchValue: this.productCode, quantity: 30 })
 					.then(resolve => {
 						this.productMap = resolve;
 					})
@@ -246,10 +371,129 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 						console.log('Error Search Product By Code =>', error);
 						this.handlerDispatchToast('Falha!', ('Erro inesperado! ' + error), 'error');
 					})
-					.finally(() => this.isLoading = false);
+					.finally(() => {
+						if (this.products.length > 0) this.isShowSeeMoreButton = true;
+						this.isLoading = false;
+						this.isLoadingModal = false;
+					});
 			}, 1500);
 		}
-		else this.productCodeLoading = false;
+		else {
+			this.isShowSeeMoreButton = false;
+			this.productCodeLoading = false;
+		}
+	}
+
+	onClickSeeMoreExceptionProduct() {
+		if (this.productCode > ' ') {
+			this.isLoading = true;
+
+			getExceptionProducts({ quoteId: this.quoteId, searchValue: this.productCode, quantity: (this.products.length + 30) })
+				.then(resolve => {
+					this.productMap = resolve;
+				})
+				.catch(error => {
+					console.log('Error Search Product By Code =>', error);
+					this.handlerDispatchToast('Falha!', ('Erro inesperado! ' + error), 'error');
+				})
+				.finally(() => {
+					if (this.products.length > 0) this.isShowSeeMoreButton = true;
+					this.isLoading = false;
+				});
+		}
+		else {
+			this.isShowSeeMoreButton = false;
+			this.handlerDispatchToast('Atenção!', 'Pesquise pelo nome do produto!', 'warning');
+		}
+	}
+
+	onClickAddExceptionAccessory(event) {
+		const id = event.target.dataset.id;
+
+		this.addNewAccessory.productId = id;
+
+		this.isOpenNewAccessoryModal = true;
+	}
+
+	onClickSelectExceptionAccessory(event) {
+		const id = event.target.dataset.id;
+		let addProduct = this.productMap[id];
+
+		if (!this.checkProductIsValid(addProduct)) return;
+
+		addProduct.isSelected = true;
+		this.checkoutExceptionProductMap[id] = { ...addProduct };
+	}
+
+	onClickRemoveExceptionAccessory(event) {
+		const id = event.target.dataset.id;
+		let removeProduct = this.productMap[id];
+
+		removeProduct.isSelected = false;
+		removeProduct.quantity = 1;
+		removeProduct.price = removeProduct.listPrice;
+
+		delete this.checkoutExceptionProductMap[id];
+	}
+
+	onClickRemoveExceptionAccessoryCheckout(event) {
+		const { id, productId } = event.target.dataset;
+
+		let checkoutProduct = this.checkoutProductMap[productId];
+		checkoutProduct.exceptionAccessoryList = checkoutProduct.exceptionAccessoryList.filter(item => item.id !== id);
+
+		if (checkoutProduct.exceptionAccessoryList.length <= 0) {
+			checkoutProduct.hasExceptionAccessory = false;
+		}
+	}
+
+	onClickCancelNewAccessory() {
+		this.productCode = '';
+		this.addNewAccessory = {};
+		this.checkoutExceptionProductMap = {};
+		this.productMap = {};
+		this.isOpenNewAccessoryModal = false;
+	}
+
+	onClickSaveNewAccessory() {
+		if (Object.values(this.checkoutExceptionProductMap).length <= 0) {
+			this.handlerDispatchToast('Atenção!', 'Nenhum acessório selecionado!', 'warning');
+			return;
+		}
+
+		Object.values(this.checkoutExceptionProductMap).forEach(item => {
+			let currentProduct = this.checkoutProductMap[this.addNewAccessory.productId];
+
+			if (!currentProduct.exceptionAccessoryList) currentProduct.exceptionAccessoryList = [];
+
+			if (currentProduct.hasExceptionAccessory) {
+				let hasProduct = false;
+				currentProduct.exceptionAccessoryList.forEach(accessory => {
+					if (accessory.id === item.id) {
+						accessory = item;
+						hasProduct = true;
+					}
+				});
+
+				if (!hasProduct) {
+					currentProduct.exceptionAccessoryList.push({ ...item });
+				}
+			}
+			else {
+				currentProduct.hasExceptionAccessory = true;
+				currentProduct.exceptionAccessoryList.push({ ...item });
+			}
+		});
+
+		this.onClickCancelNewAccessory();
+	}
+
+	onChangeExceptionAccessoryQuantity(event) {
+		const { id, productId } = event.target.dataset;
+
+		let accessory = this.checkoutProductMap[productId].exceptionAccessoryList.find(item => item.id === id);
+		accessory.quantity = Number(event.target.value);
+		accessory.totalAmount = Number(Number(accessory.quantity * accessory.price).toFixed(2));
 	}
 
 	handleClearConfigKit(event) {
@@ -441,26 +685,25 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		return errorMessage;
 	}
 
+	onClickRemoveAccessoryCheckout(event) {
+		const { id, groupId, productId } = event.target.dataset;
+
+		let checkoutProduct = this.checkoutProductMap[productId];
+		let groupAccessory = checkoutProduct.groupAccessoryList.find(item => item.id === groupId);
+		groupAccessory.accessoryList.forEach(item => {
+			if (!groupAccessory.isRequired && item.id === id) {
+				item.quantity = 1;
+				item.isSelected = false;
+				groupAccessory.isSelected = false;
+			}
+		});
+	}
+
 	handleSelectProduct(event) {
 		const id = event.target.dataset.id;
 		let addProduct = this.productMap[id];
 
-		if (!addProduct.quantity || addProduct.quantity <= 0) {
-			this.handlerDispatchToast('Atenção!', 'Quantidade inválida', 'warning');
-			return;
-		}
-		else if (!addProduct.price || addProduct.price <= 0) {
-			this.handlerDispatchToast('Atenção!', 'Preço inválido', 'warning');
-			return;
-		}
-		else if ((!addProduct.discountCurrency && addProduct.discountCurrency != 0) || addProduct.discountCurrency > addProduct.listPrice) {
-			this.handlerDispatchToast('Atenção!', 'Desconto inválido', 'warning');
-			return;
-		}
-		else if ((!addProduct.discountPercent && addProduct.discountPercent != 0) || addProduct.discountPercent > 100) {
-			this.handlerDispatchToast('Atenção!', 'Porcetagem do desconto inválido', 'warning');
-			return;
-		}
+		if (!this.checkProductIsValid(addProduct)) return;
 
 		addProduct.isSelected = true;
 		this.checkoutProductMap[id] = { ...addProduct };
@@ -475,6 +718,27 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		removeProduct.price = removeProduct.listPrice;
 
 		delete this.checkoutProductMap[id];
+	}
+
+	checkProductIsValid(addProduct) {
+		if (!addProduct.quantity || addProduct.quantity <= 0) {
+			this.handlerDispatchToast('Atenção!', 'Quantidade inválida', 'warning');
+			return false;
+		}
+		else if (!addProduct.price || addProduct.price <= 0) {
+			this.handlerDispatchToast('Atenção!', 'Preço inválido', 'warning');
+			return false;
+		}
+		else if ((!addProduct.discountCurrency && addProduct.discountCurrency != 0) || addProduct.discountCurrency > addProduct.listPrice) {
+			this.handlerDispatchToast('Atenção!', 'Desconto inválido', 'warning');
+			return false;
+		}
+		else if ((!addProduct.discountPercent && addProduct.discountPercent != 0) || addProduct.discountPercent > 100) {
+			this.handlerDispatchToast('Atenção!', 'Porcetagem do desconto inválido', 'warning');
+			return false;
+		}
+
+		return true;
 	}
 
 	handleCheckoutProductData(event) {
@@ -503,11 +767,11 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		}
 		else if (name === 'price') {
 			productData.discountCurrency = Number((productData.listPrice - productData.price).toFixed(2));
-			productData.discountPercent = Number((productData.discountCurrency / productData.listPrice).toFixed(2));
+			productData.discountPercent = Number(((productData.discountCurrency / productData.listPrice) * 100).toFixed(2));
 		}
 		else if (name === 'discountCurrency') {
 			productData.price = Number((productData.listPrice - productData.discountCurrency).toFixed(2));
-			productData.discountPercent = Number((productData.discountCurrency / productData.listPrice).toFixed(2));
+			productData.discountPercent = Number(((productData.discountCurrency / productData.listPrice) * 100).toFixed(2));
 		}
 		else if (name === 'discountPercent') {
 			productData.discountCurrency = Number(((productData.discountPercent / 100) * productData.listPrice).toFixed(2));
@@ -574,6 +838,14 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 			else if (item.price <= 0 || item.price > item.listPrice) {
 				errorMessage = 'Valor inválido para o item ' + item.name;
 			}
+
+			if (!errorMessage && item.hasExceptionAccessory) {
+				item.exceptionAccessoryList.forEach(accessory => {
+					if (accessory.quantity <= 0) {
+						errorMessage = 'Quantidade inválida para o acessório ' + accessory.name;
+					}
+				});
+			}
 		});
 
 		return errorMessage;
@@ -632,30 +904,12 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 			.finally(() => this.isLoading = false);
 	}
 
-	clearAllNextTypes(resourceIndex, id) {
-		for (let i = resourceIndex + 1; i < this.resourceList.length; i++) {
-			this.resourceList[i].ComposicaoProduto__r.forEach(item => {
-				item.isChecked = false;
-				item.isShowType = false;
-			});
-			this.resourceList[i].isShowResource = false;
-		}
-
-		this.resourceList[resourceIndex].ComposicaoProduto__r.forEach(item => {
-			item.isChecked = false;
-
-			if (item.isShowType && item.Id != id) {
-				this.template.querySelector('[data-id="' + item.Id + '"]').checked = false;
-			}
-		});
-	}
-
 	fillStackTraceCode() {
 		this.currentStackTraceCode = '';
 
 		this.resourceList.forEach(resource => {
 			resource.ComposicaoProduto__r.forEach(item => {
-				if (item.isChecked) {
+				if (item.isSelected) {
 					this.currentStackTraceCode += item.ExternalId__c;
 				}
 			});
@@ -666,6 +920,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		this.resourceList = [];
 		this.productMap = {};
 		this.selectedStructure = {};
+		this.addNewAccessory = {};
 		this.currentStackTraceCode = '';
 		this.productCode = '';
 
