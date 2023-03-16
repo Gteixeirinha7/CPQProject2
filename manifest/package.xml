@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>OpenQuotePDFController</members>
+        <members>PDFQuoteController</members>
+        <members>ProductScreenController</members>
+        <members>ProductScreenControllerTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>openQuotePDF</members>
+        <members>productScreen</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>redirectPdfQuote</members>
+        <members>redirectProductScreen</members>
+        <name>AuraDefinitionBundle</name>
+    </types>
+    <types>
+        <members>PDFQuote</members>
+        <name>ApexPage</name>
+    </types>
+    <types>
+        <members>PDFQuoteStyle</members>
+        <members>libs</members>
+        <name>StaticResource</name>
+    </types>
+    <types>
+        <members>QuoteLineItem.ParentProduct__c</members>
+        <members>Product2.ExternalId__c</members>
+        <members>Product2.Image_URL__c</members>
+        <members>Product2.EstruturaProduto__c</members>
+        <members>Product2.KitAcessorios__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>TiposRecurso__c</members>
+        <members>RecursosProduto__c</members>
+        <members>EstruturaProduto__c</members>
+        <members>KitAcessorios__c</members>
+        <members>TipoAcessorios__c</members>
+        <members>GrupoAcessorios__c</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>EstruturaProduto__c-Layout de Estrutura de Produto</members>
+        <members>GrupoAcessorios__c-Layout de Grupo de Acessórios</members>
+        <members>KitAcessorios__c-Layout de Kit de Acessórios</members>
+        <members>RecursosProduto__c-Layout de Recursos do Produto</members>
+        <members>TipoAcessorios__c-Layout de Tipos de Acessórios</members>
+        <members>TiposRecurso__c-Layout de Composição do Produto</members>
+        <name>Layout</name>
+    </types>
+    <types>
+        <members>Quote.CreateItems</members>
+        <members>Quote.GeneratePDF</members>
+        <name>QuickAction</name>
+    </types>
+    <types>
+        <members>EstruturaProduto__c.All</members>
+        <members>GrupoAcessorios__c.All</members>
+        <members>KitAcessorios__c.All</members>
+        <members>RecursosProduto__c.All</members>
+        <members>TipoAcessorios__c.All</members>
+        <members>TiposRecurso__c.All</members>
+        <name>ListView</name>
+    </types>
+    <types>
+        <members>StructureProductScreen</members>
+        <name>CustomTab</name>
+    </types>
+    <types>
+        <members>ProductConfigCPQ</members>
+        <name>PermissionSet</name>
+    </types>
+    <types>
+        <members>Recursos_do_Produto_P_gina_de_registro</members>
+        <members>Tipos_de_Recurso_P_gina_de_registro</members>
+        <members>Estrutura_de_Produto_P_gina_de_registro</members>
+        <members>Tipos_de_Acess_rios_P_gina_de_registro</members>
+        <members>Grupo_de_Acess_rios_P_gina_de_registro</members>
+        <members>Kit_de_Acess_rios_P_gina_de_registro</members>
+        <name>FlexiPage</name>
+    </types>
+    <version>55.0</version>
+</Package>

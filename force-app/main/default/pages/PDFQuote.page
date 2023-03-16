@@ -1,0 +1,191 @@
+<apex:page applyBodyTag="false" applyHtmlTag="false" standardStylesheets="false" docType="html-5.0" showHeader="false" readOnly="true" controller="PDFQuoteController">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.4.1/jspdf.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/canvas2image@1.0.5/canvas2image.min.js"></script>
+	<script src="https://raw.githack.com/eKoopmans/html2pdf/master/dist/html2pdf.bundle.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<apex:includeScript value="{!URLFOR($Resource.libs, 'forcetk.js')}" />
+	<apex:stylesheet value="{!$Resource.PDFQuoteStyle}"/>
+	<apex:slds />
+
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>{!quoteData.name}</title>
+
+		<!-- <script type="text/javascript">
+			console.log('Before window');
+			window.onload = function() {
+				window.open('/apex/QuotePDF?Id={!id}', '_blank');
+			}
+			console.log('After window');
+		</script> -->
+
+		<script>
+			var downloadPDF = function() {
+				document.body.scrollTop = 0;
+ 				document.documentElement.scrollTop = 0;
+
+				var element = document.getElementById('renderPDF');
+				var fileName = '{!quoteData.name}';
+				var quoteId = '{!quoteId}';
+				var options = {
+					margin: 5,
+					filename: fileName,
+					image: { type: 'jpeg', quality: 0.98 },
+					html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
+					jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+				};
+
+				html2pdf(element, options).output('blob').then(function (pdf) {
+					Visualforce.remoting.Manager.invokeAction(
+						'{!$RemoteAction.PDFQuoteController.getUserSessionKey}',
+						function (result, event) {
+							var sessionResult = result;
+
+							var forceClient = new forcetk.Client();
+							forceClient.setSessionToken(
+								sessionResult
+							);
+
+							forceClient.createBlob(
+								'ContentVersion', {
+									Origin: 'C',
+									PathOnClient: fileName
+								},
+								fileName,
+								'VersionData',
+								pdf,
+								function (response) {
+									Visualforce.remoting.Manager.invokeAction(
+										'{!$RemoteAction.PDFQuoteController.createPDF}',
+										response.id,
+										quoteId,
+										fileName,
+										function (result, event) {
+											if (event.status) {
+												// sforce.one.navigateToURL(result, true);
+												// window.open(result, '_blank');
+												// sforce.one.navigateToSObject(response.id);
+											}
+										}, { escape: false, timeout: 120000 }
+									);
+
+								},
+								function (request, status, response) {
+									console.log(status);
+									console.log(response);
+								}
+							);
+						}, { escape: false, timeout: 120000 }
+					);
+
+				}).catch(function (error) {
+					console.log('error =>', error);
+					debugger;
+				});
+			}
+		</script>
+	</head>
+
+	<body class="slds-scope main">
+		<div id="renderPDF">
+			<div class="container__title">{!quoteData.name}</div>
+
+			<p style="font-size: 16px; margin-bottom: 5px;">
+				<span style="font-weight: 600">Nome da conta:</span>
+				<br />{!quoteData.accountName}
+			</p>
+
+			<p class="header">
+				<span style="font-weight: 600">To:</span>
+				<br />{!quoteData.contactName}
+				<br />{!quoteData.shippingStreet}
+				<br />{!quoteData.shippingCity}, {!quoteData.shippingState}, {!quoteData.shippingPostalCode}
+				<br />{!quoteData.contactAccountName}
+				<br />{!quoteData.contactPhone}
+			</p>
+
+			<div class="container__table">
+				<apex:repeat value="{!quoteData.itemList}" var="item" id="itemRepeat">
+
+					<div class="container__items">
+						<p class="title__item">
+							<img class="content__image" src="data:image/{!item.extension};base64,{!item.image}" />
+							{!item.name}
+						</p>
+
+						<apex:outputPanel rendered="{!item.hasKit}">
+							<div style="border-radius: 9px;">
+								<table class="styled-table" cellspacing="0">
+									<thead>
+										<tr>
+											<th class="content__th-left">
+												Acessório
+											</th>
+
+											<th class="content__th-right">
+												Quantidade
+											</th>
+										</tr>
+									</thead>
+
+									<tbody>
+										<apex:repeat value="{!item.kitDataList}" var="accessory" id="accessoryRepeat">
+
+											<tr>
+												<td style="padding: 10px 5px; font-size: 16px; border-right: 1px solid gray;">
+													{!accessory.name}
+												</td>
+
+												<td style="padding: 10px 5px; font-size: 16px;">
+													{!accessory.quantity}
+												</td>
+											</tr>
+
+										</apex:repeat>
+									</tbody>
+								</table>
+							</div>
+						</apex:outputPanel>
+
+						<div style="border-radius: 9px;">
+							<table class="styled-table" cellspacing="0">
+								<thead>
+									<tr>
+										<th class="content__th-left">
+											Opcional
+										</th>
+
+										<th class="content__th-right">
+											Descrição
+										</th>
+									</tr>
+								</thead>
+
+								<tbody>
+									<apex:repeat value="{!item.optionalList}" var="optional" id="optionalRepeat">
+
+										<tr>
+											<td style="padding: 10px 5px; font-size: 16px; border-right: 1px solid gray;">
+												{!optional.name}
+											</td>
+
+											<td style="padding: 10px 5px; font-size: 16px;">
+												{!optional.description}
+											</td>
+										</tr>
+
+									</apex:repeat>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+				</apex:repeat>
+			</div>
+		</div>
+
+		<div class="container__button-save">
+			<button class="slds-button slds-button_brand button__save" onclick="downloadPDF()">Salvar PDF</button>
+		</div>
+	</body>
+</apex:page>

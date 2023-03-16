@@ -1,0 +1,11 @@
+<aura:component	implements="force:hasRecordId,lightning:actionOverride,force:lightningQuickActionWithoutHeader" access="global">
+	<aura:attribute name="recordId" type="String"></aura:attribute>
+	<aura:attribute name="message" type="String"/>
+	<lightning:navigation aura:id="navService"/>
+	<aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+
+	<p style="text-align: center; font-weight: 600; font-size: 20px;">
+		{!v.message}
+	</p>
+
+</aura:component>

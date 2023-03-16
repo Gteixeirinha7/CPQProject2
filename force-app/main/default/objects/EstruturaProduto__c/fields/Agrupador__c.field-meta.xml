@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Agrupador__c</fullName>
+    <externalId>false</externalId>
+    <label>Agrupador</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Ferramenta de Automação</fullName>
+                <default>false</default>
+                <label>Ferramenta de Automação</label>
+            </value>
+            <value>
+                <fullName>Esterilizadora</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Esterilizadora</label>
+            </value>
+            <value>
+                <fullName>Foco XLED</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Foco XLED</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
