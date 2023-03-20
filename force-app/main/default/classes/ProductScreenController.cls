@@ -490,6 +490,7 @@ public with sharing class ProductScreenController {
 					SELECT Id,
 						   Name,
 						   DescricaoRecurso__c,
+						   RecursoProduto__r.Name,
 						   ExternalId__c
 					  FROM ComposicaoProduto__r
 					 WHERE Ativo__c = true
@@ -657,6 +658,22 @@ public with sharing class ProductScreenController {
 		];
 	}
 
+	public static List<OpportunityLineItem> getOppLineItemsByOpportunityId(String oppId) {
+		return [
+			SELECT Id,
+				   Quantity,
+				   UnitPrice,
+				   ParentProduct__c,
+				   ParentProduct__r.KitAcessorios__c,
+				   Product2Id,
+				   Product2.Name,
+				   Product2.ExternalId__c,
+				   Product2.KitAcessorios__c
+			  FROM OpportunityLineItem
+			 WHERE OpportunityId = :oppId
+		];
+	}
+
 	public static List<QuoteLineItem> getQuoteLineItemsByQuoteId(String quoteId) {
 		return [
 			SELECT Id,
@@ -740,56 +757,56 @@ public with sharing class ProductScreenController {
 		@AuraEnabled
 		public List<ProductData> exceptionAccessoryList {get; set;}
 
-		public ProductData() {}
+		public ProductData() {
+			this.groupAccessoryList = new List<GroupAccessoryData>();
+			this.exceptionAccessoryList = new List<ProductData>();
+
+			this.totalPrice = 0;
+			this.listPrice = 0;
+			this.discountPercent = 0;
+			this.discountCurrency = 0;
+			this.discountType = 'currency';
+			this.image = '';
+			this.extension = '';
+			this.isDiscountPercent = false;
+			this.isConfigured = false;
+			this.hasExceptionAccessory = false;
+		}
 		public ProductData(Product2 product) {
+			this();
 			this.id = product.Id;
 			this.name = product.Name;
 			this.quantity = 1;
-			this.totalPrice = 0;
-			this.listPrice = 0;
 			this.price = 0;
-			this.discountPercent = 0;
-			this.discountCurrency = 0;
-			this.discountType = 'currency';
 			this.productCode = product.ExternalId__c;
-			this.image = '';
-			this.extension = '';
-
 			this.isSelected = false;
 			this.isShowProduct = false;
-			this.isDiscountPercent = false;
 			this.isHasKit = product.KitAcessorios__c <> null;
 			this.isDisabledButtons = product.KitAcessorios__c <> null;
-			this.isConfigured = false;
-			this.hasExceptionAccessory = false;
-
-			this.groupAccessoryList = new List<GroupAccessoryData>();
-			this.exceptionAccessoryList = new List<ProductData>();
 		}
 		public ProductData(QuoteLineItem currentQuoteLineItem) {
+			this();
 			this.id = currentQuoteLineItem.Product2Id;
 			this.name = currentQuoteLineItem.Product2.Name;
 			this.quantity = currentQuoteLineItem.Quantity;
-			this.totalPrice = 0;
-			this.listPrice = 0;
 			this.price = currentQuoteLineItem.UnitPrice;
-			this.discountPercent = 0;
-			this.discountCurrency = 0;
-			this.discountType = 'currency';
 			this.productCode = currentQuoteLineItem.Product2.ExternalId__c;
-			this.image = '';
-			this.extension = '';
-
 			this.isSelected = true;
 			this.isShowProduct = true;
-			this.isDiscountPercent = false;
 			this.isHasKit = currentQuoteLineItem.Product2.KitAcessorios__c != null;
 			this.isDisabledButtons = currentQuoteLineItem.Product2.KitAcessorios__c != null;
-			this.isConfigured = false;
-			this.hasExceptionAccessory = false;
-
-			this.groupAccessoryList = new List<GroupAccessoryData>();
-			this.exceptionAccessoryList = new List<ProductData>();
+		}
+		public ProductData(OpportunityLineItem currentOpporunityLineItem) {
+			this();
+			this.id = currentOpporunityLineItem.Product2Id;
+			this.name = currentOpporunityLineItem.Product2.Name;
+			this.quantity = currentOpporunityLineItem.Quantity;
+			this.price = currentOpporunityLineItem.UnitPrice;
+			this.productCode = currentOpporunityLineItem.Product2.ExternalId__c;
+			this.isSelected = true;
+			this.isShowProduct = true;
+			this.isHasKit = currentOpporunityLineItem.Product2.KitAcessorios__c != null;
+			this.isDisabledButtons = currentOpporunityLineItem.Product2.KitAcessorios__c != null;
 		}
 	}
 

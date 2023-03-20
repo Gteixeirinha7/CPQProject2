@@ -10,6 +10,9 @@ export default class ResourceComponent extends LightningElement {
 	@api
 	activatedResourceIndex;
 
+	@api
+	selectedStructure;
+
 	get selectedResourceList() {
 		let selectedResourceList = [];
 

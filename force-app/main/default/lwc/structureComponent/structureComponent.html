@@ -1,0 +1,31 @@
+<template>
+    <div class="swiper-slide" style="margin-right: 16px;">
+	    <a class="common-catalog-item common-catalog-item--v1"  data-id={structure.Id} onclick={handleSelectStructure}>
+	        <div class="common-catalog-item__container-image">
+                <template if:true={structure.showIcon}>
+					<div style="display: flex;flex-direction: column;align-items: center;justify-content: center;">
+			        	<lightning-icon icon-name="standard:custom" size="large"></lightning-icon>
+					</div>
+                </template>
+                <template if:false={structure.showIcon}>
+	                <img class="common-catalog-item__merchant-image" src={structure.ImagemProduto__c} >
+                </template>
+	        </div>
+	        <div class="common-catalog-item__info">
+	            <h2 class="common-catalog-item__name">{structure.Name}</h2>
+				<span class="common-catalog-item__value common-catalog-item__price--regular card-stack-price__DEFAULT">{structure.Agrupador__c}</span>
+				<span class="catalog-item-v2-content__delivery">
+					<span class="catalog-item-v2-content__rating  cardstack-rating">
+						<span class="icon-star icon-star--star">
+	  						<lightning-icon icon-name="utility:favorite" size="xx-small"></lightning-icon>
+						</span>
+					</span>
+					<span> • </span>
+					40-50 min
+					<span> • </span>
+					<span class="catalog-item-content__delivery--free">Grátis</span>
+				</span>
+	        </div>
+	    </a>
+	</div>
+</template>

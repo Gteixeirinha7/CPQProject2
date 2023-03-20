@@ -7,7 +7,7 @@
 			aria-labelledby="modal-heading-01"
 			aria-modal="true"
 			aria-describedby="modal-content-id-1"
-			class="slds-modal slds-fade-in-open"
+			class="slds-modal slds-fade-in-open container__kit-configure"
 		>
 			<lightning-spinner if:true={isLoadingModal} alternative-text="Loading..." size="medium"></lightning-spinner>
 
@@ -193,147 +193,20 @@
 						<template for:each={products} for:item="product">
 
 							<lightning-layout-item
-								if:true={product.isShowProduct}
 								key={product.id}
 								class="slds-var-p-around_x-small"
-								size="12"
-							>
-
-								<article class="slds-card" style="border: 1px solid silver;">
-									<div class="slds-card__header slds-grid">
-										<header class="slds-media slds-media_center slds-has-flexi-truncate">
-											<div class="slds-media__body">
-												<h2 class="slds-card__header-title">
-													{product.name}
-												</h2>
-											</div>
-										</header>
-									</div>
-
-									<div class="slds-card__body slds-card__body_inner">
-										<lightning-layout multiple-rows horizontal-align="space" vertical-align="center">
-											<lightning-layout-item class="container__image" size="3">
-												<img class="structure__image" src={product.image} />
-											</lightning-layout-item>
-
-											<lightning-layout-item size="8">
-												<span class="slds-text-title_bold">
-													Código: {product.productCode}
-												</span>
-
-												<p class="container__fields">
-													<lightning-input
-														data-id={product.id}
-														style="width: 50%;"
-														name="quantity"
-														label="Quantity"
-														value={product.quantity}
-														type="number"
-														max-length="8"
-														min="1"
-														onchange={handleProductData}
-														disabled={product.isSelected}>
-													</lightning-input>
-
-													<lightning-input
-														data-id={product.id}
-														class="slds-var-p-left_xx-small"
-														style="width: 50%;"
-														name="price"
-														label="Preço"
-														value={product.price}
-														type="number"
-														formatter="currency"
-														step="any"
-														min="0"
-														onchange={handleProductData}
-														disabled={product.isSelected}>
-													</lightning-input>
-												</p>
-
-												<p class="container__fields">
-													<lightning-input
-														if:false={product.isDiscountPercent}
-														data-id={product.id}
-														style="width: 50%;"
-														name="discountCurrency"
-														label="Desconto"
-														value={product.discountCurrency}
-														type="number"
-														formatter="currency"
-														step="any"
-														min="0"
-														onchange={handleProductData}
-														disabled={product.isSelected}>
-													</lightning-input>
-
-													<lightning-input
-														if:true={product.isDiscountPercent}
-														data-id={product.id}
-														style="width: 50%;"
-														name="discountPercent"
-														label="% Desconto"
-														value={product.discountPercent}
-														type="number"
-														formatter="fixed-percent"
-														step="any"
-														min="0"
-														onchange={handleProductData}
-														disabled={product.isSelected}>
-													</lightning-input>
-
-													<lightning-combobox
-														data-id={product.id}
-														class="slds-var-p-left_xx-small"
-														style="width: 50%;"
-														name="discountType"
-														label="Tipo de desconto"
-														value={product.discountType}
-														options={discountTypeOptionList}
-														onchange={handleProductData}
-														disabled={product.isSelected}>
-													</lightning-combobox>
-												</p>
-
-												<p class="slds-var-m-top_x-small">
-													Preço de lista: <lightning-formatted-number
-														value={product.listPrice}
-														format-style="currency"
-														currency-code="BRL"
-														maximum-fraction-digits="2">
-													</lightning-formatted-number>
-												</p>
-
-												<p class="slds-var-m-top_xxx-small">
-													Preço total: <lightning-formatted-number
-														value={product.totalPrice}
-														format-style="currency"
-														currency-code="BRL"
-														maximum-fraction-digits="2">
-													</lightning-formatted-number>
-												</p>
-											</lightning-layout-item>
-
-											<lightning-layout-item if:false={product.isDisabledButtons} class="slds-var-m-top_small container__buttons" size="12">
-												<lightning-button
-													if:false={product.isSelected}
-													data-id={product.id}
-													label="Adicionar"
-													variant="brand"
-													onclick={onClickSelectExceptionAccessory}>
-												</lightning-button>
-
-												<lightning-button
-													if:true={product.isSelected}
-													data-id={product.id}
-													label="Remover"
-													variant="destructive"
-													onclick={onClickRemoveExceptionAccessory}>
-												</lightning-button>
-											</lightning-layout-item>
-										</lightning-layout>
-									</div>
-								</article>
+								size="12" medium-device-size="5" large-device-size="5"
+							>									
+								<c-product-component
+									product={product}
+									onhandleproductdata={handleProductData}
+									onhandleconfigkit={handleConfigureKit}
+									onhandleclearconfigkit={handleClearKitConfiguration}
+									onhandleselectproduct={handleSelectProduct}
+									onhandleremoveproduct={handleRemoveProduct}
+								>
+								</c-product-component>
+							
 							</lightning-layout-item>
 
 						</template>
@@ -352,53 +225,167 @@
 
 	<div class="main">
 		<lightning-spinner if:true={isLoading} alternative-text="Loading..." size="medium"></lightning-spinner>
-
 		<lightning-layout class="slds-var-p-vertical_small container__header" horizontal-align="spread">
-			<div>
-				<lightning-button label="Pesquisar estrutura" icon-name="utility:search" onclick={handleNewStructure}>
-				</lightning-button>
-
-				<lightning-button
-					class="slds-var-p-left_medium"
-					label="Pesquisar produto"
-					icon-name="utility:search"
-					onclick={handleSearchProductCode}>
-				</lightning-button>
+			<lightning-layout-item size="12">
+			<div class="slds-page-header slds-page-header_record-home">
+			  <div class="slds-page-header__row">
+			    <div class="slds-page-header__col-title">
+			      <div class="slds-media">
+			        <div class="slds-media__figure">
+			          <lightning-icon icon-name="standard:quotes"></lightning-icon>
+			        </div>
+			        <div class="slds-media__body">
+			          <div class="slds-page-header__name">
+			            <div class="slds-page-header__name-title">
+			              <h1>
+			                <span>Configurador de Produtos</span>
+			                <span class="slds-page-header__title slds-truncate">Nome da Cotação</span>
+			              </h1>
+			            </div>
+			          </div>
+			        </div>
+			      </div>
+			    </div>
+			    <div class="slds-page-header__col-actions">
+			      <div class="slds-page-header__controls">
+			        <div class="slds-page-header__control">
+			          <lightning-button-group>
+			            <lightning-button label="Estrutura" onclick={handleNewStructure}   icon-name="utility:search" ></lightning-button>
+			            <lightning-button label="Produto" onclick={handleSearchProductCode}  icon-name="utility:search" ></lightning-button>
+			            <lightning-button label="Carrinho" onclick={handleCheckout} icon-name="utility:cart"></lightning-button>
+			            <lightning-button if:false={isShowCheckout} label="Buscar" icon-name="utility:search" variant="brand" onclick={handleSearchProduct} disabled={isShowProducts}></lightning-button>
+			            <lightning-button if:true={isShowCheckout}  label="Salvar" variant="brand" onclick={handleSaveProducts}></lightning-button>
+			          </lightning-button-group>
+			        </div>
+			      </div>
+			    </div>
+			  </div>
+			  <div class="slds-page-header__row slds-page-header__row_gutters">
+			    <div class="slds-page-header__col-details">
+			      <ul class="slds-page-header__detail-row">
+			        <li class="slds-page-header__detail-block">
+			          <div class="slds-text-title slds-truncate" title="Field 4">Field 1</div>
+			          <div class="slds-truncate"></div>
+			        </li>
+			        <li class="slds-page-header__detail-block">
+			          <div class="slds-text-title slds-truncate" title="Field 4">Field 2</div>
+			          <div class="slds-truncate"></div>
+			        </li>
+			        <li class="slds-page-header__detail-block">
+			          <div class="slds-text-title slds-truncate" title="Field 4">Field 3</div>
+			          <div class="slds-truncate"></div>
+			        </li>
+			        <li class="slds-page-header__detail-block">
+			          <div class="slds-text-title slds-truncate" title="Field 4">Field 4</div>
+			          <div class="slds-truncate"></div>
+			        </li>
+			      </ul>
+			    </div>
+			  </div>
 			</div>
-
-			<div>
-				<lightning-icon
-					class="button__checkout"
-					icon-name="standard:webcart"
-					size="medium"
-					alternative-text="Carrinho"
-					title="Carrinho"
-					onclick={handleCheckout}>
-				</lightning-icon>
-
-				<lightning-button
-					if:false={isShowCheckout}
-					class="slds-var-p-left_medium"
-					label="Buscar"
-					icon-name="utility:search"
-					variant="brand"
-					onclick={handleSearchProduct}
-					disabled={isShowProducts}>
-				</lightning-button>
-
-				<lightning-button
-					if:true={isShowCheckout}
-					class="slds-var-p-left_medium"
-					label="Salvar"
-					variant="brand"
-					onclick={handleSaveProducts}>
-				</lightning-button>
-			</div>
+			</lightning-layout-item>
 		</lightning-layout>
+
+
+
+<lightning-layout  if:true={isShowStructures} multiple-rows horizontal-align="space">
+		<lightning-layout-item
+			class="slds-var-p-horizontal_x-small container__filters"
+			size="12" medium-device-size="3" large-device-size="2"
+		>
+
+			<lightning-layout class="content__filters" multiple-rows horizontal-align="space" vertical-align="center">
+				<lightning-layout-item
+					class="slds-var-m-vertical_xx-small slds-var-p-horizontal_x-small"
+					size="4" medium-device-size="12" large-device-size="12"
+				>
+						<lightning-input  name="structureName" label="Estrutura" value={structureName} onchange={handleFilter}>
+						</lightning-input>
+				</lightning-layout-item>
+
+				<lightning-layout-item
+					class="slds-var-m-vertical_xx-small slds-var-p-horizontal_x-small"
+					size="4" medium-device-size="12" large-device-size="12"
+				>
+					<lightning-input name="grouper" label="Agrupador" value={grouper} onchange={handleFilter}>
+					</lightning-input>
+				</lightning-layout-item>
+			</lightning-layout>
+
+		</lightning-layout-item>
+
+		<lightning-layout-item
+			class="slds-var-p-horizontal_x-small container__items"
+			size="12" medium-device-size="9" large-device-size="10"
+		>
+			<lightning-layout multiple-rows horizontal-align="space">
+			<template for:each={structures} for:item="structure">
+				<lightning-layout-item key={structure.Id} class="slds-var-p-around_xx-small container__cart-structure" size="2" medium-device-size="2" small-device-size="4">
+					<c-structure-component 
+						structure={structure}
+						onhandlestructure={handleSelectStructure}>
+					</c-structure-component>
+				</lightning-layout-item>
+			</template>	
+			<lightning-layout-item class="slds-var-p-around_xx-small container__cart-structure" size="2" medium-device-size="2" small-device-size="4">
+				<c-structure-component 
+					structure={structureException}
+					onhandlestructure={handleSelectStructure}>
+				</c-structure-component>
+			</lightning-layout-item>
+				
+				
+				
+			<!-- <lightning-layout-item class="slds-var-p-around_xx-small container__cart-structure" size="12" medium-device-size="4" small-device-size="3"> -->
+				<!-- <article class="slds-card" style="min-height: 235px;"> -->
+					  <!-- <div class="slds-card__header slds-grid"> -->
+					    <!-- <header class="slds-media slds-media_center slds-has-flexi-truncate"> -->
+					      <!-- <div class="slds-media__body"> -->
+					        <!-- <h2 class="slds-card__header-title"> -->
+					          <!-- <span class="slds-card__header-link slds-truncate"> -->
+					            <!-- <span>Estrutura Exceção</span> -->
+							  <!-- </span> -->
+					        <!-- </h2> -->
+					      <!-- </div> -->
+					    <!-- </header> -->
+					  <!-- </div>      				   -->
+					  <!-- <div class="slds-card__body slds-card__body_inner container__cart-structure" style="height: 140px;"> -->
+						<!-- <p class="slds-var-p-horizontal_small content__structure"> -->
+			          		<!-- <lightning-icon icon-name="standard:custom" size="large"></lightning-icon> -->
+						<!-- </p> -->
+						<!-- <p class="slds-var-p-horizontal_small content__structure"> -->
+							<!-- <span class="slds-var-m-left_x-small">Já sabe o produto e seus acessórios ?</span> -->
+						<!-- </p>												 -->
+					  <!-- </div> -->
+					  <!-- <footer class="slds-card__footer"> -->
+					    <!-- <span class="slds-card__footer-action"><lightning-button slot="actions" label="Selecionar" variant="brand" onclick={onClickNewStructure}></lightning-button></span> -->
+					  <!-- </footer> -->
+					<!-- </article> -->
+			<!-- </lightning-layout-item> -->
+
+			</lightning-layout>
+		</lightning-layout-item>
+	</lightning-layout>
+
+		<lightning-layout if:true={isShowResources} class="container__resource">
+			<c-resource-component
+				class="container__resource"
+				resource-list={resourceList}
+				selected-structure={selectedStructure}
+				current-resource-activeted={currentResourceActiveted}
+				activated-resource-index={activatedResourceIndex}
+				onchooseresource={handleChooseResource}
+				onchoosetyperesource={handleChooseTypeResource}
+			>
+			</c-resource-component>
+		</lightning-layout>
+
 
 		<lightning-layout if:true={isShowSearchProduct} multiple-rows horizontal-align="space">
 			<lightning-layout-item class="slds-var-p-around_small" size="12">
+
 				<lightning-layout horizontal-align="center">
+
 					<lightning-layout-item size="6">
 						<lightning-input
 							name="productCode"
@@ -410,182 +397,29 @@
 							onchange={handleProductCode}>
 						</lightning-input>
 					</lightning-layout-item>
+
 				</lightning-layout>
+
 			</lightning-layout-item>
 
 			<template for:each={products} for:item="product">
 
-				<lightning-layout-item if:true={product.isShowProduct} key={product.id} class="slds-var-p-around_xx-small" size="6">
-					<lightning-card title={product.name}>
-						<lightning-layout multiple-rows horizontal-align="space" vertical-align="center">
-							<lightning-layout-item class="container__image" size="3">
-								<img class="structure__image" src={product.image} />
-							</lightning-layout-item>
+				<lightning-layout-item
+					key={product.id}
+					class="slds-var-p-around_x-small"
+					size="12" medium-device-size="5" large-device-size="5"
+				>
 
-							<lightning-layout-item size="8">
-								<span class="slds-text-title_bold">
-									Código: {product.productCode}
-								</span>
+					<c-product-component
+						product={product}
+						onhandleproductdata={handleProductData}
+						onhandleconfigkit={handleConfigureKit}
+						onhandleclearconfigkit={handleClearKitConfiguration}
+						onhandleselectproduct={handleSelectProduct}
+						onhandleremoveproduct={handleRemoveProduct}
+					>
+					</c-product-component>
 
-								<p class="container__fields">
-									<lightning-input
-										data-id={product.id}
-										style="width: 50%;"
-										name="quantity"
-										label="Quantity"
-										value={product.quantity}
-										type="number"
-										max-length="8"
-										min="1"
-										onchange={handleProductData}
-										disabled={product.isSelected}>
-									</lightning-input>
-
-									<lightning-input
-										data-id={product.id}
-										class="slds-var-p-left_xx-small"
-										style="width: 50%;"
-										name="price"
-										label="Preço"
-										value={product.price}
-										type="number"
-										formatter="currency"
-										step="any"
-										min="0"
-										onchange={handleProductData}
-										disabled={product.isSelected}>
-									</lightning-input>
-								</p>
-
-								<p class="container__fields">
-									<lightning-input
-										if:false={product.isDiscountPercent}
-										data-id={product.id}
-										style="width: 50%;"
-										name="discountCurrency"
-										label="Desconto"
-										value={product.discountCurrency}
-										type="number"
-										formatter="currency"
-										step="any"
-										min="0"
-										onchange={handleProductData}
-										disabled={product.isSelected}>
-									</lightning-input>
-
-									<lightning-input
-										if:true={product.isDiscountPercent}
-										data-id={product.id}
-										style="width: 50%;"
-										name="discountPercent"
-										label="% Desconto"
-										value={product.discountPercent}
-										type="number"
-										formatter="fixed-percent"
-										step="any"
-										min="0"
-										onchange={handleProductData}
-										disabled={product.isSelected}>
-									</lightning-input>
-
-									<lightning-combobox
-										data-id={product.id}
-										class="slds-var-p-left_xx-small"
-										style="width: 50%;"
-										name="discountType"
-										label="Tipo de desconto"
-										value={product.discountType}
-										options={discountTypeOptionList}
-										onchange={handleProductData}
-										disabled={product.isSelected}>
-									</lightning-combobox>
-								</p>
-
-								<p class="slds-var-m-top_x-small">
-									Preço de lista: <lightning-formatted-number
-										value={product.listPrice}
-										format-style="currency"
-										currency-code="BRL"
-										maximum-fraction-digits="2">
-									</lightning-formatted-number>
-								</p>
-
-								<p class="slds-var-m-top_xxx-small">
-									Preço total: <lightning-formatted-number
-										value={product.totalPrice}
-										format-style="currency"
-										currency-code="BRL"
-										maximum-fraction-digits="2">
-									</lightning-formatted-number>
-								</p>
-							</lightning-layout-item>
-
-							<lightning-layout-item class="slds-var-p-horizontal_small" size="12">
-								<p if:true={product.isConfigured} class="title__accessories">
-									Acessórios
-								</p>
-
-								<template if:true={product.isConfigured} for:each={product.groupAccessoryList} for:item="group">
-									<div key={group.id} style="width: 100%; display: flex; flex-direction: row;">
-										<div class="slds-var-m-top_xxx-small">
-											{group.name}:
-											<p><b if:true={group.value}>{group.value}</b></p>
-											<template if:true={group.isListing} for:each={group.accessoryList} for:item="accessory">
-												<p if:true={accessory.isSelected} key={accessory.id}><b>
-													{accessory.name} (
-														<lightning-formatted-number
-															value={accessory.unitPrice}
-															format-style="currency"
-															currency-code="BRL"
-															maximum-fraction-digits="2">
-														</lightning-formatted-number>
-													)
-												</b></p>
-											</template>
-										</div>
-									</div>
-								</template>
-							</lightning-layout-item>
-
-							<lightning-layout-item if:true={product.isDisabledButtons} class="slds-var-m-top_small container__buttons" size="12">
-								<lightning-button
-									data-id={product.id}
-									label="Configurar"
-									variant="brand"
-									onclick={handleConfigKit}>
-								</lightning-button>
-							</lightning-layout-item>
-
-							<lightning-layout-item if:false={product.isDisabledButtons} class="slds-var-m-top_small container__buttons" size="12">
-								<div if:true={product.isHasKit}>
-									<lightning-button
-										if:false={product.isSelected}
-										data-id={product.id}
-										class="slds-var-m-right_x-small"
-										label="Limpar"
-										variant="destructive"
-										onclick={handleClearConfigKit}>
-									</lightning-button>
-								</div>
-
-								<lightning-button
-									if:false={product.isSelected}
-									data-id={product.id}
-									label="Adicionar"
-									variant="brand"
-									onclick={handleSelectProduct}>
-								</lightning-button>
-
-								<lightning-button
-									if:true={product.isSelected}
-									data-id={product.id}
-									label="Remover"
-									variant="destructive"
-									onclick={handleRemoveProduct}>
-								</lightning-button>
-							</lightning-layout-item>
-						</lightning-layout>
-					</lightning-card>
 				</lightning-layout-item>
 
 			</template>
@@ -602,257 +436,28 @@
 			</lightning-layout-item>
 		</lightning-layout>
 
-		<lightning-layout if:true={isShowStructures} multiple-rows horizontal-align="space">
-			<lightning-layout-item class="slds-var-p-around_small" size="12">
-				<lightning-layout horizontal-align="center">
 
-					<lightning-layout-item size="5">
-						<lightning-input name="grouper" label="Agrupador" value={grouper} onchange={handleFilter}>
-						</lightning-input>
-					</lightning-layout-item>
-
-					<lightning-layout-item class="slds-var-m-left_medium" size="5">
-						<lightning-input class="slds-var-p-left_medium" name="structureName" label="Nome" value={structureName} onchange={handleFilter}>
-						</lightning-input>
-					</lightning-layout-item>
-
-				</lightning-layout>
-			</lightning-layout-item>
-
-			<template for:each={structures} for:item="structure">
-
-				<lightning-layout-item key={structure.Id} class="slds-var-p-around_xx-small" size="6">
-					<lightning-card title={structure.Name}>
-						<lightning-button data-id={structure.Id} slot="actions" label="Selecionar" variant="brand" onclick={handleSelectStructure}>
-						</lightning-button>
-
-						<p class="slds-var-p-horizontal_small content__structure">
-							<img src={structure.ImagemProduto__c} class="structure__image"/>
-							<span class="slds-var-m-left_x-small">Agrupador: {structure.Agrupador__c}</span>
-						</p>
-					</lightning-card>
-				</lightning-layout-item>
-
-			</template>
-
-			<lightning-layout-item class="slds-var-p-around_xx-small" size="6">
-				<lightning-card title="Nova estrutura">
-					<lightning-button slot="actions" label="Selecionar" variant="brand" onclick={onClickNewStructure}>
-					</lightning-button>
-
-					<div class="slds-var-p-horizontal_small content__structure-exception">
-						<p class="text__structure-exception">Já sabe o produto e seus acessórios ?</p>
-					</div>
-				</lightning-card>
-			</lightning-layout-item>
-		</lightning-layout>
-
-
-		<lightning-layout if:true={isShowResources} class="container__header-title" horizontal-align="center">
-			<lightning-icon
-				icon-name="standard:product"
-				alternative-text="Estrutura de produto"
-				title="Estrutura de produto">
-			</lightning-icon>
-
-			<span class="slds-var-p-left_xx-small title">{selectedStructure.Name}</span>
-		</lightning-layout>
-
-		<lightning-layout if:true={isShowResources} class="container__resource">
-			<c-resource-component
-				class="container__resource"
-				resource-list={resourceList}
-				current-resource-activeted={currentResourceActiveted}
-				activated-resource-index={activatedResourceIndex}
-				onchooseresource={handleChooseResource}
-				onchoosetyperesource={handleChooseTypeResource}
-			>
-			</c-resource-component>
-		</lightning-layout>
-
-
-		<lightning-layout if:true={isShowProducts} multiple-rows horizontal-align="space">
+		<lightning-layout if:true={isShowProducts} class="container__product" multiple-rows horizontal-align="space">
 			<template for:each={products} for:item="product">
-				<lightning-layout-item if:true={product.isShowProduct} key={product.id} size="6">
 
-					<lightning-layout multiple-rows horizontal-align="space">
+				<lightning-layout-item
+					key={product.id}
+					class="slds-var-p-around_x-small"
+					size="12" medium-device-size="5" large-device-size="5"
+				>
 
-						<lightning-layout-item class="slds-var-p-around_xx-small" size="12">
-							<lightning-card title={product.name}>
-								<lightning-layout multiple-rows horizontal-align="space" vertical-align="center">
-									<lightning-layout-item class="container__image" size="3">
-										<img class="structure__image" src={product.image} />
-									</lightning-layout-item>
-
-									<lightning-layout-item size="8">
-										<span class="slds-text-title_bold">
-											Código: {product.productCode}
-										</span>
-
-										<p class="container__fields">
-											<lightning-input
-												data-id={product.id}
-												style="width: 50%;"
-												name="quantity"
-												label="Quantity"
-												value={product.quantity}
-												type="number"
-												max-length="8"
-												min="1"
-												onchange={handleProductData}
-												disabled={product.isSelected}>
-											</lightning-input>
-
-											<lightning-input
-												data-id={product.id}
-												class="slds-var-p-left_xx-small"
-												style="width: 50%;"
-												name="price"
-												label="Preço"
-												value={product.price}
-												type="number"
-												formatter="currency"
-												step="any"
-												min="0"
-												onchange={handleProductData}
-												disabled={product.isSelected}>
-											</lightning-input>
-										</p>
-
-										<p class="container__fields">
-											<lightning-input
-												if:false={product.isDiscountPercent}
-												data-id={product.id}
-												style="width: 50%;"
-												name="discountCurrency"
-												label="Desconto"
-												value={product.discountCurrency}
-												type="number"
-												formatter="currency"
-												step="any"
-												min="0"
-												onchange={handleProductData}
-												disabled={product.isSelected}>
-											</lightning-input>
-
-											<lightning-input
-												if:true={product.isDiscountPercent}
-												data-id={product.id}
-												style="width: 50%;"
-												name="discountPercent"
-												label="% Desconto"
-												value={product.discountPercent}
-												type="number"
-												formatter="fixed-percent"
-												step="any"
-												min="0"
-												onchange={handleProductData}
-												disabled={product.isSelected}>
-											</lightning-input>
-
-											<lightning-combobox
-												data-id={product.id}
-												class="slds-var-p-left_xx-small"
-												style="width: 50%;"
-												name="discountType"
-												label="Tipo de desconto"
-												value={product.discountType}
-												options={discountTypeOptionList}
-												onchange={handleProductData}
-												disabled={product.isSelected}>
-											</lightning-combobox>
-										</p>
-
-										<p class="slds-var-m-top_x-small">
-											Preço de lista: <lightning-formatted-number
-												value={product.listPrice}
-												format-style="currency"
-												currency-code="BRL"
-												maximum-fraction-digits="2">
-											</lightning-formatted-number>
-										</p>
-
-										<p class="slds-var-m-top_xxx-small">
-											Preço total: <lightning-formatted-number
-												value={product.totalPrice}
-												format-style="currency"
-												currency-code="BRL"
-												maximum-fraction-digits="2">
-											</lightning-formatted-number>
-										</p>
-									</lightning-layout-item>
-
-									<lightning-layout-item class="slds-var-p-horizontal_small" size="12">
-										<p if:true={product.isConfigured} class="title__accessories">
-											Acessórios
-										</p>
-
-										<template if:true={product.isConfigured} for:each={product.groupAccessoryList} for:item="group">
-											<div key={group.id} style="width: 100%; display: flex; flex-direction: row;">
-												<div class="slds-var-m-top_xxx-small">
-													{group.name}:
-													<p><b if:true={group.value}>{group.value}</b></p>
-													<template if:true={group.isListing} for:each={group.accessoryList} for:item="accessory">
-														<p if:true={accessory.isSelected} key={accessory.id}><b>
-															{accessory.name} (
-																<lightning-formatted-number
-																	value={accessory.unitPrice}
-																	format-style="currency"
-																	currency-code="BRL"
-																	maximum-fraction-digits="2">
-																</lightning-formatted-number>
-															)
-														</b></p>
-													</template>
-												</div>
-											</div>
-										</template>
-									</lightning-layout-item>
-
-									<lightning-layout-item if:true={product.isDisabledButtons} class="slds-var-m-top_small container__buttons" size="12">
-										<lightning-button
-											data-id={product.id}
-											label="Configurar"
-											variant="brand"
-											onclick={handleConfigKit}>
-										</lightning-button>
-									</lightning-layout-item>
-
-									<lightning-layout-item if:false={product.isDisabledButtons} class="slds-var-m-top_small container__buttons" size="12">
-										<div if:true={product.isHasKit}>
-											<lightning-button
-												if:false={product.isSelected}
-												data-id={product.id}
-												class="slds-var-m-right_x-small"
-												label="Limpar"
-												variant="destructive"
-												onclick={handleClearConfigKit}>
-											</lightning-button>
-										</div>
-
-										<lightning-button
-											if:false={product.isSelected}
-											data-id={product.id}
-											label="Adicionar"
-											variant="brand"
-											onclick={handleSelectProduct}>
-										</lightning-button>
-
-										<lightning-button
-											if:true={product.isSelected}
-											data-id={product.id}
-											label="Remover"
-											variant="destructive"
-											onclick={handleRemoveProduct}>
-										</lightning-button>
-									</lightning-layout-item>
-								</lightning-layout>
-							</lightning-card>
-						</lightning-layout-item>
-
-					</lightning-layout>
+					<c-product-component
+						product={product}
+						onhandleproductdata={handleProductData}
+						onhandleconfigkit={handleConfigureKit}
+						onhandleclearconfigkit={handleClearKitConfiguration}
+						onhandleselectproduct={handleSelectProduct}
+						onhandleremoveproduct={handleRemoveProduct}
+					>
+					</c-product-component>
 
 				</lightning-layout-item>
+
 			</template>
 		</lightning-layout>
 

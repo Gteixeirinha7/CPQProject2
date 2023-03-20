@@ -25,6 +25,14 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	@track
 	currentResourceActiveted = {};
 
+	@track 
+	structureException = {
+		Id : "",
+		showIcon : true,
+		Name : "Estrutura Exceção",
+		Agrupador__c : "Cadastro Produto fora da Estrutura",
+	}
+
 	structureMap = {};
 	delayProductCode = {};
 	addNewAccessory = {};
@@ -54,16 +62,6 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	isTablet = false;
 
 	currentPageReference;
-	discountTypeOptionList = [
-		{
-			label: 'Moeda (R$)',
-			value: 'currency'
-		},
-		{
-			label: 'Porcentagem (%)',
-			value: 'percent'
-		}
-	];
 
 	get structures() {
 		if (!this.grouper && !this.structureName) return Object.values(this.structureMap);
@@ -138,8 +136,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		if (!this.isConnectedLoading && !this.isWireConnectedLoading) this.isLoading = false;
 	}
 
-	async handleSelectStructure(event) {
-		const id = event.target.dataset.id;
+	async handleSelectStructure(id) {
 
 		this.isLoading = true;
 
@@ -292,10 +289,34 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		this.isLoading = false;
 	}
 
-	handleProductData(event) {
-		const { name, value, dataset } = event.target;
+	async handleSearchProduct() {
+		this.isLoading = true;
 
-		let productData = this.productMap[dataset.id];
+		if (!this.currentStackTraceCode) {
+			this.handlerDispatchToast('Atenção!', 'Não é possível buscar produtos sem nenhuma estrutura.', 'warning');
+			this.isLoading = false;
+			return;
+		}
+
+		this.productMap = await getProducts({
+			quoteId: this.quoteId,
+			structureId: this.selectedStructure.Id,
+			productCode: this.currentStackTraceCode
+		});
+
+		this.isShowProducts = true;
+		this.isShowStructures = false;
+		this.isShowResources = false;
+		this.isShowCheckout = false;
+		this.isShowSearchProduct = false;
+
+		this.isLoading = false;
+	}
+
+	handleProductData(event) {
+		const { name, value, id } = event.detail;
+
+		let productData = this.productMap[id];
 
 		if (!value || (name !== 'discountType' && value < 0)) {
 			productData.price = 0;
@@ -332,6 +353,78 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		productData.totalPrice = Number((productData.price * productData.quantity).toFixed(2));
 	}
 
+	handleConfigureKit(event) {
+		const id = event.detail.id;
+
+		this.currentProductConfig = JSON.parse(JSON.stringify(this.productMap[id]));
+		console.log('this.currentProductConfig =>', JSON.parse(JSON.stringify(this.currentProductConfig)));
+
+		this.isOpenConfigKit = true;
+	}
+
+	handleClearKitConfiguration(event) {
+		const id = event.detail.id;
+
+		this.clearConfig(this.productMap[id]);
+	}
+
+	handleSelectProduct(event) {
+		const id = event.detail.id; // target.database
+		let addProduct = this.productMap[id];
+
+		if (!this.checkProductIsValid(addProduct)) return;
+
+		addProduct.isSelected = true;
+		this.checkoutProductMap[id] = { ...addProduct };
+	}
+
+	handleRemoveProduct(event) {
+		const id = event.detail.id;
+
+		let removeProduct = this.productMap[id];
+
+		removeProduct.isSelected = false;
+		removeProduct.quantity = 1;
+		removeProduct.price = removeProduct.listPrice;
+
+		delete this.checkoutProductMap[id];
+	}
+
+	checkProductIsValid(addProduct) {
+		if (!addProduct.quantity || addProduct.quantity <= 0) {
+			this.handlerDispatchToast('Atenção!', 'Quantidade inválida', 'warning');
+			return false;
+		}
+		else if (!addProduct.price || addProduct.price <= 0) {
+			this.handlerDispatchToast('Atenção!', 'Preço inválido', 'warning');
+			return false;
+		}
+		else if ((!addProduct.discountCurrency && addProduct.discountCurrency != 0) || addProduct.discountCurrency > addProduct.listPrice) {
+			this.handlerDispatchToast('Atenção!', 'Desconto inválido', 'warning');
+			return false;
+		}
+		else if ((!addProduct.discountPercent && addProduct.discountPercent != 0) || addProduct.discountPercent > 100) {
+			this.handlerDispatchToast('Atenção!', 'Porcetagem do desconto inválido', 'warning');
+			return false;
+		}
+
+		return true;
+	}
+
+
+
+
+
+
+	handleStructure(event){
+		const structure = event.detail.structure;
+		if(structure.Name == "Estrutura Exceção"){
+			this.onClickNewStructure();
+		}else{
+			this.handleSelectStructure();
+		}
+
+	}
 	handleNewStructure() {
 		this.clearAll();
 	}
@@ -366,6 +459,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 				getExceptionProducts({ quoteId: this.quoteId, searchValue: this.productCode, quantity: 30 })
 					.then(resolve => {
 						this.productMap = resolve;
+						console.log('this.productMap =>', JSON.parse(JSON.stringify(this.productMap)));
 					})
 					.catch(error => {
 						console.log('Error Search Product By Code =>', error);
@@ -626,19 +720,6 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		this.isOpenConfigKit = false;
 	}
 
-	clearConfig(product) {
-		product.isConfigured = false;
-
-		product.groupAccessoryList.forEach(group => {
-			if (group.isListing) group.value = '';
-
-			group.isSelected = false;
-			group.accessoryList.forEach(item => item.isSelected = false);
-		});
-
-		product.isDisabledButtons = true;
-	}
-
 	checkAccessories(groupList) {
 		let hasError = false;
 		let errorMessage = '';
@@ -697,48 +778,6 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 				groupAccessory.isSelected = false;
 			}
 		});
-	}
-
-	handleSelectProduct(event) {
-		const id = event.target.dataset.id;
-		let addProduct = this.productMap[id];
-
-		if (!this.checkProductIsValid(addProduct)) return;
-
-		addProduct.isSelected = true;
-		this.checkoutProductMap[id] = { ...addProduct };
-	}
-
-	handleRemoveProduct(event) {
-		const id = event.target.dataset.id;
-		let removeProduct = this.productMap[id];
-
-		removeProduct.isSelected = false;
-		removeProduct.quantity = 1;
-		removeProduct.price = removeProduct.listPrice;
-
-		delete this.checkoutProductMap[id];
-	}
-
-	checkProductIsValid(addProduct) {
-		if (!addProduct.quantity || addProduct.quantity <= 0) {
-			this.handlerDispatchToast('Atenção!', 'Quantidade inválida', 'warning');
-			return false;
-		}
-		else if (!addProduct.price || addProduct.price <= 0) {
-			this.handlerDispatchToast('Atenção!', 'Preço inválido', 'warning');
-			return false;
-		}
-		else if ((!addProduct.discountCurrency && addProduct.discountCurrency != 0) || addProduct.discountCurrency > addProduct.listPrice) {
-			this.handlerDispatchToast('Atenção!', 'Desconto inválido', 'warning');
-			return false;
-		}
-		else if ((!addProduct.discountPercent && addProduct.discountPercent != 0) || addProduct.discountPercent > 100) {
-			this.handlerDispatchToast('Atenção!', 'Porcetagem do desconto inválido', 'warning');
-			return false;
-		}
-
-		return true;
 	}
 
 	handleCheckoutProductData(event) {
@@ -804,53 +843,6 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		this.isShowCheckout = true;
 	}
 
-	async handleSearchProduct() {
-		this.isLoading = true;
-
-		if (!this.currentStackTraceCode) {
-			this.handlerDispatchToast('Atenção!', 'Não é possível buscar produtos sem nenhuma estrutura.', 'warning');
-			this.isLoading = false;
-			return;
-		}
-
-		this.productMap = await getProducts({
-			quoteId: this.quoteId,
-			structureId: this.selectedStructure.Id,
-			productCode: this.currentStackTraceCode
-		});
-
-		this.isShowProducts = true;
-		this.isShowStructures = false;
-		this.isShowResources = false;
-		this.isShowCheckout = false;
-		this.isShowSearchProduct = false;
-
-		this.isLoading = false;
-	}
-
-	checkProducts() {
-		let errorMessage = '';
-
-		this.checkoutProducts.forEach(item => {
-			if (item.quantity <= 0) {
-				errorMessage = 'Quantidade inválida para o item ' + item.name;
-			}
-			else if (item.price <= 0 || item.price > item.listPrice) {
-				errorMessage = 'Valor inválido para o item ' + item.name;
-			}
-
-			if (!errorMessage && item.hasExceptionAccessory) {
-				item.exceptionAccessoryList.forEach(accessory => {
-					if (accessory.quantity <= 0) {
-						errorMessage = 'Quantidade inválida para o acessório ' + accessory.name;
-					}
-				});
-			}
-		});
-
-		return errorMessage;
-	}
-
 	handleSaveProducts() {
 		this.isLoading = true;
 
@@ -902,6 +894,50 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 				this.handlerDispatchToast('Erro!', 'Falha na inserção dos itens da cotação! ' + error, 'error');
 			})
 			.finally(() => this.isLoading = false);
+	}
+
+	checkProducts() {
+		let errorMessage = '';
+
+		this.checkoutProducts.forEach(item => {
+			if (item.quantity <= 0) {
+				errorMessage = 'Quantidade inválida para o item ' + item.name;
+			}
+			else if (item.price <= 0 || item.price > item.listPrice) {
+				errorMessage = 'Valor inválido para o item ' + item.name;
+			}
+
+			if (!errorMessage && item.hasExceptionAccessory) {
+				item.exceptionAccessoryList.forEach(accessory => {
+					if (accessory.quantity <= 0) {
+						errorMessage = 'Quantidade inválida para o acessório ' + accessory.name;
+					}
+				});
+			}
+		});
+
+		return errorMessage;
+	}
+
+
+
+
+
+
+
+
+
+	clearConfig(product) {
+		product.isConfigured = false;
+
+		product.groupAccessoryList.forEach(group => {
+			if (group.isListing) group.value = '';
+
+			group.isSelected = false;
+			group.accessoryList.forEach(item => item.isSelected = false);
+		});
+
+		product.isDisabledButtons = true;
 	}
 
 	fillStackTraceCode() {

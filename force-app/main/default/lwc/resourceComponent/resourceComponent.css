@@ -12,6 +12,8 @@
 .container__menu {
 	padding: 20px;
 
+	min-width: 230px;
+
 	border-radius: 5px;
 
 	box-shadow: 0 3px 10px rgb(0 0 0 / 0.5);
@@ -83,4 +85,8 @@
 	font-size: 14px;
 
 	cursor: pointer;
+}
+.container__header-title {
+	margin-bottom: 8px;
+	z-index: 3;
 }
