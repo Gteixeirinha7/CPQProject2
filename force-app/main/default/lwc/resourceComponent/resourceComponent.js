@@ -26,11 +26,7 @@ export default class ResourceComponent extends LightningElement {
 
 		return selectedResourceList;
 	}
-
-	get hasResourceSelected() {
-		return this.selectedResourceList.length > 0;
-	}
-
+	
 	onClickChooseResource(event) {
 		const index = event.target.dataset.index;
 

@@ -8,7 +8,7 @@ import getStructures from '@salesforce/apex/ProductScreenController.getStructure
 import getResources from '@salesforce/apex/ProductScreenController.getResources';
 import getProducts from '@salesforce/apex/ProductScreenController.getProducts';
 import getExceptionProducts from '@salesforce/apex/ProductScreenController.getExceptionProducts';
-import saveQuoteLineItems from '@salesforce/apex/ProductScreenController.saveQuoteLineItems';
+import saveLineItems from '@salesforce/apex/ProductScreenController.saveLineItems';
 import checkNextTypeResources from '@salesforce/apex/ProductScreenController.checkNextTypeResources';
 
 export default class ProductScreen extends NavigationMixin(LightningElement) {
@@ -63,6 +63,19 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 
 	currentPageReference;
 
+	get selectedResourceList() {
+		let selectedResourceList = [];
+
+		this.resourceList.forEach(resource => {
+			resource.ComposicaoProduto__r.forEach(item => {
+				if (item.isSelected) {
+					selectedResourceList.push(item);
+				}
+			});
+		});
+
+		return selectedResourceList;
+	}
 	get structures() {
 		if (!this.grouper && !this.structureName) return Object.values(this.structureMap);
 
@@ -91,7 +104,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		if (state) {
 			this.quoteId = state.c__quoteId;
 
-			getCheckoutData({ quoteId: this.quoteId })
+			getCheckoutData({ objId: this.quoteId })
 				.then(resolve => {
 					this.checkoutProductMap = resolve;
 				})
@@ -299,7 +312,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		}
 
 		this.productMap = await getProducts({
-			quoteId: this.quoteId,
+			objId: this.quoteId,
 			structureId: this.selectedStructure.Id,
 			productCode: this.currentStackTraceCode
 		});
@@ -421,7 +434,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		if(structure.Name == "Estrutura Exceção"){
 			this.onClickNewStructure();
 		}else{
-			this.handleSelectStructure();
+			this.handleSelectStructure(structure.Id);
 		}
 
 	}
@@ -456,7 +469,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 				this.isLoading = true;
 				this.isLoadingModal = true;
 
-				getExceptionProducts({ quoteId: this.quoteId, searchValue: this.productCode, quantity: 30 })
+				getExceptionProducts({ objId: this.quoteId, searchValue: this.productCode, quantity: 30 })
 					.then(resolve => {
 						this.productMap = resolve;
 						console.log('this.productMap =>', JSON.parse(JSON.stringify(this.productMap)));
@@ -482,7 +495,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		if (this.productCode > ' ') {
 			this.isLoading = true;
 
-			getExceptionProducts({ quoteId: this.quoteId, searchValue: this.productCode, quantity: (this.products.length + 30) })
+			getExceptionProducts({ objId: this.quoteId, searchValue: this.productCode, quantity: (this.products.length + 30) })
 				.then(resolve => {
 					this.productMap = resolve;
 				})
@@ -868,7 +881,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 			return;
 		}
 
-		saveQuoteLineItems({ quoteId: this.quoteId, quoteItemList: this.checkoutProducts })
+		saveLineItems({ objId: this.quoteId, quoteItemList: this.lineItemList })
 			.then(resolve => {
 				if (!resolve.hasError) {
 					this.handlerDispatchToast('Sucesso!!', 'Itens salvo com exito!!!', 'success');

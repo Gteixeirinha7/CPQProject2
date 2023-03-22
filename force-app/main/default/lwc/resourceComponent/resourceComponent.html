@@ -2,50 +2,29 @@
 	<div class="main-resource">
 		<lightning-layout multiple-rows horizontal-align="spread">
 
-			<lightning-layout-item size="12" medium-device-size="5" large-device-size="3">
-				<lightning-layout-item size="12" style=" display: flex; flex-direction: row; justify-content: space-evenly; align-items: stretch;">
-					<div class="container__header-title">
-						<c-structure-component 
-							structure={selectedStructure}
-							disabled-click="true">
-						</c-structure-component>
+			<lightning-layout-item size="12" medium-device-size="6" large-device-size="5" style=" display: flex; flex-direction: row; justify-content: center; align-items: stretch;">
+				<div class="container__header-title">
+					<c-selected-structure-component 
+						selected-structure={selectedStructure}
+						selected-resource-list={selectedResourceList}>
+					</c-selected-structure-component>
+				</div>
+				<div class="container__header-title">					
+    				<div class="swiper-slide">
+					    <a class="common-catalog-item common-catalog-item--v1">
+							<template for:each={resourceList} for:item="resource" for:index="resourceIndex">
+								<p key={resource.Id} data-index={resourceIndex} class={resource.class} onclick={onClickChooseResource} >
+									{resource.Name}
+								</p>
+							</template>
+						</a>
 					</div>
-					<div class="container__menu">
-						<template for:each={resourceList} for:item="resource" for:index="resourceIndex">
-							<p key={resource.Id} data-index={resourceIndex} class={resource.class} onclick={onClickChooseResource} >
-								{resource.Name}
-							</p>
-						</template>
-					</div>
-				</lightning-layout-item>
-				<lightning-layout-item size="12" style=" display: flex; flex-direction: row; justify-content: space-evenly; align-items: stretch;">
-					<template if:true={hasResourceSelected} for:each={selectedResourceList} for:item="item">
-						<article key={item.Id} class="slds-card" style="height: 120px; margin-top: 10px">
-							<div class="slds-card__header slds-grid">
-								<header class="slds-media slds-media_center slds-has-flexi-truncate slds-var-p-around_xx-small" style="display: flex;flex-direction: column;">						
-									<div class="slds-media__body">
-										<h2 class="slds-card__header-title">
-											{item.RecursoProduto__r.Name}
-										</h2>
-									</div>
-									<div>
-										<lightning-icon icon-name="action:new_child_case" size="small"></lightning-icon>
-									</div>								
-									<div class="slds-media__body">
-										<h2 class="slds-card__header-title">
-											{item.DescricaoRecurso__c}
-										</h2>
-									</div>
-								</header>
-							</div>
-						</article>
-					</template>
-				</lightning-layout-item>
+				</div>
 			</lightning-layout-item>
 
 			<lightning-layout-item
 				if:true={activatedResourceIndex}
-				size="12" medium-device-size="7" large-device-size="9"
+				size="12" medium-device-size="6" large-device-size="7"
 			>
 
 				<template for:each={currentResourceActiveted.ComposicaoProduto__r} for:item="typeResource" for:index="typeIndex">

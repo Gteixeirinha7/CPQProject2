@@ -1,65 +1,54 @@
-public with sharing class ProductScreenController {
+public with sharing class ProductScreenController extends ProductScreenModel{
+	public static String context {get;set;}
+
+	//GetCheckoutData
+	public static Map<String, Set<Id>> parentProductIdToKitProductIdAccessoryMap {get;set;} 
+	public static Map<String, Map<Id, ProductData>> parentProductIdToKitProductMap {get;set;} 
+	public static Map<String, List<ProductData>> parentProductIdToExceptionProductMap {get;set;} 
+	public static Map<Id, Set<Id>> kitIdToProductIdSetMap {get;set;} 
+	public static Set<Id> kitIdSet {get;set;} 
+
+
+	//CreateRecordData
+	public static List<QuoteLineItem> insertQuoteLineItemList {get;set;} 
+	public static List<QuoteLineItem> updateQuoteLineItemList {get;set;} 
+	public static List<OpportunityLineItem> insertOpportunityLineItemList {get;set;} 
+	public static List<OpportunityLineItem> updateOpportunityLineItemList {get;set;} 
+	public static Map<String, Id> itemKeyToLineItemMap {get;set;}
+	public static Map<Id, PricebookEntry> productToPriceIdMap {get;set;}
+
+	public static void initCheckoutStaticVariable(String objId){
+		parentProductIdToKitProductIdAccessoryMap = new Map<String, Set<Id>>();
+		parentProductIdToKitProductMap = new Map<String, Map<Id, ProductData>>();
+		parentProductIdToExceptionProductMap = new Map<String, List<ProductData>>();
+		kitIdToProductIdSetMap = new Map<Id, Set<Id>>();
+		kitIdSet = new Set<Id>();
+
+		context = isOpp(objId) ? 'Opportunity' : 'Quote';
+	}
+
 	@AuraEnabled
-	public static Map<Id, ProductData> getCheckoutData(String quoteId) {
-		if (String.isBlank(quoteId)) return new Map<Id, ProductData>();
+	public static Map<Id, ProductData> getCheckoutData(String objId) {
+		if (String.isBlank(objId)) return new Map<Id, ProductData>();
 
 		Map<Id, ProductData> checkoutProductMap = new Map<Id, ProductData>();
 
 		try {
-			Map<String, Set<Id>> parentProductIdToKitProductIdAccessoryMap = new Map<String, Set<Id>>();
-			Map<String, Map<Id, ProductData>> parentProductIdToKitProductMap = new Map<String, Map<Id, ProductData>>();
-			Map<String, List<ProductData>> parentProductIdToExceptionProductMap = new Map<String, List<ProductData>>();
-			Map<Id, Set<Id>> kitIdToProductIdSetMap = new Map<Id, Set<Id>>();
-			Set<Id> kitIdSet = new Set<Id>();
+			initCheckoutStaticVariable(objId);
 
-			for (QuoteLineItem retrievedItem : getQuoteLineItemsByQuoteId(quoteId)) {
-				ProductData currentProductData = new ProductData(retrievedItem);
-
-				if (!String.isBlank(retrievedItem.Product2.KitAcessorios__c)) {
-					kitIdSet.add(retrievedItem.Product2.KitAcessorios__c);
-
-					if (!kitIdToProductIdSetMap.containsKey(retrievedItem.Product2.KitAcessorios__c)) {
-						kitIdToProductIdSetMap.put(retrievedItem.Product2.KitAcessorios__c, new Set<Id>());
-					}
-					kitIdToProductIdSetMap.get(retrievedItem.Product2.KitAcessorios__c).add(retrievedItem.Product2Id);
+			if(isOpp(objId)){
+				for (QuoteLineItem retrievedItem : getQuoteLineItemsByQuoteId(objId)) {
+					getCheckoutData(new ProductData(retrievedItem), checkoutProductMap);
 				}
-
-				if (String.isBlank(retrievedItem.ParentProduct__c)) {
-					checkoutProductMap.put(retrievedItem.Product2Id, currentProductData);
-				}
-				else {
-					if (String.isBlank(retrievedItem.ParentProduct__r.KitAcessorios__c)) {
-						if (!parentProductIdToExceptionProductMap.containsKey(retrievedItem.ParentProduct__c)) {
-							parentProductIdToExceptionProductMap.put(
-								retrievedItem.ParentProduct__c,
-								new List<ProductData>()
-							);
-						}
-						parentProductIdToExceptionProductMap.get(retrievedItem.ParentProduct__c).add(currentProductData);
-					}
-					else {
-						if (!parentProductIdToKitProductMap.containsKey(retrievedItem.ParentProduct__c)) {
-							parentProductIdToKitProductMap.put(
-								retrievedItem.ParentProduct__c,
-								new Map<Id, ProductData>()
-							);
-						}
-						parentProductIdToKitProductMap.get(retrievedItem.ParentProduct__c).put(retrievedItem.Product2Id, currentProductData);
-
-						if (!parentProductIdToKitProductIdAccessoryMap.containsKey(retrievedItem.ParentProduct__c)) {
-							parentProductIdToKitProductIdAccessoryMap.put(
-								retrievedItem.ParentProduct__c,
-								new Set<Id>()
-							);
-						}
-						parentProductIdToKitProductIdAccessoryMap.get(retrievedItem.ParentProduct__c).add(retrievedItem.Product2Id);
-					}
+			}else{
+				for (OpportunityLineItem retrievedItem : getOppLineItemsByOpportunityId(objId)) {
+					getCheckoutData(new ProductData(retrievedItem), checkoutProductMap);
 				}
 			}
 
 			if (!checkoutProductMap.isEmpty()) {
-				fillProductImage(quoteId, checkoutProductMap);
-				fillKitConfigData(kitIdSet, kitIdToProductIdSetMap, checkoutProductMap, quoteId);
+				fillProductImage(objId, checkoutProductMap);
+				fillKitConfigData(kitIdSet, kitIdToProductIdSetMap, checkoutProductMap, objId);
 
 				for (String productId : parentProductIdToExceptionProductMap.keySet()) {
 					ProductData parentProductData = checkoutProductMap.get(productId);
@@ -118,9 +107,47 @@ public with sharing class ProductScreenController {
 		System.debug('checkoutProductMap Done => ' + checkoutProductMap);
 		return checkoutProductMap;
 	}
+	public static void getCheckoutData(ProductData retrievedItem, Map<Id, ProductData> checkoutProductMap) {
+		if (!String.isBlank(retrievedItem.Product2KitAcessoriosId)) {
+			kitIdSet.add(retrievedItem.Product2KitAcessoriosId);
+			if (!kitIdToProductIdSetMap.containsKey(retrievedItem.Product2KitAcessoriosId)) {
+				kitIdToProductIdSetMap.put(retrievedItem.Product2KitAcessoriosId, new Set<Id>());
+			}
+			kitIdToProductIdSetMap.get(retrievedItem.Product2KitAcessoriosId).add(retrievedItem.Product2Id);
+		}
+		if (String.isBlank(retrievedItem.ParentProduct)) {
+			checkoutProductMap.put(retrievedItem.Product2Id, retrievedItem);
+		} else {
+			if (String.isBlank(retrievedItem.ParentProductKitAcessoriosId)) {
+				if (!parentProductIdToExceptionProductMap.containsKey(retrievedItem.ParentProduct)) {
+					parentProductIdToExceptionProductMap.put(
+						retrievedItem.ParentProduct,
+						new List<ProductData>()
+					);
+				}
+				parentProductIdToExceptionProductMap.get(retrievedItem.ParentProduct).add(retrievedItem);
+			}
+			else {
+				if (!parentProductIdToKitProductMap.containsKey(retrievedItem.ParentProduct)) {
+					parentProductIdToKitProductMap.put(
+						retrievedItem.ParentProduct,
+						new Map<Id, ProductData>()
+					);
+				}
+				parentProductIdToKitProductMap.get(retrievedItem.ParentProduct).put(retrievedItem.Product2Id, retrievedItem);
+				if (!parentProductIdToKitProductIdAccessoryMap.containsKey(retrievedItem.ParentProduct)) {
+					parentProductIdToKitProductIdAccessoryMap.put(
+						retrievedItem.ParentProduct,
+						new Set<Id>()
+					);
+				}
+				parentProductIdToKitProductIdAccessoryMap.get(retrievedItem.ParentProduct).add(retrievedItem.Product2Id);
+			}
+		}
+	}
 
 	@AuraEnabled
-	public static Map<Id, ProductData> getExceptionProducts(String quoteId, String searchValue, Integer quantity) {
+	public static Map<Id, ProductData> getExceptionProducts(String objId, String searchValue, Integer quantity) {
 		if (String.isBlank(searchValue)) return new Map<Id, ProductData>();
 
 		Map<Id, ProductData> productDataMap = new Map<Id, ProductData>();
@@ -129,12 +156,10 @@ public with sharing class ProductScreenController {
 		String pricebookId;
 
 		searchValue = '%' + searchValue + '%';
+		
+		Map<String, String> masterValuesMap = getMasterValues(objId);
 
-		for (Quote retrievedQuote : [SELECT Pricebook2Id FROM Quote WHERE Id = :quoteId LIMIT 1]) {
-			pricebookId = retrievedQuote.Pricebook2Id;
-		}
-
-		for (Product2 retrievedProduct : getExceptionProductsByTerm(pricebookId, searchValue, quantity)) {
+		for (Product2 retrievedProduct : getExceptionProductsByTerm(masterValuesMap.get('Pricebook2Id'), searchValue, quantity)) {
 			productDataMap.put(retrievedProduct.Id, new ProductData(retrievedProduct));
 
 			if (!kitIdToProductIdSetMap.containsKey(retrievedProduct.KitAcessorios__c)) {
@@ -146,15 +171,15 @@ public with sharing class ProductScreenController {
 		}
 
 		if (!productDataMap.isEmpty()) {
-			fillProductImage(quoteId, productDataMap);
-			fillKitConfigData(kitIdSet, kitIdToProductIdSetMap, productDataMap, quoteId);
+			fillProductImage(objId, productDataMap);
+			fillKitConfigData(kitIdSet, kitIdToProductIdSetMap, productDataMap, objId);
 		}
 
 		return productDataMap;
 	}
 
 	@AuraEnabled
-	public static Map<Id, ProductData> getProducts(String quoteId, String structureId, String productCode) {
+	public static Map<Id, ProductData> getProducts(String objId, String structureId, String productCode) {
 		if (String.isBlank(productCode)) return new Map<Id, ProductData>();
 
 		Map<Id, ProductData> productDataMap = new Map<Id, ProductData>();
@@ -184,19 +209,19 @@ public with sharing class ProductScreenController {
 		}
 
 		if (!productDataMap.isEmpty()) {
-			fillProductImage(quoteId, productDataMap);
+			fillProductImage(objId, productDataMap);
 
 			if (!kitIdToProductIdSetMap.isEmpty()) {
-				fillKitConfigData(kitIdSet, kitIdToProductIdSetMap, productDataMap, quoteId);
+				fillKitConfigData(kitIdSet, kitIdToProductIdSetMap, productDataMap, objId);
 			}
 		}
 
 		return productDataMap;
 	}
 
-	public static void fillProductImage(Id quoteId, Map<Id, ProductData> productDataMap) {
+	public static void fillProductImage(Id objId, Map<Id, ProductData> productDataMap) {
 		Map<Id, ContentVersion> productIdToImageMap = getImages(productDataMap.keySet());
-		Map<Id, PricebookEntry> productIdToPriceMap = getPrices(quoteId, productDataMap.keySet());
+		Map<Id, PricebookEntry> productIdToPriceMap = getPrices(objId, productDataMap.keySet());
 
 		for (Id productId : productDataMap.keySet()) {
 			ProductData currentProduct = productDataMap.get(productId);
@@ -218,7 +243,7 @@ public with sharing class ProductScreenController {
 		}
 	}
 
-	public static void fillKitConfigData(Set<Id> kitIdSet, Map<Id, Set<Id>> kitIdToProductIdSetMap, Map<Id, ProductData> productDataMap, String quoteId) {
+	public static void fillKitConfigData(Set<Id> kitIdSet, Map<Id, Set<Id>> kitIdToProductIdSetMap, Map<Id, ProductData> productDataMap, String objId) {
 		Map<String, List<GroupAccessoryData>> productIdToGroupAccessories = new Map<String, List<GroupAccessoryData>>();
 		Map<Id, PricebookEntry> productIdToPriceMap = new Map<Id, PricebookEntry>();
 
@@ -238,7 +263,7 @@ public with sharing class ProductScreenController {
 			}
 		}
 
-		productIdToPriceMap = getPrices(quoteId, productIdToPriceMap.keySet());
+		productIdToPriceMap = getPrices(objId, productIdToPriceMap.keySet());
 
 		for (Id productId : productDataMap.keySet()) {
 			ProductData currentProduct = productDataMap.get(productId);
@@ -286,136 +311,53 @@ public with sharing class ProductScreenController {
 		return new List<String>(nextExternalIdSet);
 	}
 
+
+	public static void initSaveLineItemsVars(String objId, List<ProductData> lineItemList){
+		insertQuoteLineItemList = new List<QuoteLineItem>();
+		updateQuoteLineItemList = new List<QuoteLineItem>();
+		insertOpportunityLineItemList = new List<OpportunityLineItem>();
+		updateOpportunityLineItemList = new List<OpportunityLineItem>();
+		
+		context = isOpp(objId) ? 'Opportunity' : 'Quote';
+
+		getCurrentLineItems(objId);
+		getPricebookEntries(objId, lineItemList);
+	}
+
+
 	@AuraEnabled
-	public static SaveResponse saveQuoteLineItems(String quoteId, List<ProductData> quoteItemList) {
-		if (String.isBlank(quoteId)) return new SaveResponse('Cotação inválida');
+	public static SaveResponse saveLineItems(String objId, List<ProductData> lineItemList) {
+		if (String.isBlank(objId)) return new SaveResponse('Registro inválido. Entrar em contato com Administrador do Sistema');
 
 		Savepoint currentSavepoint = Database.setSavepoint();
 
 		try {
-			List<QuoteLineItem> insertQuoteLineItemList = new List<QuoteLineItem>();
-			List<QuoteLineItem> updateQuoteLineItemList = new List<QuoteLineItem>();
-			Map<String, QuoteLineItem> quoteItemKeyToQuoteLineItemMap = new Map<String, QuoteLineItem>();
-			Map<Id, PricebookEntry> productToPriceIdMap = getPricebookEntries(quoteId, quoteItemList);
+			
+			initSaveLineItemsVars(objId, lineItemList);
 
-			for (QuoteLineItem retrievedItem : [SELECT Id, Product2Id, ParentProduct__c FROM QuoteLineItem WHERE QuoteId = :quoteId]) {
-				quoteItemKeyToQuoteLineItemMap.put(retrievedItem.Product2Id + '-' + retrievedItem.ParentProduct__c, retrievedItem);
-			}
-
-			for (ProductData retrievedProductData : quoteItemList) {
+			for (ProductData retrievedProductData : lineItemList) {
 
 				for (GroupAccessoryData retrievedGroup : retrievedProductData.groupAccessoryList) {
+					if (!retrievedGroup.isListing) continue;
 
-					if (retrievedGroup.isListing) {
-						for (AccessoryData retrievedAccessory : retrievedGroup.accessoryList) {
-							if (retrievedAccessory.isSelected) {
-								PricebookEntry currentPrice = productToPriceIdMap.get(retrievedAccessory.productId);
-								String quoteItemKey = retrievedAccessory.productId + '-' + retrievedProductData.id;
+					for (AccessoryData retrievedAccessory : retrievedGroup.accessoryList) {
+						if (!retrievedAccessory.isSelected) continue;
 
-								if (currentPrice == null) throw new CustomException('Acessorio ' + retrievedProductData.name + ' não tem preço!');
-
-								if (quoteItemKeyToQuoteLineItemMap.containsKey(quoteItemKey)) {
-									updateQuoteLineItemList.add(new QuoteLineItem(
-										Id = quoteItemKeyToQuoteLineItemMap.get(quoteItemKey).Id,
-										UnitPrice = retrievedAccessory.unitPrice,
-										Quantity = retrievedAccessory.quantity,
-										// DescontoAplicado__c = currentPrice.UnitPrice - retrievedAccessory.unitPrice,
-										Discount = (1 - (retrievedAccessory.unitPrice / currentPrice.UnitPrice)) * 100,
-										Product2Id = retrievedAccessory.productId,
-										PricebookEntryId = currentPrice.Id,
-										ParentProduct__c = retrievedProductData.id
-									));
-
-									quoteItemKeyToQuoteLineItemMap.remove(quoteItemKey);
-								}
-								else {
-									insertQuoteLineItemList.add(new QuoteLineItem(
-										QuoteId = quoteId,
-										UnitPrice = retrievedAccessory.unitPrice,
-										Quantity = retrievedAccessory.quantity,
-										// DescontoAplicado__c = currentPrice.UnitPrice - retrievedAccessory.unitPrice,
-										Discount = (1 - (retrievedAccessory.unitPrice / currentPrice.UnitPrice)) * 100,
-										Product2Id = retrievedAccessory.productId,
-										PricebookEntryId = currentPrice.Id,
-										ParentProduct__c = retrievedProductData.id
-									));
-								}
-							}
-						}
+						handleAcessoryDataDML(retrievedAccessory, retrievedProductData.id, objId);					
 					}
 				}
 
 				for (ProductData retrievedAccessoryData : retrievedProductData.exceptionAccessoryList) {
-					PricebookEntry currentPrice = productToPriceIdMap.get(retrievedAccessoryData.id);
-					String quoteItemKey = retrievedAccessoryData.id + '-' + retrievedProductData.id;
-
-					if (currentPrice == null) throw new CustomException('Produto ' + retrievedAccessoryData.name + ' não tem preço!!');
-
-					if (quoteItemKeyToQuoteLineItemMap.containsKey(quoteItemKey)) {
-						updateQuoteLineItemList.add(new QuoteLineItem(
-							Id = quoteItemKeyToQuoteLineItemMap.get(quoteItemKey).Id,
-							UnitPrice = retrievedAccessoryData.price,
-							Quantity = retrievedAccessoryData.quantity,
-							// DescontoAplicado__c = currentPrice.UnitPrice - retrievedAccessoryData.price,
-							Discount = (1 - (retrievedAccessoryData.price / currentPrice.UnitPrice)) * 100,
-							Product2Id = retrievedAccessoryData.id,
-							PricebookEntryId = currentPrice.Id,
-							ParentProduct__c = retrievedProductData.id
-						));
-
-						quoteItemKeyToQuoteLineItemMap.remove(quoteItemKey);
-					}
-					else {
-						insertQuoteLineItemList.add(new QuoteLineItem(
-							QuoteId = quoteId,
-							UnitPrice = retrievedAccessoryData.price,
-							Quantity = retrievedAccessoryData.quantity,
-							// DescontoAplicado__c = currentPrice.UnitPrice - retrievedAccessoryData.price,
-							Discount = (1 - (retrievedAccessoryData.price / currentPrice.UnitPrice)) * 100,
-							Product2Id = retrievedAccessoryData.id,
-							PricebookEntryId = currentPrice.Id,
-							ParentProduct__c = retrievedProductData.id
-						));
-					}
+					handleProductDataDML(retrievedAccessoryData, retrievedProductData.id, objId);
 				}
-
-				PricebookEntry currentPrice = productToPriceIdMap.get(retrievedProductData.id);
-				String quoteItemKey = retrievedProductData.id + '-null';
-
-				if (currentPrice == null) throw new CustomException('Produto ' + retrievedProductData.name + ' não tem preço!!');
-
-				if (quoteItemKeyToQuoteLineItemMap.containsKey(quoteItemKey)) {
-					updateQuoteLineItemList.add(new QuoteLineItem(
-						Id = quoteItemKeyToQuoteLineItemMap.get(quoteItemKey).Id,
-						UnitPrice = retrievedProductData.price,
-						Quantity = retrievedProductData.quantity,
-						// DescontoAplicado__c = currentPrice.UnitPrice - retrievedProductData.price,
-						Discount = (1 - (retrievedProductData.price / currentPrice.UnitPrice)) * 100,
-						Product2Id = retrievedProductData.id,
-						PricebookEntryId = currentPrice.Id
-					));
-
-					quoteItemKeyToQuoteLineItemMap.remove(quoteItemKey);
-				}
-				else {
-					insertQuoteLineItemList.add(new QuoteLineItem(
-						QuoteId = quoteId,
-						UnitPrice = retrievedProductData.price,
-						Quantity = retrievedProductData.quantity,
-						// DescontoAplicado__c = currentPrice.UnitPrice - retrievedProductData.price,
-						Discount = (1 - (retrievedProductData.price / currentPrice.UnitPrice)) * 100,
-						Product2Id = retrievedProductData.id,
-						PricebookEntryId = currentPrice.Id
-					));
-				}
+				handleProductDataDML(retrievedProductData, null, objId);
 			}
 
-			if (!quoteItemKeyToQuoteLineItemMap.isEmpty()) delete (quoteItemKeyToQuoteLineItemMap.values());
-			if (!insertQuoteLineItemList.isEmpty()) insert insertQuoteLineItemList;
-			if (!updateQuoteLineItemList.isEmpty()) update updateQuoteLineItemList;
+			saveLineItemsDML();
+
 		}
 		catch (Exception ex) {
-			System.debug('Save QuoteLineItems Exception => ' + ex.getMessage());
+			System.debug('Save LineItems Exception => ' + ex.getMessage());
 			System.debug('Stack Trace => ' + ex.getStackTraceString());
 			Database.rollback(currentSavepoint);
 			return new SaveResponse(ex);
@@ -423,49 +365,133 @@ public with sharing class ProductScreenController {
 
 		return new SaveResponse();
 	}
+	public static void  saveLineItemsDML() {
+		if (!itemKeyToLineItemMap.isEmpty()) getDeleteLineItem(itemKeyToLineItemMap.values());
+		if (!insertQuoteLineItemList.isEmpty()) insert insertQuoteLineItemList;
+		if (!updateQuoteLineItemList.isEmpty()) update updateQuoteLineItemList;
+		if (!insertOpportunityLineItemList.isEmpty()) insert insertOpportunityLineItemList;
+		if (!updateOpportunityLineItemList.isEmpty()) update updateOpportunityLineItemList;
+	}
 
-	public static Map<Id, PricebookEntry> getPricebookEntries(String quoteId, List<ProductData> quoteItemList) {
-		Map<Id, PricebookEntry> productToPriceIdMap = new Map<Id, PricebookEntry>();
-		Set<Id> product2IdSet = new Set<Id>();
-		Id pricebook2Id;
-		String currencyIsoCode = 'BRL';
-
-		for (Quote retrievedQuote : [SELECT Id, Pricebook2Id, CurrencyIsoCode FROM Quote WHERE Id = :quoteId LIMIT 1]) {
-			pricebook2Id = retrievedQuote.Pricebook2Id;
-			currencyIsoCode = retrievedQuote.CurrencyIsoCode;
+	public static void getDeleteLineItem(List<Id> deleteIdList){
+		List<sObject> sobjList = new List<sObject>(); 
+		for(Id objId : deleteIdList){
+			sobjList.add(objId.getsObjectType().newsObject(objId));
 		}
+		delete sobjList;
+	}
+	public static void handleAcessoryDataDML(AccessoryData retrievedProductData, String parentId, String objId){
+		PricebookEntry currentPrice = productToPriceIdMap.get(retrievedProductData.id);
+		String key = retrievedProductData.id + '-'+String.valueOf(parentId);
 
+		if (currentPrice == null) throw new CustomException('Produto ' + retrievedProductData.name + ' não tem preço!!');
+
+		if(context == 'Opportunity'){
+			OpportunityLineItem oppLine = retrievedProductData.getOpportunityLineItem(currentPrice, objId);
+			oppLine.ParentProduct__c = parentId;
+			
+			if (itemKeyToLineItemMap.containsKey(key)) {
+				oppLine.Id = itemKeyToLineItemMap.get(key);
+			
+				updateOpportunityLineItemList.add(oppLine);
+				itemKeyToLineItemMap.remove(key);
+			} else {
+				insertOpportunityLineItemList.add(oppLine);
+			}
+		}else{
+			QuoteLineItem quoteLine = retrievedProductData.getQuoteLineItem(currentPrice, objId);
+			quoteLine.ParentProduct__c = parentId;
+			
+			if (itemKeyToLineItemMap.containsKey(key)) {
+				quoteLine.Id = itemKeyToLineItemMap.get(key);
+			
+				updateQuoteLineItemList.add(quoteLine);
+				itemKeyToLineItemMap.remove(key);
+			} else {
+				insertQuoteLineItemList.add(quoteLine);
+			}
+		}
+	}	
+	public static void handleProductDataDML(ProductData retrievedProductData, String parentId, String objId){
+		PricebookEntry currentPrice = productToPriceIdMap.get(retrievedProductData.id);
+		String key = retrievedProductData.id + '-'+String.valueOf(parentId);
+
+		if (currentPrice == null) throw new CustomException('Produto ' + retrievedProductData.name + ' não tem preço!!');
+
+		if(context == 'Opportunity'){
+			OpportunityLineItem oppLine = retrievedProductData.getOpportunityLineItem(currentPrice, objId);
+			oppLine.ParentProduct__c = parentId;
+			
+			if (itemKeyToLineItemMap.containsKey(key)) {
+				oppLine.Id = itemKeyToLineItemMap.get(key);
+			
+				updateOpportunityLineItemList.add(oppLine);
+				itemKeyToLineItemMap.remove(key);
+			} else {
+				insertOpportunityLineItemList.add(oppLine);
+			}
+		}else{
+			QuoteLineItem quoteLine = retrievedProductData.getQuoteLineItem(currentPrice, objId);
+			quoteLine.ParentProduct__c = parentId;
+			
+			if (itemKeyToLineItemMap.containsKey(key)) {
+				quoteLine.Id = itemKeyToLineItemMap.get(key);
+			
+				updateQuoteLineItemList.add(quoteLine);
+				itemKeyToLineItemMap.remove(key);
+			} else {
+				insertQuoteLineItemList.add(quoteLine);
+			}
+		}
+	}	
+	
+	public static void getCurrentLineItems(String objId){
+		itemKeyToLineItemMap = new Map<String, Id>();
+		for (sObject retrievedItem : Database.query('SELECT Id, Product2Id, ParentProduct__c FROM '+context+'LineItem WHERE '+context+'Id = :objId')) {
+			itemKeyToLineItemMap.put((String)retrievedItem.get('Product2Id') + '-' + (String)retrievedItem.get('ParentProduct__c'), (Id)retrievedItem.get('Id'));
+		}
+	}
+
+	public static void getPricebookEntries(String objId, List<ProductData> quoteItemList) {
+		Set<Id> product2IdSet = new Set<Id>();
 		for (ProductData retrievedItemData : quoteItemList) {
 			product2IdSet.add(retrievedItemData.id);
 
 			for (GroupAccessoryData retrievedGroup : retrievedItemData.groupAccessoryList) {
-				if (retrievedGroup.isListing) {
-					for (AccessoryData retrievedAccessory : retrievedGroup.accessoryList) {
-						if (retrievedAccessory.isSelected) {
-							product2IdSet.add(retrievedAccessory.productId);
-						}
-					}
-				}
+				if (!retrievedGroup.isListing) continue;
+
+				for (AccessoryData retrievedAccessory : retrievedGroup.accessoryList) {
+					if (!retrievedAccessory.isSelected) continue;
+					
+					product2IdSet.add(retrievedAccessory.productId);					
+				}				
 			}
 
 			for (ProductData retrievedAccessoryData : retrievedItemData.exceptionAccessoryList) {
 				product2IdSet.add(retrievedAccessoryData.id);
 			}
 		}
+		productToPriceIdMap = getPrices(objId, product2IdSet);
+	}
 
-		for (PricebookEntry retrievedPrice : [
-			SELECT Id,
-				   UnitPrice,
-				   Product2Id
-			  FROM PricebookEntry
-			 WHERE Product2Id IN :product2IdSet
-			   AND Pricebook2Id = :pricebook2Id
-			   AND CurrencyIsoCode = :currencyIsoCode
-		]) {
-			productToPriceIdMap.put(retrievedPrice.Product2Id, retrievedPrice);
+	public static Map<String, String> getMasterValues(Id objId){		
+		context = isOpp(objId) ? 'Opportunity' : 'Quote';
+		Map<String, String> masterValuesMap = new Map<String, String>();
+		for (sObject retrievedObj : Database.query('SELECT Id, Pricebook2Id, CurrencyIsoCode FROM '+context+' WHERE Id = :objId LIMIT 1')) {
+			masterValuesMap.put('Pricebook2Id',    (String)retrievedObj.get('Pricebook2Id'));
+			masterValuesMap.put('CurrencyIsoCode', (String)retrievedObj.get('CurrencyIsoCode'));
 		}
+		return masterValuesMap;
+	}
 
-		return productToPriceIdMap;
+	public static Boolean isOpp(Id objId){
+		return checkObjectContext(objId, '006');
+	}
+	public static Boolean isQuote(Id objId){
+		return checkObjectContext(objId, '0Q0');
+	}
+	public static Boolean checkObjectContext(Id objId, String prefix){
+		return String.valueOf(objId).startsWith(prefix);
 	}
 
 	@AuraEnabled
@@ -532,15 +558,12 @@ public with sharing class ProductScreenController {
 		return itemToImageMap;
 	}
 
-	public static Map<Id, PricebookEntry> getPrices(String quoteId, Set<Id> product2IdSet) {
-		Id pricebook2Id;
-		String currencyIsoCode = 'BRL';
+	public static Map<Id, PricebookEntry> getPrices(String objId, Set<Id> product2IdSet) {
 		Map<Id, PricebookEntry> productIdToPriceMap = new Map<Id, PricebookEntry>();
 
-		for (Quote retrievedQuote : [SELECT Pricebook2Id, CurrencyIsoCode FROM Quote WHERE Id = :quoteId]) {
-			pricebook2Id = retrievedQuote.Pricebook2Id;
-			currencyIsoCode = retrievedQuote.CurrencyIsoCode;
-		}
+		Map<String, String> masterValuesMap = getMasterValues(objId);
+		String currencyIsoCode = masterValuesMap.get('CurrencyIsoCode') != null ? masterValuesMap.get('CurrencyIsoCode') : 'BRL';
+		String pricebook2Id = masterValuesMap.get('Pricebook2Id');
 
 		if (String.isBlank(pricebook2Id)) return new Map<Id, PricebookEntry>();
 
@@ -688,229 +711,5 @@ public with sharing class ProductScreenController {
 			  FROM QuoteLineItem
 			 WHERE QuoteId = :quoteId
 		];
-	}
-
-	public class CustomException extends Exception {}
-
-	public class SaveResponse {
-		@AuraEnabled
-		public Boolean hasError = false;
-		@AuraEnabled
-		public String errorMessage = '';
-		@AuraEnabled
-		public String exceptionMessage = '';
-
-		public SaveResponse() {}
-		public SaveResponse(String errorMessage) {
-			this.hasError = true;
-			this.errorMessage = errorMessage;
-		}
-		public SaveResponse(Exception ex) {
-			this.hasError = true;
-			this.errorMessage = ex.getMessage();
-		}
-	}
-
-	public class ProductData {
-		@AuraEnabled
-		public String id {get; set;}
-		@AuraEnabled
-		public String name {get; set;}
-		@AuraEnabled
-		public Decimal quantity {get; set;}
-		@AuraEnabled
-		public Decimal totalPrice {get; set;}
-		@AuraEnabled
-		public Decimal listPrice {get; set;}
-		@AuraEnabled
-		public Decimal price {get; set;}
-		@AuraEnabled
-		public Decimal discountPercent {get; set;}
-		@AuraEnabled
-		public Decimal discountCurrency {get; set;}
-		@AuraEnabled
-		public String discountType {get; set;}
-		@AuraEnabled
-		public String productCode {get; set;}
-		@AuraEnabled
-		public String image {get; set;}
-		@AuraEnabled
-		public String extension {get; set;}
-
-		@AuraEnabled
-		public Boolean isSelected {get; set;}
-		@AuraEnabled
-		public Boolean isShowProduct {get; set;}
-		@AuraEnabled
-		public Boolean isDiscountPercent {get; set;}
-		@AuraEnabled
-		public Boolean isHasKit {get; set;}
-		@AuraEnabled
-		public Boolean isDisabledButtons {get; set;}
-		@AuraEnabled
-		public Boolean isConfigured {get; set;}
-		@AuraEnabled
-		public Boolean hasExceptionAccessory {get; set;}
-
-		@AuraEnabled
-		public List<GroupAccessoryData> groupAccessoryList {get; set;}
-		@AuraEnabled
-		public List<ProductData> exceptionAccessoryList {get; set;}
-
-		public ProductData() {
-			this.groupAccessoryList = new List<GroupAccessoryData>();
-			this.exceptionAccessoryList = new List<ProductData>();
-
-			this.totalPrice = 0;
-			this.listPrice = 0;
-			this.discountPercent = 0;
-			this.discountCurrency = 0;
-			this.discountType = 'currency';
-			this.image = '';
-			this.extension = '';
-			this.isDiscountPercent = false;
-			this.isConfigured = false;
-			this.hasExceptionAccessory = false;
-		}
-		public ProductData(Product2 product) {
-			this();
-			this.id = product.Id;
-			this.name = product.Name;
-			this.quantity = 1;
-			this.price = 0;
-			this.productCode = product.ExternalId__c;
-			this.isSelected = false;
-			this.isShowProduct = false;
-			this.isHasKit = product.KitAcessorios__c <> null;
-			this.isDisabledButtons = product.KitAcessorios__c <> null;
-		}
-		public ProductData(QuoteLineItem currentQuoteLineItem) {
-			this();
-			this.id = currentQuoteLineItem.Product2Id;
-			this.name = currentQuoteLineItem.Product2.Name;
-			this.quantity = currentQuoteLineItem.Quantity;
-			this.price = currentQuoteLineItem.UnitPrice;
-			this.productCode = currentQuoteLineItem.Product2.ExternalId__c;
-			this.isSelected = true;
-			this.isShowProduct = true;
-			this.isHasKit = currentQuoteLineItem.Product2.KitAcessorios__c != null;
-			this.isDisabledButtons = currentQuoteLineItem.Product2.KitAcessorios__c != null;
-		}
-		public ProductData(OpportunityLineItem currentOpporunityLineItem) {
-			this();
-			this.id = currentOpporunityLineItem.Product2Id;
-			this.name = currentOpporunityLineItem.Product2.Name;
-			this.quantity = currentOpporunityLineItem.Quantity;
-			this.price = currentOpporunityLineItem.UnitPrice;
-			this.productCode = currentOpporunityLineItem.Product2.ExternalId__c;
-			this.isSelected = true;
-			this.isShowProduct = true;
-			this.isHasKit = currentOpporunityLineItem.Product2.KitAcessorios__c != null;
-			this.isDisabledButtons = currentOpporunityLineItem.Product2.KitAcessorios__c != null;
-		}
-	}
-
-	public class GroupAccessoryData {
-		@AuraEnabled
-		public String id {get; set;}
-		@AuraEnabled
-		public String name {get; set;}
-		@AuraEnabled
-		public Decimal minQuantity {get; set;}
-		@AuraEnabled
-		public String value {get; set;}
-		@AuraEnabled
-		public Boolean isRequired {get; set;}
-		@AuraEnabled
-		public Boolean isNA {get; set;}
-		@AuraEnabled
-		public Boolean isIncluded {get; set;}
-		@AuraEnabled
-		public Boolean isListing {get; set;}
-		@AuraEnabled
-		public Boolean isSelected {get; set;}
-		@AuraEnabled
-		public Boolean isShowGroup {get; set;}
-		@AuraEnabled
-		public Boolean isFirstGroup {get; set;}
-		@AuraEnabled
-		public Boolean isLastGroup {get; set;}
-		@AuraEnabled
-		public Boolean isCurrentGroup {get; set;}
-		@AuraEnabled
-		public Boolean isNotCurrentGroup {get; set;}
-		@AuraEnabled
-		public String kitId {get; set;}
-
-		@AuraEnabled
-		public List<AccessoryData> accessoryList {get; set;}
-
-		public GroupAccessoryData() {}
-		public GroupAccessoryData(GrupoAcessorios__c currentGroup) {
-			this.id = currentGroup.Id;
-			this.name = currentGroup.Name + ' (' + currentGroup.Tipo__c + ')';
-			this.minQuantity = currentGroup.NumeroMinimoAcessorios__c > 1 ? currentGroup.NumeroMinimoAcessorios__c : 1;
-			this.isRequired = currentGroup.Tipo__c == 'Obrigatório';
-			this.isNA = currentGroup.AcaoGrupo__c == 'N/A';
-			this.isIncluded = currentGroup.AcaoGrupo__c == 'Incluido';
-			this.isListing = currentGroup.AcaoGrupo__c == 'Listar';
-			this.isSelected = false;
-			this.kitId = currentGroup.KitAcessorios__c;
-			this.isShowGroup = false;
-			this.isFirstGroup = false;
-			this.isCurrentGroup = false;
-			this.isNotCurrentGroup = false;
-			this.isLastGroup = false;
-
-			this.value = (
-				this.isNA ? 'N/A' : (
-					this.isIncluded ? 'Incluido' : ''
-				)
-			);
-
-			this.accessoryList = new List<AccessoryData>();
-
-			for (TipoAcessorios__c currentAccessory : currentGroup.TipoAcessorios__r) {
-				this.accessoryList.add(new AccessoryData(currentAccessory));
-			}
-		}
-	}
-
-	public class AccessoryData {
-		@AuraEnabled
-		public String id {get; set;}
-		@AuraEnabled
-		public String name {get; set;}
-		@AuraEnabled
-		public String code {get; set;}
-		@AuraEnabled
-		public Decimal unitPrice {get; set;}
-		@AuraEnabled
-		public Decimal quantity {get; set;}
-		@AuraEnabled
-		public Decimal totalAmount {get; set;}
-		@AuraEnabled
-		public String productId {get; set;}
-		@AuraEnabled
-		public String groupId {get; set;}
-		@AuraEnabled
-		public Boolean isSelected {get; set;}
-		@AuraEnabled
-		public Boolean isDisabled {get; set;}
-
-		public AccessoryData() {}
-		public AccessoryData(TipoAcessorios__c currentAccessory) {
-			this.id = currentAccessory.Id;
-			this.name = currentAccessory.Produto__r.Name;
-			this.code = currentAccessory.Name;
-			this.quantity = 1;
-			this.unitPrice = 0;
-			this.totalAmount = 0;
-			this.productId = currentAccessory.Produto__c;
-			this.groupId = currentAccessory.GrupoAcessorio__c;
-
-			this.isSelected = false;
-			this.isDisabled = false;
-		}
 	}
 }

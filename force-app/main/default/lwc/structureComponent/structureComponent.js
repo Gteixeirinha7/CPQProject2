@@ -13,7 +13,7 @@ export default class StructureComponent extends LightningElement {
 		this.dispatchEvent(new CustomEvent(
 			'handlestructure',
 			{
-				detail: { structure: newStructure }
+				detail: { structure: this.structure }
 			}
 		));
 

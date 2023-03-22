@@ -323,14 +323,14 @@
 				<lightning-layout-item key={structure.Id} class="slds-var-p-around_xx-small container__cart-structure" size="2" medium-device-size="2" small-device-size="4">
 					<c-structure-component 
 						structure={structure}
-						onhandlestructure={handleSelectStructure}>
+						onhandlestructure={handleStructure}>
 					</c-structure-component>
 				</lightning-layout-item>
 			</template>	
 			<lightning-layout-item class="slds-var-p-around_xx-small container__cart-structure" size="2" medium-device-size="2" small-device-size="4">
 				<c-structure-component 
 					structure={structureException}
-					onhandlestructure={handleSelectStructure}>
+					onhandlestructure={handleStructure}>
 				</c-structure-component>
 			</lightning-layout-item>
 				
@@ -438,27 +438,31 @@
 
 
 		<lightning-layout if:true={isShowProducts} class="container__product" multiple-rows horizontal-align="space">
-			<template for:each={products} for:item="product">
 
-				<lightning-layout-item
-					key={product.id}
-					class="slds-var-p-around_x-small"
-					size="12" medium-device-size="5" large-device-size="5"
-				>
+			<lightning-layout-item size="12" medium-device-size="4" large-device-size="4" style=" display: flex; flex-direction: row; justify-content: center; align-items: stretch;">
+				<c-selected-structure-component 
+					selected-structure={selectedStructure}
+					selected-resource-list={selectedResourceList}>
+				</c-selected-structure-component>
+			</lightning-layout-item>
+			<lightning-layout-item class="slds-var-p-around_x-small" size="12" medium-device-size="8" large-device-size="8">
+				<template for:each={products} for:item="product">
+					<lightning-layout key={product.id} class="container__product" multiple-rows horizontal-align="space">
+						<lightning-layout-item class="slds-var-p-around_x-small" size="12" medium-device-size="12" large-device-size="12">
+							<c-product-component
+								product={product}
+								onhandleproductdata={handleProductData}
+								onhandleconfigkit={handleConfigureKit}
+								onhandleclearconfigkit={handleClearKitConfiguration}
+								onhandleselectproduct={handleSelectProduct}
+								onhandleremoveproduct={handleRemoveProduct}
+							>
+							</c-product-component>
+						</lightning-layout-item>
+					</lightning-layout>
 
-					<c-product-component
-						product={product}
-						onhandleproductdata={handleProductData}
-						onhandleconfigkit={handleConfigureKit}
-						onhandleclearconfigkit={handleClearKitConfiguration}
-						onhandleselectproduct={handleSelectProduct}
-						onhandleremoveproduct={handleRemoveProduct}
-					>
-					</c-product-component>
-
-				</lightning-layout-item>
-
-			</template>
+				</template>
+			</lightning-layout-item>
 		</lightning-layout>
 
 		<lightning-layout if:true={isShowCheckout} multiple-rows>
@@ -578,7 +582,7 @@
 										<lightning-button
 											data-id={product.id}
 											class="slds-var-m-left_x-small"
-											label="Adicioanr acessório"
+											label="Novo acessório"
 											variant="brand"
 											onclick={onClickAddExceptionAccessory}>
 										</lightning-button>

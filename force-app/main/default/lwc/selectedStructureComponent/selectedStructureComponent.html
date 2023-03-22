@@ -1,0 +1,17 @@
+<template>
+	<div style="display: flex; flex-direction: row;">
+		<template if:true={hasSelectedResourceList}>
+    		<div class="container__header-title">
+				<template for:each={selectedResourceList} for:item="item">
+					<c-selected-resource-component key={item.Id} item={item}></c-selected-resource-component>
+				</template>
+			</div>
+		</template>
+		<div class="container__header-title" style="margin: 5px;margin-top:0px">
+			<c-structure-component 
+				structure={selectedStructure}
+				disabled-click="true">
+			</c-structure-component>
+		</div>
+	</div>
+</template>
