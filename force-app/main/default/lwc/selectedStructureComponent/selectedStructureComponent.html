@@ -3,7 +3,7 @@
 		<template if:true={hasSelectedResourceList}>
     		<div class="container__header-title">
 				<template for:each={selectedResourceList} for:item="item">
-					<c-selected-resource-component key={item.Id} item={item}></c-selected-resource-component>
+					<c-selected-resource-component key={item.Id} title={item.DescricaoRecurso__c} subs={item.RecursoProduto__r.Name}></c-selected-resource-component>
 				</template>
 			</div>
 		</template>

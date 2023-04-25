@@ -70,10 +70,8 @@
 .common-catalog-item--v2 .common-catalog-item__container-image {
 	background-size: cover;
 	border-radius: 12px;
-	min-height: 110px;
 	display: grid;
 	width: 100%;
-	min-height: 94px;
 	position: relative;
 	background-position: 50%;
 	border-top-right-radius: 4px;
@@ -170,4 +168,17 @@
 	padding: 16px 0 0;
 	border-top: 1px solid #f2f2f2;
 	order: 10;
+}
+
+.common-acessory-title{
+	border: 1px solid grey;
+	border-radius: 8px;
+	background-color: white;
+	color: grey;
+	text-align: center;
+	font-weight: bold;
+	align-items: center;
+	display: flex;
+	justify-content: center;
+	font-size: 14px;
 }

@@ -1,16 +1,16 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
         <members>OpenQuotePDFController</members>
         <members>PDFQuoteController</members>
         <members>ProductScreenController</members>
         <members>ProductScreenControllerTest</members>
+        <members>ProductScreenModel</members>
         <name>ApexClass</name>
     </types>
     <types>
-        <members>openQuotePDF</members>
-        <members>productScreen</members>
-        <name>LightningComponentBundle</name>
+        <members>PDFQuote</members>
+        <name>ApexPage</name>
     </types>
     <types>
         <members>redirectPdfQuote</members>
@@ -18,30 +18,71 @@
         <name>AuraDefinitionBundle</name>
     </types>
     <types>
-        <members>PDFQuote</members>
-        <name>ApexPage</name>
+        <members>EstruturaProduto__c.CompactLayout</members>
+        <members>KitAcessorios__c.CompactLayout</members>
+        <members>RecursosProduto__c.CompactLayout</members>
+        <members>TiposRecurso__c.CompactLayout</members>
+        <name>CompactLayout</name>
     </types>
     <types>
-        <members>PDFQuoteStyle</members>
-        <members>libs</members>
-        <name>StaticResource</name>
-    </types>
-    <types>
-        <members>QuoteLineItem.ParentProduct__c</members>
-        <members>Product2.ExternalId__c</members>
-        <members>Product2.Image_URL__c</members>
+        <members>EstruturaProduto__c.Agrupador__c</members>
+        <members>EstruturaProduto__c.Ativo__c</members>
+        <members>EstruturaProduto__c.ImagemProduto__c</members>
+        <members>GrupoAcessorios__c.AcaoGrupo__c</members>
+        <members>GrupoAcessorios__c.Ativo__c</members>
+        <members>GrupoAcessorios__c.KitAcessorios__c</members>
+        <members>GrupoAcessorios__c.NumeroMinimoAcessorios__c</members>
+        <members>GrupoAcessorios__c.OrdemExibicao__c</members>
+        <members>GrupoAcessorios__c.Tipo__c</members>
+        <members>KitAcessorios__c.Ativo__c</members>
+        <members>KitAcessorios__c.PossuiObrigatorios__c</members>
+        <members>OpportunityLineItem.AcessoryGroup__c</members>
+        <members>OpportunityLineItem.AcessoryType__c</members>
+        <members>OpportunityLineItem.ParentProduct__c</members>
         <members>Product2.EstruturaProduto__c</members>
+        <members>Product2.ExternalId__c</members>
+        <members>Product2.Imagem_URL__c</members>
         <members>Product2.KitAcessorios__c</members>
+        <members>QuoteLineItem.AcessoryGroup__c</members>
+        <members>QuoteLineItem.AcessoryType__c</members>
+        <members>QuoteLineItem.ParentProduct__c</members>
+        <members>RecursosProduto__c.Agrupador__c</members>
+        <members>RecursosProduto__c.EstruturaProduto__c</members>
+        <members>RecursosProduto__c.Sequencial__c</members>
+        <members>TipoAcessorios__c.Ativo__c</members>
+        <members>TipoAcessorios__c.GrupoAcessorio__c</members>
+        <members>TipoAcessorios__c.Produto__c</members>
+        <members>TiposRecurso__c.Agrupador__c</members>
+        <members>TiposRecurso__c.Ativo__c</members>
+        <members>TiposRecurso__c.DescricaoRecurso__c</members>
+        <members>TiposRecurso__c.EstruturaProduto__c</members>
+        <members>TiposRecurso__c.ExternalId__c</members>
+        <members>TiposRecurso__c.RecursoProduto__c</members>
+        <members>TiposRecurso__c.SequencialRecurso__c</members>
+        <members>TiposRecurso__c.Sequencial__c</members>
         <name>CustomField</name>
     </types>
     <types>
-        <members>TiposRecurso__c</members>
-        <members>RecursosProduto__c</members>
         <members>EstruturaProduto__c</members>
-        <members>KitAcessorios__c</members>
-        <members>TipoAcessorios__c</members>
         <members>GrupoAcessorios__c</members>
+        <members>KitAcessorios__c</members>
+        <members>RecursosProduto__c</members>
+        <members>TipoAcessorios__c</members>
+        <members>TiposRecurso__c</members>
         <name>CustomObject</name>
+    </types>
+    <types>
+        <members>StructureProductScreen</members>
+        <name>CustomTab</name>
+    </types>
+    <types>
+        <members>Estrutura_de_Produto_P_gina_de_registro</members>
+        <members>Grupo_de_Acess_rios_P_gina_de_registro</members>
+        <members>Kit_de_Acess_rios_P_gina_de_registro</members>
+        <members>Recursos_do_Produto_P_gina_de_registro</members>
+        <members>Tipos_de_Acess_rios_P_gina_de_registro</members>
+        <members>Tipos_de_Recurso_P_gina_de_registro</members>
+        <name>FlexiPage</name>
     </types>
     <types>
         <members>EstruturaProduto__c-Layout de Estrutura de Produto</members>
@@ -53,9 +94,16 @@
         <name>Layout</name>
     </types>
     <types>
-        <members>Quote.CreateItems</members>
-        <members>Quote.GeneratePDF</members>
-        <name>QuickAction</name>
+        <members>accessoryComponent</members>
+        <members>accessoryListComponent</members>
+        <members>openQuotePDF</members>
+        <members>productComponent</members>
+        <members>productScreen</members>
+        <members>resourceComponent</members>
+        <members>selectedResourceComponent</members>
+        <members>selectedStructureComponent</members>
+        <members>structureComponent</members>
+        <name>LightningComponentBundle</name>
     </types>
     <types>
         <members>EstruturaProduto__c.All</members>
@@ -64,24 +112,22 @@
         <members>RecursosProduto__c.All</members>
         <members>TipoAcessorios__c.All</members>
         <members>TiposRecurso__c.All</members>
+        <members>TiposRecurso__c.All1</members>
         <name>ListView</name>
-    </types>
-    <types>
-        <members>StructureProductScreen</members>
-        <name>CustomTab</name>
     </types>
     <types>
         <members>ProductConfigCPQ</members>
         <name>PermissionSet</name>
     </types>
     <types>
-        <members>Recursos_do_Produto_P_gina_de_registro</members>
-        <members>Tipos_de_Recurso_P_gina_de_registro</members>
-        <members>Estrutura_de_Produto_P_gina_de_registro</members>
-        <members>Tipos_de_Acess_rios_P_gina_de_registro</members>
-        <members>Grupo_de_Acess_rios_P_gina_de_registro</members>
-        <members>Kit_de_Acess_rios_P_gina_de_registro</members>
-        <name>FlexiPage</name>
+        <members>Quote.CreateItems</members>
+        <members>Quote.GeneratePDF</members>
+        <name>QuickAction</name>
     </types>
-    <version>55.0</version>
+    <types>
+        <members>PDFQuoteStyle</members>
+        <members>libs</members>
+        <name>StaticResource</name>
+    </types>
+    <version>57.0</version>
 </Package>

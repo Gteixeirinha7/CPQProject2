@@ -1,0 +1,26 @@
+<template>
+  <header>
+    <lightning-layout multiple-rows horizontal-align="spread">
+				<lightning-layout-item
+					class="slds-var-m-vertical_xx-small slds-var-p-horizontal_x-small"
+					size="12" style="text-align: center;font-size: 16px;font-weight: bold;"
+				>
+					FILTROS
+				</lightning-layout-item>
+      <lightning-layout-item size="3">
+        <div class="slds-form-element">
+          <div class="slds-form-element__control">
+            <lightning-combobox variant="label-hidden" options={filterList} value={selectedFilter} onchange={showOptionsCheck}></lightning-combobox>
+          </div>
+        </div>
+      </lightning-layout-item>
+      <lightning-layout-item size="9">
+        <div class="slds-form-element">
+          <div class="slds-form-element__control">
+			  		<lightning-input variant="label-hidden" value={filterValue} type="search" onchange={handleFilter}>  </lightning-input>
+          </div>
+        </div>
+      </lightning-layout-item>
+    </lightning-layout>
+  </header>
+</template>

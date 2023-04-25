@@ -5,6 +5,26 @@ export default class ProductComponent extends LightningElement {
 	@api
 	product = {};
 
+	get sizeAcessory(){
+		return this.product.isConfigured ? 8 : 0;
+	}
+	get sizeDescription(){
+		return this.product.isConfigured ? 4 : 12;
+	}
+
+	get subTotalProduct(){
+		let val =  (this.product.price * this.product.quantity);
+		this.product.groupAccessoryList.filter(item => item.isListing).forEach(function(item){
+			item.accessoryList.filter(itemAcessory => itemAcessory.isSelected).forEach(function(ItemVal){
+				val += (ItemVal.quantity * ItemVal.price);
+			}, {val})
+		}, {val});
+		this.product.exceptionAccessoryList.filter(item => item.isSelected).forEach(function(item){
+			val += (item.quantity * item.price);
+		}, {val});
+		return val;
+	}
+
 	discountTypeOptionList = [
 		{
 			label: 'Moeda (R$)',
@@ -16,62 +36,47 @@ export default class ProductComponent extends LightningElement {
 		}
 	];
 
+	handlechangeacessory(event) {
+		this.dispatchEvents('handlechangeacessory', { ...event.detail});
+	}
+	handleeditexception(){
+		this.dispatchEvents('handleeditexception', { ...event.detail});
+	}
+	handleremoveexception(){
+		this.dispatchEvents('handleremoveexception', { ...event.detail});
+	}
+	onhandleremovecheckoutacessory(event){
+		this.dispatchEvents('handleremovecheckoutacessory', {...event.detail});
+	}
+	onClickCreateAcessory(event){
+		this.dispatchEvents('addexceptionaccessory', { id: this.product.id});
+	}
+
 	onChangeProductData(event) {
 		const { name, value } = event.target;
-
-		this.dispatchEvent(new CustomEvent(
-			'handleproductdata',
-			{
-				detail: {
-					name: name,
-					value: value,
-					id: this.product.id
-				}
-			}
-		));
+		this.dispatchEvents('handleproductdata', { name: name, value: value, id: this.product.id});
 	}
 
 	onClickConfigureKit() {
-		this.dispatchEvent(new CustomEvent(
-			'handleconfigkit',
-			{
-				detail: {
-					id: this.product.id
-				}
-			}
-		));
+		this.dispatchEvents('handleconfigkit', { id: this.product.id});
 	}
 
 	onClickClearKitConfiguration() {
-		this.dispatchEvent(new CustomEvent(
-			'handleclearconfigkit',
-			{
-				detail: {
-					id: this.product.id
-				}
-			}
-		));
+		this.dispatchEvents('handleclearconfigkit', { id: this.product.id});
 	}
 
 	onClickSelectProduct() {
-		this.dispatchEvent(new CustomEvent(
-			'handleselectproduct',
-			{
-				detail: {
-					id: this.product.id
-				}
-			}
-		));
+		this.handlerDispatchToast('Sucesso', 'Produto adicionado no carrinho com sucesso', 'success');
+		this.dispatchEvents('handleselectproduct', { id: this.product.id});
 	}
 
 	onClickRemoveProduct() {
+		this.dispatchEvents('handleremoveproduct', { id: this.product.id});
+	}
+
+	dispatchEvents(evt, details){
 		this.dispatchEvent(new CustomEvent(
-			'handleremoveproduct',
-			{
-				detail: {
-					id: this.product.id
-				}
-			}
+			evt, { detail: details }
 		));
 	}
 

@@ -4,7 +4,7 @@
 		component.set("v.message", "");
 
 		if (quoteId) {
-			var url = '/apex/PDFQuote?Id=' + quoteId;
+			var url = '/apex/ProductScreenPDF?Id=' + quoteId;
 
 			component.set("v.message", "PDF Gerado!");
 

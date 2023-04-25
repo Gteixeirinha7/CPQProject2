@@ -1,0 +1,22 @@
+<template>
+    <lightning-layout multiple-rows horizontal-align="spread">
+        <lightning-layout-item size="9">
+            <p><b>{accessory.name} ({group.name})</b></p>
+            <p>
+                Quantidade: {accessory.quantity}
+            </p>
+            <p>
+                Valor: <lightning-formatted-number class="slds-var-p-left_xxx-small"
+													value={accessory.price} format-style="currency"
+													currency-code="BRL"
+													maximum-fraction-digits="2"></lightning-formatted-number>
+            </p>
+        </lightning-layout-item>
+        <lightning-layout-item size="3" style="display: flex;justify-content: flex-end;">
+            <template if:false={group.isRequired}>
+                <lightning-button-icon icon-name="utility:delete"   class="slds-m-left_xx-small" title="Delete" onclick={onRemoveAcessory}></lightning-button-icon>
+            </template>
+            <lightning-button-icon icon-name="utility:edit" class="slds-m-left_xx-small" title="Edit" onclick={onEditException}></lightning-button-icon>
+        </lightning-layout-item>
+    </lightning-layout>    
+</template>

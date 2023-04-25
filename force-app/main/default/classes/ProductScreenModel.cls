@@ -13,6 +13,7 @@ public abstract class ProductScreenModel {
 		@AuraEnabled public String productCode {get; set;}
 		@AuraEnabled public String image {get; set;}
 		@AuraEnabled public String extension {get; set;}
+		@AuraEnabled public String productId {get; set;}
 
         @AuraEnabled public String Product2KitAcessoriosId {get;set;}
         @AuraEnabled public String ParentProductKitAcessoriosId {get;set;}
@@ -48,7 +49,9 @@ public abstract class ProductScreenModel {
 		public ProductData(Product2 product) {
 			this();
 			this.id = product.Id;
+			this.productId = product.Id;
 			this.name = product.Name;
+			this.image = product.Imagem_URL__c;
 			this.quantity = 1;
 			this.price = 0;
 			this.productCode = product.ExternalId__c;
@@ -62,6 +65,7 @@ public abstract class ProductScreenModel {
 			this.id = currentQuoteLineItem.Product2Id;
 			this.name = currentQuoteLineItem.Product2.Name;
 			this.quantity = currentQuoteLineItem.Quantity;
+			this.image = currentQuoteLineItem.Product2.Imagem_URL__c;
 			this.price = currentQuoteLineItem.UnitPrice;
 			this.productCode = currentQuoteLineItem.Product2.ExternalId__c;
 			this.isSelected = true;
@@ -73,12 +77,21 @@ public abstract class ProductScreenModel {
             this.ParentProductKitAcessoriosId = currentQuoteLineItem.ParentProduct__r.KitAcessorios__c;
             this.Product2Id = currentQuoteLineItem.Product2Id;
             this.ParentProduct = currentQuoteLineItem.ParentProduct__c;
+			this.productId = currentQuoteLineItem.Product2Id;
+
+			
+			this.totalPrice = 0;
+			this.listPrice = currentQuoteLineItem.ListPrice;
+			this.discountPercent = currentQuoteLineItem.Discount;
+			this.discountCurrency = currentQuoteLineItem.ListPrice - currentQuoteLineItem.UnitPrice;
+			this.discountType = 'currency';
 		}
 		public ProductData(OpportunityLineItem currentOpporunityLineItem) {
 			this();
 			this.id = currentOpporunityLineItem.Product2Id;
 			this.name = currentOpporunityLineItem.Product2.Name;
 			this.quantity = currentOpporunityLineItem.Quantity;
+			this.image = currentOpporunityLineItem.Product2.Imagem_URL__c;
 			this.price = currentOpporunityLineItem.UnitPrice;
 			this.productCode = currentOpporunityLineItem.Product2.ExternalId__c;
 			this.isSelected = true;
@@ -90,6 +103,7 @@ public abstract class ProductScreenModel {
             this.ParentProductKitAcessoriosId = currentOpporunityLineItem.ParentProduct__r.KitAcessorios__c;
             this.Product2Id = currentOpporunityLineItem.Product2Id;
             this.ParentProduct = currentOpporunityLineItem.ParentProduct__c;
+			this.productId = currentOpporunityLineItem.Product2Id;
 		}
 		public QuoteLineItem getQuoteLineItem(PricebookEntry currentPrice, Id quoteId){
 				return new QuoteLineItem(
@@ -98,7 +112,7 @@ public abstract class ProductScreenModel {
 					Quantity = this.quantity,
 					// DescontoAplicado__c = currentPrice.UnitPrice - this.price,
 					Discount = (1 - (this.price / currentPrice.UnitPrice)) * 100,
-					Product2Id = this.id,
+					Product2Id = this.productId,
 					PricebookEntryId = currentPrice.Id
 			);
 		}
@@ -109,7 +123,7 @@ public abstract class ProductScreenModel {
 				Quantity = this.quantity,
 				// DescontoAplicado__c = currentPrice.UnitPrice - this.unitPrice,
 				Discount = (1 - (this.price / currentPrice.UnitPrice)) * 100,
-				Product2Id = this.id,
+				Product2Id = this.productId,
 				PricebookEntryId = currentPrice.Id
 			);
 		}
@@ -118,6 +132,7 @@ public abstract class ProductScreenModel {
 	public class GroupAccessoryData {
 		@AuraEnabled public String id {get; set;}
 		@AuraEnabled public String name {get; set;}
+		@AuraEnabled public String nameCompleted {get; set;}
 		@AuraEnabled public Decimal minQuantity {get; set;}
 		@AuraEnabled public String value {get; set;}
 		@AuraEnabled public Boolean isRequired {get; set;}
@@ -131,13 +146,17 @@ public abstract class ProductScreenModel {
 		@AuraEnabled public Boolean isCurrentGroup {get; set;}
 		@AuraEnabled public Boolean isNotCurrentGroup {get; set;}
 		@AuraEnabled public String kitId {get; set;}
+		@AuraEnabled public Decimal discountPercent {get; set;}
+		@AuraEnabled public Decimal discountCurrency {get; set;}
+		@AuraEnabled public String discountType {get; set;}
 
 		@AuraEnabled public List<AccessoryData> accessoryList {get; set;}
 
 		public GroupAccessoryData() {}
 		public GroupAccessoryData(GrupoAcessorios__c currentGroup) {
 			this.id = currentGroup.Id;
-			this.name = currentGroup.Name + ' (' + currentGroup.Tipo__c + ')';
+			this.name = currentGroup.Name;
+			this.nameCompleted = currentGroup.Name + ' (' + currentGroup.Tipo__c + ')';
 			this.minQuantity = currentGroup.NumeroMinimoAcessorios__c > 1 ? currentGroup.NumeroMinimoAcessorios__c : 1;
 			this.isRequired = currentGroup.Tipo__c == 'Obrigatório';
 			this.isNA = currentGroup.AcaoGrupo__c == 'N/A';
@@ -169,21 +188,26 @@ public abstract class ProductScreenModel {
 		@AuraEnabled public String id {get; set;}
 		@AuraEnabled public String name {get; set;}
 		@AuraEnabled public String code {get; set;}
-		@AuraEnabled public Decimal unitPrice {get; set;}
+		@AuraEnabled public String prodCode {get; set;}
+		@AuraEnabled public Decimal price {get; set;}
 		@AuraEnabled public Decimal quantity {get; set;}
 		@AuraEnabled public Decimal totalAmount {get; set;}
 		@AuraEnabled public String productId {get; set;}
 		@AuraEnabled public String groupId {get; set;}
 		@AuraEnabled public Boolean isSelected {get; set;}
 		@AuraEnabled public Boolean isDisabled {get; set;}
+		@AuraEnabled public Decimal discountPercent {get; set;}
+		@AuraEnabled public Decimal discountCurrency {get; set;}
+		@AuraEnabled public String discountType {get; set;}
 
 		public AccessoryData() {}
 		public AccessoryData(TipoAcessorios__c currentAccessory) {
 			this.id = currentAccessory.Id;
 			this.name = currentAccessory.Produto__r.Name;
+			this.prodCode = currentAccessory.Produto__r.ProductCode != null ? currentAccessory.Produto__r.ProductCode : currentAccessory.Produto__r.ExternalId__c;
 			this.code = currentAccessory.Name;
 			this.quantity = 1;
-			this.unitPrice = 0;
+			this.price = 0;
 			this.totalAmount = 0;
 			this.productId = currentAccessory.Produto__c;
 			this.groupId = currentAccessory.GrupoAcessorio__c;
@@ -194,10 +218,10 @@ public abstract class ProductScreenModel {
 		public QuoteLineItem getQuoteLineItem(PricebookEntry currentPrice, Id quoteId){
 			return new QuoteLineItem(
 				QuoteId = quoteId,
-				UnitPrice = this.unitPrice,
+				UnitPrice = this.price,
 				Quantity = this.quantity,
 				// DescontoAplicado__c = currentPrice.UnitPrice - this.unitPrice,
-				Discount = (1 - (this.unitPrice / currentPrice.UnitPrice)) * 100,
+				Discount = (1 - (this.price / currentPrice.UnitPrice)) * 100,
 				Product2Id = this.productId,
 				PricebookEntryId = currentPrice.Id
 			);
@@ -205,10 +229,10 @@ public abstract class ProductScreenModel {
 		public OpportunityLineItem getOpportunityLineItem(PricebookEntry currentPrice, Id opportunityId){
 			return new OpportunityLineItem(
 				OpportunityId = opportunityId,
-				UnitPrice = this.unitPrice,
+				UnitPrice = this.price,
 				Quantity = this.quantity,
 				// DescontoAplicado__c = currentPrice.UnitPrice - this.unitPrice,
-				Discount = (1 - (this.unitPrice / currentPrice.UnitPrice)) * 100,
+				Discount = (1 - (this.price / currentPrice.UnitPrice)) * 100,
 				Product2Id = this.productId,
 				PricebookEntryId = currentPrice.Id
 			);

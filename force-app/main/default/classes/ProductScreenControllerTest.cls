@@ -82,42 +82,42 @@ private with sharing class ProductScreenControllerTest {
 		insert new List<TiposRecurso__c>{
 			new TiposRecurso__c(
 				DescricaoRecurso__c = 'D1',
-				Sequencial__c = 1,
+				Sequencial__c = '1',
 				ExternalId__c = '01',
 				RecursoProduto__c = newResourceList[0].Id,
 				Ativo__c = true
 			),
 			new TiposRecurso__c(
 				DescricaoRecurso__c = 'D2',
-				Sequencial__c = 2,
+				Sequencial__c = '2',
 				ExternalId__c = '02',
 				RecursoProduto__c = newResourceList[0].Id,
 				Ativo__c = true
 			),
 			new TiposRecurso__c(
 				DescricaoRecurso__c = 'DT3',
-				Sequencial__c = 3,
+				Sequencial__c = '3',
 				ExternalId__c = '03',
 				RecursoProduto__c = newResourceList[1].Id,
 				Ativo__c = true
 			),
 			new TiposRecurso__c(
 				DescricaoRecurso__c = 'DT4',
-				Sequencial__c = 4,
+				Sequencial__c = '4',
 				ExternalId__c = '04',
 				RecursoProduto__c = newResourceList[1].Id,
 				Ativo__c = true
 			),
 			new TiposRecurso__c(
 				DescricaoRecurso__c = 'M5',
-				Sequencial__c = 5,
+				Sequencial__c = '5',
 				ExternalId__c = '05',
 				RecursoProduto__c = newResourceList[2].Id,
 				Ativo__c = true
 			),
 			new TiposRecurso__c(
 				DescricaoRecurso__c = 'M6',
-				Sequencial__c = 6,
+				Sequencial__c = '6',
 				ExternalId__c = '06',
 				RecursoProduto__c = newResourceList[2].Id,
 				Ativo__c = true
@@ -147,24 +147,24 @@ private with sharing class ProductScreenControllerTest {
 	}
 
 	@IsTest
-	static void saveQuoteLineItemsTest() {
+	static void saveLineItemsTest() {
 		Quote currentQuote = getQuote();
 		Product2 currentProduct = getProduct();
-		List<ProductScreenController.ProductData> quoteItemList = new List<ProductScreenController.ProductData>();
-		ProductScreenController.ProductData productData = new ProductScreenController.ProductData(currentProduct);
-		ProductScreenController.ProductData emptyProductData = new ProductScreenController.ProductData();
+		List<ProductScreenModel.ProductData> quoteItemList = new List<ProductScreenModel.ProductData>();
+		ProductScreenModel.ProductData productData = new ProductScreenModel.ProductData(currentProduct);
+		ProductScreenModel.ProductData emptyProductData = new ProductScreenModel.ProductData();
 
 		productData.price = 90;
 		productData.quantity = 5;
 
 		quoteItemList.add(productData);
 
-		ProductScreenController.saveQuoteLineItems(currentQuote.Id, quoteItemList);
-		ProductScreenController.saveQuoteLineItems(currentQuote.Id, quoteItemList);
+		ProductScreenController.saveLineItems(currentQuote.Id, quoteItemList);
+		ProductScreenController.saveLineItems(currentQuote.Id, quoteItemList);
 
 		quoteItemList[0].id = null;
-		ProductScreenController.saveQuoteLineItems(currentQuote.Id, quoteItemList);
-		ProductScreenController.saveQuoteLineItems(null, quoteItemList);
+		ProductScreenController.saveLineItems(currentQuote.Id, quoteItemList);
+		ProductScreenController.saveLineItems(null, quoteItemList);
 	}
 
 	static Product2 getProduct() {
@@ -174,7 +174,7 @@ private with sharing class ProductScreenControllerTest {
 			SELECT Id,
 				   Name,
 				   ExternalId__c,
-				   Image_URL__c,
+				   Imagem_URL__c,
 				   KitAcessorios__c
 			  FROM Product2
 			 LIMIT 1

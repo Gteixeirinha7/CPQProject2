@@ -17,16 +17,21 @@
                 <label>Ferramenta de Automação</label>
             </value>
             <value>
+                <fullName>Foco XLED</fullName>
+                <default>false</default>
+                <label>Foco XLED</label>
+            </value>
+            <value>
                 <fullName>Esterilizadora</fullName>
                 <default>false</default>
                 <isActive>false</isActive>
                 <label>Esterilizadora</label>
             </value>
             <value>
-                <fullName>Foco XLED</fullName>
+                <fullName>Lavadora</fullName>
                 <default>false</default>
                 <isActive>false</isActive>
-                <label>Foco XLED</label>
+                <label>Lavadora</label>
             </value>
         </valueSetDefinition>
     </valueSet>

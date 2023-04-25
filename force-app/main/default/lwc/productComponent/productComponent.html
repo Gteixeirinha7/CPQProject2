@@ -1,163 +1,102 @@
 <!-- sldsValidatorIgnore -->
 <template>
-	 <lightning-layout if:true={product.isShowProduct}>
+	<lightning-layout if:true={product.isShowProduct}>
 		<lightning-layout-item class="slds-var-p-around_x-small" size="12">
 			<div class="swiper-slide">
-			    <a class="common-catalog-item common-catalog-item--v1" 
+				<a class="common-catalog-item common-catalog-item--v1"
 					style="display: flex;flex-direction: row;justify-content: center;align-items: stretch; padding: 0px;">
-					<lightning-layout if:true={product.isConfigured}  multiple-rows horizontal-align="spread" style="padding: 16px;">
-						<lightning-layout-item class="slds-var-p-horizontal_xx-small"
-							size="12" medium-device-size="12" large-device-size="12" >			        		
-			        		<div class="common-catalog-item__info">
-								<template for:each={product.groupAccessoryList} for:item="group">
-									<div key={group.id} class="container__accessories-data">
-										<div class="slds-var-m-top_xxx-small">
-											{group.name}: <p><b if:true={group.value}>{group.value}</b></p>
-											<template if:true={group.isListing} for:each={group.accessoryList} for:item="accessory">
-												<p if:true={accessory.isSelected} key={accessory.id}><b>
-													{accessory.name} (
-														<lightning-formatted-number
-															value={accessory.unitPrice}
-															format-style="currency"
-															currency-code="BRL"
-															maximum-fraction-digits="2">
-														</lightning-formatted-number>
-													)
-												</b></p>
-											</template>
-										</div>
+					<lightning-layout multiple-rows horizontal-align="spread" style="height: 100%; background-color: rgb(249, 249, 249);">		
+						<lightning-layout-item size="12" style="background-color: white">
+							<lightning-layout multiple-rows horizontal-align="spread" style="padding: 16px;">
+								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12"
+									medium-device-size="12" large-device-size="12" style="display: flex;justify-content: space-between;">
+									<div>
+										<img class="common-catalog-item__merchant-image" src={product.image} style="max-height: 40px;">
 									</div>
-								</template>
-			        		</div>
-						</lightning-layout-item>
-					</lightning-layout>
-					<lightning-layout multiple-rows horizontal-align="spread" style="padding: 16px;">
-						<lightning-layout-item class="slds-var-p-horizontal_xx-small"
-							size="12" medium-device-size="12" large-device-size="12" >
-			        		<div class="common-catalog-item__container-image">
-			        		    <img class="common-catalog-item__merchant-image" src={product.image} >
-			        		</div>
-			        		<div class="common-catalog-item__info">
-			        		    <h2 class="common-catalog-item__name">{product.name}</h2>
-								<span class="common-catalog-item__value common-catalog-item__price--regular card-stack-price__DEFAULT">{product.productCode}</span>
-								<span class="catalog-item-v2-content__delivery">
-									<span class="catalog-item-v2-content__rating  cardstack-rating">
-										<span class="icon-star icon-star--star">
-			  								<lightning-icon icon-name="utility:money" size="xx-small"></lightning-icon>
+									<div >
+										<h2 style="font-size: 18px; font-weight: bold;">{product.productCode} - {product.name}</h2>
+									</div>
+									<div >
+										<span >
+											<span class="catalog-item-content__delivery--free">
+												<lightning-formatted-number class="slds-var-p-left_xxx-small"
+													value={subTotalProduct} format-style="currency"
+													currency-code="BRL"
+													maximum-fraction-digits="2"></lightning-formatted-number>
+											</span>
 										</span>
-									</span>
-									<span> • </span>
-									<span class="catalog-item-content__delivery--free">
-										Preço de lista:
-										<lightning-formatted-number
-											class="slds-var-p-left_xxx-small"
-											value={product.listPrice}
-											format-style="currency"
-											currency-code="BRL"
-											maximum-fraction-digits="2"
-										></lightning-formatted-number>
-									</span>
-								</span>
-			        		</div>
+									</div>
+								</lightning-layout-item>
+							</lightning-layout>
+						</lightning-layout-item>				
+						<lightning-layout-item size="12" medium-device-size="12" large-device-size={sizeDescription} style="height: 100%">
+							<lightning-layout multiple-rows horizontal-align="spread"
+								style="border-left: 1px dashed lightgrey;background-color: #F9F9F9; padding: 16px; padding-bottom: 0px; height: 100%">
+								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12"
+									medium-device-size="6" large-device-size="6">
+									<lightning-input name="quantity" label="Quantidade" value={product.quantity}
+										type="number" max-length="8" min="1" onchange={onChangeProductData}
+										>
+									</lightning-input>
+								</lightning-layout-item>
+								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12"
+									medium-device-size="6" large-device-size="6">
+									<lightning-input name="price" label="Preço" value={product.price} type="number"
+										formatter="currency" step="any" min="0" onchange={onChangeProductData}
+										>
+									</lightning-input>
+								</lightning-layout-item>
+								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12"
+									medium-device-size="12" large-device-size="12">
+									<lightning-input if:false={product.isDiscountPercent} name="discountCurrency"
+										label="Desconto" value={product.discountCurrency} type="number"
+										formatter="currency" step="any" min="0" onchange={onChangeProductData}
+										>
+									</lightning-input>
+									<lightning-input if:true={product.isDiscountPercent} name="discountPercent"
+										label="% Desconto" value={product.discountPercent} type="number"
+										formatter="fixed-percent" step="any" min="0" onchange={onChangeProductData}
+										>
+									</lightning-input>
+								</lightning-layout-item>
+								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12"
+									medium-device-size="12" large-device-size="12">
+									<lightning-combobox name="discountType" label="Tipo de desconto"
+										value={product.discountType} options={discountTypeOptionList}
+										onchange={onChangeProductData} >
+									</lightning-combobox>
+								</lightning-layout-item>
+								<lightning-layout-item if:true={product.isDisabledButtons}
+									class="slds-var-m-top_small slds-var-m-bottom_small container__buttons" size="12">
+									<lightning-button label="Configurar" variant="brand" onclick={onClickConfigureKit}>
+									</lightning-button>
+								</lightning-layout-item>
+								<lightning-layout-item if:false={product.isDisabledButtons}
+									class="slds-var-m-top_small slds-var-m-bottom_small container__buttons" size="12">
+									<div if:true={product.isHasKit}>
+										<lightning-button if:false={product.isSelected} class="slds-var-m-right_x-small"
+											label="Limpar" variant="destructive" onclick={onClickClearKitConfiguration}>
+										</lightning-button>
+									</div>
+									<lightning-button if:false={product.isSelected} class="slds-var-m-right_x-small" label="Adicionar" variant="brand"
+										onclick={onClickSelectProduct}>
+									</lightning-button>
+									<lightning-button if:true={product.isSelected} class="slds-var-m-right_x-small" label="Remover" variant="destructive"
+										onclick={onClickRemoveProduct}>
+									</lightning-button>
+									<lightning-button if:true={product.isSelected} class="slds-var-m-right_x-small" label="Novo Acessorio" variant="brand" onclick={onClickCreateAcessory} data-id={product.id}>
+									</lightning-button>
+								</lightning-layout-item>
+							</lightning-layout>
 						</lightning-layout-item>
-					</lightning-layout>
-					<lightning-layout multiple-rows horizontal-align="spread" style="border-left: 1px dashed lightgrey;background-color: #F9F9F9; padding: 16px;">
-						<lightning-layout-item class="slds-var-p-horizontal_xx-small"
-							size="12" medium-device-size="6" large-device-size="6" >
-							<lightning-input
-								name="quantity"
-								label="Quantidade"
-								value={product.quantity}
-								type="number"
-								max-length="8"
-								min="1"
-								onchange={onChangeProductData}
-								disabled={product.isSelected}>
-							</lightning-input>
-						</lightning-layout-item>
-						<lightning-layout-item class="slds-var-p-horizontal_xx-small"
-							size="12" medium-device-size="6" large-device-size="6" >
-							<lightning-input
-								name="price"
-								label="Preço"
-								value={product.price}
-								type="number"
-								formatter="currency"
-								step="any"
-								min="0"
-								onchange={onChangeProductData}
-								disabled={product.isSelected}
-							>
-							</lightning-input>
-						</lightning-layout-item>
-						<lightning-layout-item class="slds-var-p-horizontal_xx-small"
-							size="12" medium-device-size="12" large-device-size="12" >
-							<lightning-input
-								if:false={product.isDiscountPercent}
-								name="discountCurrency"
-								label="Desconto"
-								value={product.discountCurrency}
-								type="number"
-								formatter="currency"
-								step="any"
-								min="0"
-								onchange={onChangeProductData}
-								disabled={product.isSelected} >
-							</lightning-input>
-							<lightning-input
-								if:true={product.isDiscountPercent}
-								name="discountPercent"
-								label="% Desconto"
-								value={product.discountPercent}
-								type="number"
-								formatter="fixed-percent"
-								step="any"
-								min="0"
-								onchange={onChangeProductData}
-								disabled={product.isSelected} >
-							</lightning-input>
-						</lightning-layout-item>
-						<lightning-layout-item class="slds-var-p-horizontal_xx-small"
-							size="12" medium-device-size="12" large-device-size="12" >
-							<lightning-combobox
-								name="discountType"
-								label="Tipo de desconto"
-								value={product.discountType}
-								options={discountTypeOptionList}
-								onchange={onChangeProductData}
-								disabled={product.isSelected}
-							>
-							</lightning-combobox>
-						</lightning-layout-item>						
-						<lightning-layout-item if:true={product.isDisabledButtons} class="slds-var-m-top_small container__buttons" size="12">
-							<lightning-button
-								label="Configurar"
-								variant="brand"
-								onclick={onClickConfigureKit}>
-							</lightning-button>
-						</lightning-layout-item>
-						<lightning-layout-item if:false={product.isDisabledButtons} class="slds-var-m-top_small container__buttons" size="12">
-							<div if:true={product.isHasKit}>
-								<lightning-button
-									if:false={product.isSelected}
-									class="slds-var-m-right_x-small"
-									label="Limpar"
-									variant="destructive"
-									onclick={onClickClearKitConfiguration}>
-								</lightning-button>
-							</div>
-							<lightning-button
-								if:false={product.isSelected}
-								label="Adicionar"
-								variant="brand"
-								onclick={onClickSelectProduct}>
-							</lightning-button>
-							<lightning-button
-								if:true={product.isSelected}
-								label="Remover"
-								variant="destructive"
-								onclick={onClickRemoveProduct}>
-							</lightning-button>
+						<lightning-layout-item size="6" medium-device-size="6" large-device-size={sizeAcessory} if:true={product.isConfigured}
+								style="border-right: 1px dashed lightgrey;background-color: #F9F9F9; padding: 16px; height: 100%">
+							<lightning-layout multiple-rows horizontal-align="spread">
+								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12"
+									medium-device-size="12" large-device-size="12">
+									<c-accessory-list-component product={product} onhandlechangeacessory={handlechangeacessory} onhandleremoveexception={handleremoveexception} onhandleeditexception={handleeditexception}  ></c-accessory-list-component>
+								</lightning-layout-item>	
+							</lightning-layout>
 						</lightning-layout-item>
 					</lightning-layout>
 				</a>
@@ -205,7 +144,7 @@
 										max-length="8"
 										min="1"
 										onchange={onChangeProductData}
-										disabled={product.isSelected}
+										
 									>
 									</lightning-input>
 								</lightning-layout-item>
@@ -223,7 +162,7 @@
 										step="any"
 										min="0"
 										onchange={onChangeProductData}
-										disabled={product.isSelected}
+										
 									>
 									</lightning-input>
 								</lightning-layout-item>
@@ -242,7 +181,7 @@
 										step="any"
 										min="0"
 										onchange={onChangeProductData}
-										disabled={product.isSelected}
+										
 									>
 									</lightning-input>
 
@@ -256,7 +195,7 @@
 										step="any"
 										min="0"
 										onchange={onChangeProductData}
-										disabled={product.isSelected}
+										
 									>
 									</lightning-input>
 								</lightning-layout-item>
@@ -271,7 +210,7 @@
 										value={product.discountType}
 										options={discountTypeOptionList}
 										onchange={onChangeProductData}
-										disabled={product.isSelected}
+										
 									>
 									</lightning-combobox>
 								</lightning-layout-item>
@@ -318,7 +257,7 @@
 											<p if:true={accessory.isSelected} key={accessory.id}><b>
 												{accessory.name} (
 													<lightning-formatted-number
-														value={accessory.unitPrice}
+														value={accessory.price}
 														format-style="currency"
 														currency-code="BRL"
 														maximum-fraction-digits="2">

@@ -1,0 +1,70 @@
+<template>
+  <template if:true={showCustomLookup}>
+    <div class="containerCL slds-is-relative">
+      <template if:false={selectedRecord}>
+        <lightning-input
+          type="search"
+          disabled={disabledCustomLookup}
+          class="slds-container_fluid"
+          autocomplete="off"
+          label={inputLabel}
+          name="searchInput"
+          value={searchValue}
+          onchange={handleTyping}
+          onfocus={handleOnFocus}
+          onfocusout={handleOnFocusOut}
+          is-loading={isLoading}
+          variant="label-hidden">
+      </lightning-input>
+        <template if:true={recordsList}>
+          <div class="containerCL-records-list slds-container_fluid slds-is-absolute">
+            <ul>
+              <template for:each={recordsList} for:item="record">
+                <li
+                  key={record.Id}
+                  data-value={record.Id}
+                  onclick={handleSelectRecord}
+                  class="slds-var-p-vertical_small slds-var-p-horizontal_medium slds-list_horizontal slds-media_center list-item">
+                  <lightning-icon
+                    data-value={record.Id}
+                    icon-name={objectIconName}
+                    title={objectIconName}
+                    size="small"
+                    class="slds-var-m-right_small">
+                  </lightning-icon>
+                  <div data-value={record.Id}>{record.Name}</div>
+                </li>
+              </template>
+            </ul>
+          </div>
+        </template>
+      </template>
+  
+      <template if:true={selectedRecord}>
+        <div>  
+          <div class={changeColorSelectedRecord}>
+            <div class="slds-list_horizontal slds-media_center">
+              <lightning-icon 
+                icon-name={objectIconName}
+                title={objectIconName}
+                size="small"
+                class="slds-var-m-right_small">
+              </lightning-icon>
+              {selectedRecord.Name}
+            </div>
+              <div class="slds-var-p-bottom_xx-small">
+                <lightning-button-icon
+                  icon-name="utility:close"
+                  variant="bare"
+                  alternative-text="Settings"
+                  title="Settings"
+                  onclick={handleClearSelected}
+                  disabled={disabledCustomLookup}>
+                </lightning-button-icon>
+              </div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </template>
+</template>

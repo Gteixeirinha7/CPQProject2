@@ -113,46 +113,12 @@
 							{!item.name}
 						</p>
 
-						<apex:outputPanel rendered="{!item.hasKit}">
-							<div style="border-radius: 9px;">
-								<table class="styled-table" cellspacing="0">
-									<thead>
-										<tr>
-											<th class="content__th-left">
-												Acessório
-											</th>
-
-											<th class="content__th-right">
-												Quantidade
-											</th>
-										</tr>
-									</thead>
-
-									<tbody>
-										<apex:repeat value="{!item.kitDataList}" var="accessory" id="accessoryRepeat">
-
-											<tr>
-												<td style="padding: 10px 5px; font-size: 16px; border-right: 1px solid gray;">
-													{!accessory.name}
-												</td>
-
-												<td style="padding: 10px 5px; font-size: 16px;">
-													{!accessory.quantity}
-												</td>
-											</tr>
-
-										</apex:repeat>
-									</tbody>
-								</table>
-							</div>
-						</apex:outputPanel>
-
 						<div style="border-radius: 9px;">
 							<table class="styled-table" cellspacing="0">
 								<thead>
 									<tr>
 										<th class="content__th-left">
-											Opcional
+											Configuração
 										</th>
 
 										<th class="content__th-right">
@@ -178,6 +144,106 @@
 								</tbody>
 							</table>
 						</div>
+
+						<apex:outputPanel rendered="{!item.hasRequiredKit}">
+							<div style="border-radius: 9px;">
+								<table class="styled-table" cellspacing="0">
+									<thead>
+										<tr>
+											<th class="content__th-left">
+												Acessórios Obrigatorios
+											</th>
+
+											<th class="content__th-right">
+												Quantidade
+											</th>
+										</tr>
+									</thead>
+
+									<tbody>
+										<apex:repeat value="{!item.kitRequiredDataList}" var="accessory" id="accessoryRepeat">
+
+											<tr>
+												<td style="padding: 10px 5px; font-size: 16px; border-right: 1px solid gray;">
+													{!accessory.name}
+												</td>
+
+												<td style="padding: 10px 5px; font-size: 16px;">
+													{!accessory.quantity}
+												</td>
+											</tr>
+
+										</apex:repeat>
+									</tbody>
+								</table>
+							</div>
+						</apex:outputPanel>
+						<apex:outputPanel rendered="{!item.hasOptionalKit}">
+							<div style="border-radius: 9px;">
+								<table class="styled-table" cellspacing="0">
+									<thead>
+										<tr>
+											<th class="content__th-left">
+												Acessórios Opcionais
+											</th>
+						
+											<th class="content__th-right">
+												Quantidade
+											</th>
+										</tr>
+									</thead>
+						
+									<tbody>
+										<apex:repeat value="{!item.kitOpcionalDataList}" var="accessory" id="accessoryRepeatO">
+						
+											<tr>
+												<td style="padding: 10px 5px; font-size: 16px; border-right: 1px solid gray;">
+													{!accessory.name}
+												</td>
+						
+												<td style="padding: 10px 5px; font-size: 16px;">
+													{!accessory.quantity}
+												</td>
+											</tr>
+						
+										</apex:repeat>
+									</tbody>
+								</table>
+							</div>
+						</apex:outputPanel>
+						<apex:outputPanel rendered="{!item.hasExceptionKit}">
+							<div style="border-radius: 9px;">
+								<table class="styled-table" cellspacing="0">
+									<thead>
+										<tr>
+											<th class="content__th-left">
+												Acessórios Adicional
+											</th>
+						
+											<th class="content__th-right">
+												Quantidade
+											</th>
+										</tr>
+									</thead>
+						
+									<tbody>
+										<apex:repeat value="{!item.kitExceptionDataList}" var="accessory" id="accessoryRepeat3">
+						
+											<tr>
+												<td style="padding: 10px 5px; font-size: 16px; border-right: 1px solid gray;">
+													{!accessory.name}
+												</td>
+						
+												<td style="padding: 10px 5px; font-size: 16px;">
+													{!accessory.quantity}
+												</td>
+											</tr>
+						
+										</apex:repeat>
+									</tbody>
+								</table>
+							</div>
+						</apex:outputPanel>
 					</div>
 
 				</apex:repeat>

@@ -2,7 +2,7 @@ public with sharing class OpenQuotePDFController {
 	@AuraEnabled
 	public static String getURL(String quoteId) {
 		String pdfUrl = '';
-		PageReference pageRef = new PageReference('/apex/PDFQuote?Id=' + quoteId);
+		PageReference pageRef = new PageReference('/apex/ProductScreenPDF?Id=' + quoteId);
 		Blob pdf = !Test.isRunningTest() ? pageRef.getContent() : Blob.valueOf('Test');
 
 		try {
@@ -21,7 +21,7 @@ public with sharing class OpenQuotePDFController {
 			);
 			insert contentVersion;
 
-			pdfUrl = URL.getSalesforceBaseUrl().toExternalForm() + '/apex/PDFQuote?Id=' + quoteId;
+			pdfUrl = URL.getSalesforceBaseUrl().toExternalForm() + '/apex/ProductScreenPDF?Id=' + quoteId;
 		}
 		catch (Exception ex) {
 			System.debug('Generate PDF Exception => ' + ex.getMessage());

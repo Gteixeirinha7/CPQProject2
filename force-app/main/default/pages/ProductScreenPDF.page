@@ -1,0 +1,1058 @@
+<apex:page applyBodyTag="false"  showHeader="false" docType="html-5.0" controller="PDFQuoteController">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.4.1/jspdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas2image@1.0.5/canvas2image.min.js"></script>
+    <script src="https://raw.githack.com/eKoopmans/html2pdf/master/dist/html2pdf.bundle.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+    <apex:includeScript value="{!URLFOR($Resource.libs, 'forcetk.js')}" />
+
+    <apex:includeScript value="/support/console/37.0/integration.js" /><script>
+        var downloadPDF = function () {
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+
+            var element = document.getElementById('renderPDF');
+            var fileName = '{!quoteData.name}';
+            var quoteId = '{!quoteId}';
+            var options = {
+                margin: 0,
+                filename: fileName,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            html2pdf(element, options).output('blob').then(function (pdf) {
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.PDFQuoteController.getUserSessionKey}',
+                    function (result, event) {
+                        var sessionResult = result;
+
+                        var forceClient = new forcetk.Client();
+                        forceClient.setSessionToken(
+                            sessionResult
+                        );
+
+                        forceClient.createBlob(
+                            'ContentVersion', {
+                            Origin: 'C',
+                            PathOnClient: fileName
+                        },
+                            fileName,
+                            'VersionData',
+                            pdf,
+                            function (response) {
+                                Visualforce.remoting.Manager.invokeAction(
+                                    '{!$RemoteAction.PDFQuoteController.createPDF}',
+                                    response.id,
+                                    quoteId,
+                                    fileName,
+                                    function (result, event) {
+                                        if (event.status) {
+                                            // sforce.one.navigateToURL(result, true);
+                                            // window.open(result, '_blank');
+                                            // sforce.one.navigateToSObject(response.id);
+                                        }
+                                    }, { escape: false, timeout: 120000 }
+                                );
+
+                            },
+                            function (request, status, response) {
+                                console.log(status);
+                                console.log(response);
+                            }
+                        );
+                    }, { escape: false, timeout: 120000 }
+                );
+
+            }).catch(function (error) {
+                console.log('error =>', error);
+                debugger;
+            });
+        }
+    </script>
+    <style>
+        @charset "UTF-8";
+        html,
+        body {
+            background: #f7f7f7;
+            color: #333;
+            font-size: 14px;
+            font-family: 'Salesforce Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', 'sans-serif';
+        }
+
+        table {
+            width: 100%;
+        }
+
+        .container {
+            max-width: 1140px;
+            margin: 0 auto;
+        }
+
+        .container h1 {
+            font-size: 2.0rem;
+            text-align: center;
+            padding: 1rem;
+            color: #4F91CD;
+            padding: 30px 0;
+            font-weight: 400;
+        }
+
+        .btn-cta-success {
+            background-color: #4F91CD;
+            background: linear-gradient(to bottom, #4F91CD, #4F91CD);
+            color: #ffffff;
+            text-transform: uppercase;
+            font-weight: 700;
+            font-family: 'Open Sans', sans-serif;
+            min-height: 40px;
+            width: 25%;
+            margin-left: 40%;
+            border: none;
+            outline: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-left{
+            text-align: left;
+        }
+
+        .text-danger {
+            color: #ff0000;
+        }
+
+        .text-lv1 {
+            color: black;
+        }
+
+        .text-lv2 {
+            color: #4F91CD;
+        }
+
+        .text-parecer-obs {
+            color: #333;
+            font-size: 0.9rem;
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            margin: 5px;
+            font-weight: bold;
+            background-color: #fff;
+            border: 1px solid #dddbda;
+            border-radius: .25rem;
+            width: 100%;
+            transition: border .1s linear, background-color .1s linear;
+            resize: vertical;
+            padding: .5rem .75rem;
+        }
+        .text-obs {
+            color: #333;
+            font-size: 0.9rem;
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            margin: 5px;
+            font-weight: bold;
+            background-color: #fff;
+            border: 1px solid #dddbda;
+            border-radius: .25rem;
+            width: 100%;
+            transition: border .1s linear, background-color .1s linear;
+            resize: vertical;
+            padding: .5rem .75rem;
+        }
+
+        .color-border-lv2 {
+            border-bottom: 2px solid black;
+            color: #4F91CD;
+        }
+
+        /* Listando produtos */
+
+        .tr-lista-header th {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            color: #4F91CD;
+            padding: 2px 10px 8px 10px;
+        }
+
+        .tr-lista-valores td span.valor {
+            padding-left: 0 !important;
+            color: #000;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            padding-left: 5px;
+        }
+
+        .td-border-top {
+            border-top: 1px solid #ddd;
+        }
+
+        .td-border-bottom {
+            border-bottom: 1px solid #ddd;
+        }
+
+        .mb-1 {
+            margin-bottom: 10px !important;
+        }
+
+        .mb-2 {
+            margin-bottom: 20px !important;
+        }
+
+        .mb-3 {
+            margin-bottom: 30px !important;
+        }
+
+        .py-2 td {
+            padding: 5px 0 !important;
+        }
+
+        .pb-0 {
+            padding-bottom: 0 !important;
+        }
+
+        .lb-pedido {
+            font-size: 0.9rem;
+            color: black;
+        }
+
+        .nr-pedido {
+            font-size: 1.2rem;
+        }
+
+        .no-padding td {
+            padding: 0;
+        }
+
+        table {
+            background: #fff;
+        }
+
+        table td,
+        table th {
+            padding: 8px 15px;
+        }
+
+        .tb-wrap {
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .tb-wrap .td-title {
+            font-size: 0.6rem;
+            color: #666;
+        }
+
+        .tb-wrap .td-title strong {
+            color: #000;
+        }
+
+        .tb-wrap .td-sub-title {
+            font-size: 0.8rem;
+            font-weight: bold;
+            padding: 12px ​5px 10px 10p;
+        }
+
+        .tb-wrap .bg-light {
+            background: #f2f2f2;
+        }
+
+        .tb-dados {
+            /* Aplica-se na TR */
+        }
+
+        .tb-dados td {
+            padding: 5px 10px;
+            color: #555;
+            border-bottom: 1px dashed #ddd;
+        }
+
+        .tb-dados td .valor {
+            color: #000;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            padding-left: 5px;
+        }
+
+        .tb-dados td .valor.total {
+            font-size: 0.9rem;
+        }
+
+        .tb-dados .no-border td {
+            border: none !important;
+        }
+
+        .box-total {
+            border: 1px solid #fff59d !important;
+            background: #fffde7;
+            text-align: center;
+            border-radius: 5px;
+            padding: 8px;
+        }
+
+        .box-total .lb {
+            font-size: 0.6rem !important;
+            color: #333;
+        }
+
+        .box-assin {
+            background: #f9f9f9;
+        }
+
+        .box-assin td {
+            padding: 15px;
+        }
+
+        .box-assin .lb {
+            padding: 10px 0 !important;
+        }
+
+        .box-assin .valor {
+            padding-left: 0 !important;
+        }
+
+        .local-assin {
+            padding: 10px 10px;
+            border: 1px dashed #ddd;
+            border-radius: 5px;
+            margin-right: 20px;
+            height: 80px;
+            margin-top: 10px;
+            background: #fff;
+        }
+
+        .space-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .flex-end {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .flex-col {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .lb-status {
+            font-size: 0.8rem;
+            padding-top: 4px;
+        }
+
+        .lb-col {
+            color: #000;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.6rem;
+            padding-top: 5px;
+        }
+
+        .new-page {
+            /* page-break-before: always; */
+            page-break-inside: avoid;
+        }
+        .hide {
+            /* page-break-before: always; */
+            display: none;
+        }
+        .tb_load {
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 9999;
+            background-color: rgba(160, 151, 197, 0.3);
+            display: none;
+        }
+
+        .box_load {
+            width: 80px;
+            height: 80px;
+        }
+
+        .sk-fading-circle {
+            margin: 100px auto;
+            width: 40px;
+            height: 40px;
+            position: relative;
+        }
+
+        .sk-fading-circle .sk-circle {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        .sk-fading-circle .sk-circle:before {
+            content: '';
+            display: block;
+            margin: 0 auto;
+            width: 15%;
+            height: 15%;
+            background-color: #FFF;
+            border-radius: 100%;
+            -webkit-animation: sk-circleFadeDelay 1.2s infinite ease-in-out both;
+            animation: sk-circleFadeDelay 1.2s infinite ease-in-out both;
+        }
+
+        .sk-fading-circle .sk-circle2 {
+            -webkit-transform: rotate(30deg);
+            -ms-transform: rotate(30deg);
+            transform: rotate(30deg);
+        }
+
+        .sk-fading-circle .sk-circle3 {
+            -webkit-transform: rotate(60deg);
+            -ms-transform: rotate(60deg);
+            transform: rotate(60deg);
+        }
+
+        .sk-fading-circle .sk-circle4 {
+            -webkit-transform: rotate(90deg);
+            -ms-transform: rotate(90deg);
+            transform: rotate(90deg);
+        }
+
+        .sk-fading-circle .sk-circle5 {
+            -webkit-transform: rotate(120deg);
+            -ms-transform: rotate(120deg);
+            transform: rotate(120deg);
+        }
+
+        .sk-fading-circle .sk-circle6 {
+            -webkit-transform: rotate(150deg);
+            -ms-transform: rotate(150deg);
+            transform: rotate(150deg);
+        }
+
+        .sk-fading-circle .sk-circle7 {
+            -webkit-transform: rotate(180deg);
+            -ms-transform: rotate(180deg);
+            transform: rotate(180deg);
+        }
+
+        .sk-fading-circle .sk-circle8 {
+            -webkit-transform: rotate(210deg);
+            -ms-transform: rotate(210deg);
+            transform: rotate(210deg);
+        }
+
+        .sk-fading-circle .sk-circle9 {
+            -webkit-transform: rotate(240deg);
+            -ms-transform: rotate(240deg);
+            transform: rotate(240deg);
+        }
+
+        .sk-fading-circle .sk-circle10 {
+            -webkit-transform: rotate(270deg);
+            -ms-transform: rotate(270deg);
+            transform: rotate(270deg);
+        }
+
+        .sk-fading-circle .sk-circle11 {
+            -webkit-transform: rotate(300deg);
+            -ms-transform: rotate(300deg);
+            transform: rotate(300deg);
+        }
+
+        .sk-fading-circle .sk-circle12 {
+            -webkit-transform: rotate(330deg);
+            -ms-transform: rotate(330deg);
+            transform: rotate(330deg);
+        }
+
+        .sk-fading-circle .sk-circle2:before {
+            -webkit-animation-delay: -1.1s;
+            animation-delay: -1.1s;
+        }
+
+        .sk-fading-circle .sk-circle3:before {
+            -webkit-animation-delay: -1s;
+            animation-delay: -1s;
+        }
+
+        .sk-fading-circle .sk-circle4:before {
+            -webkit-animation-delay: -0.9s;
+            animation-delay: -0.9s;
+        }
+
+        .sk-fading-circle .sk-circle5:before {
+            -webkit-animation-delay: -0.8s;
+            animation-delay: -0.8s;
+        }
+
+        .sk-fading-circle .sk-circle6:before {
+            -webkit-animation-delay: -0.7s;
+            animation-delay: -0.7s;
+        }
+
+        .sk-fading-circle .sk-circle7:before {
+            -webkit-animation-delay: -0.6s;
+            animation-delay: -0.6s;
+        }
+
+        .sk-fading-circle .sk-circle8:before {
+            -webkit-animation-delay: -0.5s;
+            animation-delay: -0.5s;
+        }
+
+        .sk-fading-circle .sk-circle9:before {
+            -webkit-animation-delay: -0.4s;
+            animation-delay: -0.4s;
+        }
+
+        .sk-fading-circle .sk-circle10:before {
+            -webkit-animation-delay: -0.3s;
+            animation-delay: -0.3s;
+        }
+
+        .sk-fading-circle .sk-circle11:before {
+            -webkit-animation-delay: -0.2s;
+            animation-delay: -0.2s;
+        }
+
+        .sk-fading-circle .sk-circle12:before {
+            -webkit-animation-delay: -0.1s;
+            animation-delay: -0.1s;
+        }
+        img {
+            max-height: 200px !important;
+        }
+
+        @-webkit-keyframes sk-circleFadeDelay {
+            0%,
+            39%,
+            100% {
+                opacity: 0;
+            }
+            40% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes sk-circleFadeDelay {
+            0%,
+            39%,
+            100% {
+                opacity: 0;
+            }
+            40% {
+                opacity: 1;
+            }
+        }
+        .myCanvas{
+            max-height: 340px;
+        }
+    </style>
+    <div id="main_load" class="tb_load" style="justify-content: center;align-items: center;">
+        <div>
+            <div align="center" valign="middle">
+                <div class="box_load">
+                    <div class="sk-fading-circle">
+                        <div class="sk-circle1 sk-circle"></div>
+                        <div class="sk-circle2 sk-circle"></div>
+                        <div class="sk-circle3 sk-circle"></div>
+                        <div class="sk-circle4 sk-circle"></div>
+                        <div class="sk-circle5 sk-circle"></div>
+                        <div class="sk-circle6 sk-circle"></div>
+                        <div class="sk-circle7 sk-circle"></div>
+                        <div class="sk-circle8 sk-circle"></div>
+                        <div class="sk-circle9 sk-circle"></div>
+                        <div class="sk-circle10 sk-circle"></div>
+                        <div class="sk-circle11 sk-circle"></div>
+                        <div class="sk-circle12 sk-circle"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="renderPDF" class="container">
+        <!-- TABLE WRAP-->
+        <div id="renderPDF2" style="margin-bottom: 70px;margin-right: 10px;">
+        <table width="100%" border="0" class="tb-wrap" style="margin-bottom: 0px;margin-right: 0px;margin-left: 0px;">
+
+            <tr>
+                <td class="pb-0">
+                    <!-- CABEÇALHO -->
+                    <table width="100%" border="0">
+                        <tbody>
+                            <tr>
+                                <td width="250" class="text-center" style="padding-bottom: 0;">
+                                    <apex:image value="{!URLFOR($Resource.PDFLOGO)}" width="370" height="80" style="padding-bottom: 10px;"/>
+                                    <span>{!($Label.PDFBaseURL)}</span>
+                                </td>
+                                <td class="td-title" style="padding-bottom: 0;">
+                                    <p>
+                                        <strong>STERIS BRASIL</strong>
+                                    </p>
+                                    <p>Av. Bem-te-vi, 77 - 3 andar</p>
+                                    <p>SÃO PAULO | CEP: 04524-030</p>
+                                    <p>CNPJ: 07.374.508/0001-07 | IE: 15/04/2005</p>
+                                    <p>Fone: <strong>(11) 2149-1726</strong></p>
+
+                                    <table class="td-border-top no-padding py-2">
+                                        <tr class="space-between">
+                                            <td class="lb-pedido flex-col" width="375">
+                                                <span style="font-size: 22px;">Proposta Equipamentos e Acessórios</span>
+                                            </td>
+                                            <td class="nr-pedido flex-col">
+                                                <span class="lb-status">Emissão: </span>
+                                                 {!quoteData.today}
+                                            </td>
+                                        </tr>
+                                    </table>
+
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <!-- /CABEÇALHO -->
+                </td>
+            </tr>
+
+            <!-- INICIO A SECAO DE TABLE -->
+            <tr>
+                <td class="td-sub-title bg-light color-border-lv2">
+                    <!-- SUB-CABEÇALHO -->
+                    <span>&rsaquo;</span> INFORMAÇÕES DA COTAÇÃO
+                    <!-- /SUB-CABEÇALHO -->
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding: 0px 15px;">
+                    <table class="tb-dados">
+                        <tr>
+                            <td width="50%">
+                                <span class="lb">Nome:</span>
+                                <span class="valor">{!quoteData.name}</span>
+                            </td>
+                            <td width="50%">
+                                <span class="lb">ID da Proposta:</span>
+                                <span class="valor">{!quoteData.proposal}</span>
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="tb-dados">
+                        <tr>
+                            <td width="50%">
+                                <span class="lb">Cliente:</span>
+                                <span class="valor">{!quoteData.accountName}</span>
+                            </td>
+                            <td width="50%">
+                                <span class="lb">Endereço de Entrega:</span>
+                                <span class="valor">{!quoteData.addressDelivery}</span>
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="tb-dados">
+                        <tr>
+                            <td width="50%">
+                                <span class="lb">Prazo de garantia (Meses):</span>
+                                <span class="valor">{!quoteData.prazoGarantia}</span>
+                            </td>
+                            <td width="50%">
+                                <span class="lb">Prazo de Entrega (Dias):</span>
+                                <span class="valor">{!quoteData.prazoEntrega}</span>
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="tb-dados">
+                        <tr>
+                            <td width="50%">
+                                <span class="lb">Instalação:</span>
+                                <span class="valor">{!quoteData.instalacao}</span>
+                            </td>
+                            <td width="50%">
+                                <span class="lb">Frete:</span>
+                                <span class="valor">{!quoteData.frete}</span>
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="tb-dados">
+                        <tr>
+                            <td width="50%">
+                                <span class="lb">Emitido por:</span>
+                                <span class="valor">{!quoteData.createdBy}</span>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+                    <tr class="new-page">
+                        <td style="padding: 0;">
+                            <!-- CONDIÇÃO PAGTO E VALOR -->
+                            <table class="tb-dados mb-1">
+                                <tr class="no-border flex-end">
+                                    <td width="360" class="text-right">
+                                        <div class="box-total">
+                                            <span class="lb">Valor Total:</span>
+                                            <span class="valor total">R$ {!quoteData.totalPrice}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <!-- /CONDIÇÃO PAGTO E VALOR -->
+                        </td>
+                    </tr>
+
+            <!-- /FINAL A DE SECAO TABLE -->
+
+            <!-- INICIO D SECAO DE TABLE -->
+            <!-- INICIO B SECAO DE TABLE -->
+        <apex:repeat value="{!quoteData.itemList}" var="item" >
+
+                <tr class="html2pdf__page-break">
+                    <td class="">
+                    </td>
+                </tr>
+                <apex:outputPanel rendered="{!item.hasStructures}">
+                <tr class="new-page">
+                    <td class="td-sub-title bg-light color-border-lv2">
+                        <!-- SUB-CABEÇALHO -->
+                        <span>&rsaquo;</span> {!item.nameWithoutCode}
+                        <!-- /SUB-CABEÇALHO -->
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding: 0px 15px;">
+                        <table class="tb-dados">
+                            <tr>
+                                <td width="80%" >
+                                    <table class="tb-dados">
+                                        <apex:repeat value="{!item.optionalList}" var="optional" id="optionalRepeat">
+                                            <tr>
+                                                <td width="100%">
+                                                    <span class="lb"> {!optional.name}</span>
+                                                    <span class="valor">{!optional.description}</span>
+                                                </td>
+                                            </tr>
+                                        </apex:repeat>
+                                    </table>
+                                </td>
+                                <td width="20%" >
+                                    <img  class="content__image" src="data:image/{!item.extension};base64,{!item.image}"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                </apex:outputPanel>
+                <tr>
+                    <td style="padding: 0px">
+                        <table style="border-collapse: collapse;">
+                            <tr class="new-page">
+                                <td width="40%" class="td-sub-title bg-light color-border-lv2">
+                                    <!-- SUB-CABEÇALHO -->
+                                    <span>&rsaquo;</span> EQUIPAMENTO
+                                    <!-- /SUB-CABEÇALHO -->
+                                </td>
+                                <td width="60%" class="td-sub-title bg-light color-border-lv2 text-right">
+                                    <span class="valor">SubTotal Equipamento: {!item.totalPriceEquip}</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <table class="tb-dados">
+                        
+                            <tr class="tr-lista-header">
+                                <th width="40%" class="text-left">Nome</th>
+                                <th width="20%" class="text-left">Quantidade</th>
+                                <th width="20%" class="text-left">Valor</th>
+                                <th width="20%" class="text-right">Subtotal</th>
+                            </tr>
+                                <tr class="tr-lista-valores new-page">
+                                    <td width="40%">
+                                        <span class="valor">{!item.name}</span>
+                                    </td>
+                                    <td width="20%">
+                                        <span class="valor">{!item.quantity}</span>
+                                    </td>
+                                    <td width="20%">
+                                        <span class="valor">${!item.unitPrice}</span>
+                                    </td>
+                                    <td width="20%" class="text-right">
+                                        <span class="valor">{!item.totalPriceEquip}</span>
+                                    </td>
+                                </tr>
+                        
+                        </table>
+                    </td>
+                </tr>
+				<apex:outputPanel rendered="{!item.hasRequiredKit}">
+                    <tr>
+                        <td style="padding: 0px" >
+                            <table style="border-collapse: collapse;">
+                                <tr class="new-page">
+                                    <td width="40%" class="td-sub-title bg-light color-border-lv2">
+                                        <!-- SUB-CABEÇALHO -->
+                                        <span>&rsaquo;</span> Acessórios Obrigatorios
+                                        <!-- /SUB-CABEÇALHO -->
+                                    </td>
+                                    <td width="60%" class="td-sub-title bg-light color-border-lv2 text-right">
+                                        <span class="valor">SubTotal Acessórios Obrigatorios: {!item.kitRequiredDataTotal}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td >
+                            <!-- TABLE type 02 DADOS POPULADOS -->
+                            <table class="tb-dados">
+                    
+                                <tr class="tr-lista-header">
+                                    <th width="40%" class="text-left">Nome</th>
+                                    <th width="20%" class="text-left">Quantidade</th>
+                                    <th width="20%" class="text-left">Valor</th>
+                                    <th width="20%" class="text-right">SubTotal</th>
+                                </tr>
+                                <apex:repeat value="{!item.kitRequiredDataList}" var="accessory" id="accessoryRepeat">
+                    
+                                    <!-- LISTANDO PRODUTOS -->
+                                    <tr class="tr-lista-valores new-page">
+                                        <td width="40%">
+                                            <span class="valor">{!accessory.name}</span>
+                                        </td>
+                                        <td width="20%">
+                                            <span class="valor">{!accessory.quantity}</span>
+                                        </td>
+                                        <td width="20%">
+                                            <span class="valor">${!accessory.price}</span>
+                                        </td>
+                                        <td width="20%" class="text-right">
+                                            <span class="valor">{!accessory.subTotal}</span>
+                                        </td>
+                                    </tr>
+                                    <!-- / LISTANDO PRODUTOS -->
+                    
+                                </apex:repeat>
+                                <!-- <tr class="tr-lista-valores new-page">
+                                    <td colspan="4" width="100%" class="text-right">
+                                        <span class="valor lb-col">SubTotal: {!item.kitRequiredDataTotal}</span>
+                                    </td>
+                                </tr> -->
+                            </table>
+                            <!-- /TABLE type 02 DADOS POPULADOS -->
+                        </td>
+                    </tr>
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!item.hasOptionalKit}">
+                    <tr>
+                        <td style="padding: 0px">
+                            <table style="border-collapse: collapse;">
+                                <tr class="new-page">
+                                    <td width="40%" class="td-sub-title bg-light color-border-lv2">
+                                        <!-- SUB-CABEÇALHO -->
+                                        <span>&rsaquo;</span> Acessórios Opcionais
+                                        <!-- /SUB-CABEÇALHO -->
+                                    </td>
+                                    <td width="60%" class="td-sub-title bg-light color-border-lv2 text-right">
+                                        <span class="valor">SubTotal Acessórios Opcionais: {!item.kitOpcionalDataTotal}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <!-- TABLE type 02 DADOS POPULADOS -->
+                            <table class="tb-dados">
+                
+                                <tr class="tr-lista-header">
+                                    <th width="40%" class="text-left">Nome</th>
+                                    <th width="20%" class="text-left">Quantidade</th>
+                                    <th width="20%" class="text-left">Valor</th>
+                                    <th width="20%" class="text-right">SubTotal</th>
+                                </tr>
+                                <apex:repeat value="{!item.kitOpcionalDataList}" var="accessory" id="accessoryRepeat1">
+                
+                                    <!-- LISTANDO PRODUTOS -->
+                                    <tr class="tr-lista-valores new-page">
+                                        <td width="40%">
+                                            <span class="valor">{!accessory.name}</span>
+                                        </td>
+                                        <td width="20%">
+                                            <span class="valor">{!accessory.quantity}</span>
+                                        </td>
+                                        <td width="20%">
+                                            <span class="valor">${!accessory.price}</span>
+                                        </td>
+                                        <td width="20%" class="text-right">
+                                            <span class="valor">{!accessory.subTotal}</span>
+                                        </td>
+                                    </tr>
+                                    <!-- / LISTANDO PRODUTOS -->
+                
+                                </apex:repeat>
+                                <!-- <tr class="tr-lista-valores new-page">
+                                    <td colspan="4" width="100%" class="text-right">
+                                        <span class="valor lb-col">SubTotal: {!item.kitOpcionalDataTotal}</span>
+                                    </td>
+                                </tr> -->
+                            </table>
+                            <!-- /TABLE type 02 DADOS POPULADOS -->
+                        </td>
+                    </tr>
+                    <!-- <tr class="new-page">
+                        <td style="padding: 0;">
+                            <table class="tb-dados mb-1">
+                                <tr class="no-border flex-end">
+                                    <td width="360" class="text-right">
+                                        <div class="box-total">
+                                            <span class="lb">Valor Total:</span>
+                                            <span class="valor total">{!item.kitOpcionalDataTotal}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr> -->
+                </apex:outputPanel>
+                <apex:outputPanel rendered="{!item.hasExceptionKit}">
+                    <tr>
+                        <td style="padding: 0px">
+                            <table style="border-collapse: collapse;">
+                                <tr class="new-page">
+                                    <td width="40%" class="td-sub-title bg-light color-border-lv2">
+                                        <!-- SUB-CABEÇALHO -->
+                                        <span>&rsaquo;</span> Acessórios Adicionais
+                                        <!-- /SUB-CABEÇALHO -->
+                                    </td>
+                                    <td width="60%" class="td-sub-title bg-light color-border-lv2 text-right">
+                                        <span class="valor">SubTotal Acessórios Adicionais: {!item.kitExceptionDataTotal}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <!-- TABLE type 02 DADOS POPULADOS -->
+                            <table class="tb-dados">
+                
+                                <tr class="tr-lista-header">
+                                    <th width="40%" class="text-left">Nome</th>
+                                    <th width="20%" class="text-left">Quantidade</th>
+                                    <th width="20%" class="text-left">Valor</th>
+                                    <th width="20%" class="text-right">SubTotal</th>
+                                </tr>
+                                <apex:repeat value="{!item.kitExceptionDataList}" var="accessory" id="accessoryRepeat2">
+                
+                                    <!-- LISTANDO PRODUTOS -->
+                                    <tr class="tr-lista-valores new-page">
+                                        <td width="40%">
+                                            <span class="valor">{!accessory.name}</span>
+                                        </td>
+                                        <td width="20%">
+                                            <span class="valor">{!accessory.quantity}</span>
+                                        </td>
+                                        <td width="20%">
+                                            <span class="valor">${!accessory.price}</span>
+                                        </td>
+                                        <td width="20%" class="text-right">
+                                            <span class="valor">{!accessory.subTotal}</span>
+                                        </td>
+                                    </tr>
+                                    <!-- / LISTANDO PRODUTOS -->
+                
+                                </apex:repeat>
+                                <!-- <tr class="tr-lista-valores new-page">
+                                    <td colspan="4" width="100%" class="text-right">
+                                        <span class="valor lb-col">SubTotal: {!item.kitExceptionDataTotal}</span>
+                                    </td>
+                                </tr> -->
+                            </table>
+                            <!-- /TABLE type 02 DADOS POPULADOS -->
+                        </td>
+                    </tr>
+                    <!-- <tr class="new-page">
+                        <td style="padding: 0;">
+                            <table class="tb-dados mb-1">
+                                <tr class="no-border flex-end">
+                                    <td width="360" class="text-right">
+                                        <div class="box-total">
+                                            <span class="lb">Valor Total:</span>
+                                            <span class="valor total">{!item.kitExceptionDataTotal}</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr> -->
+                </apex:outputPanel>
+                <tr class="new-page">
+                    <td style="padding: 0;">
+                        <!-- CONDIÇÃO PAGTO E VALOR -->
+                        <table class="tb-dados mb-1">
+                            <tr class="no-border flex-end">
+                                <td width="360" class="text-right">
+                                    <div class="box-total">
+                                        <span class="lb">Valor Total:</span>
+                                        <span class="valor total">R$ {!item.totalPrice}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                        <!-- /CONDIÇÃO PAGTO E VALOR -->
+                    </td>
+                </tr>
+
+            <!-- /FINAL B DE SECAO TABLE -->
+        </apex:repeat>
+
+
+        </table>
+        <!-- /TABLE WRAP-->
+        </div>
+    </div>
+    <table width="100%" style="border: 2px solid #5cb85c; position: fixed; height: 50px; bottom: 0; width: 100%;text-align: center;"> 
+        <tr class="new-page">
+            <td style="padding: 0px 15px;">
+                <!-- TABLE type 02 DADOS POPULADOS -->
+                <table class="tb-dados">
+                    <!-- LISTANDO PRODUTOS -->
+                    <tr class="no-border">
+                        <td width="100%">
+                            <button type="button" class="btn-cta-success" onclick="downloadPDF()">Salvar PDF</button>
+                        </td>
+                    </tr>
+                    <!-- / LISTANDO PRODUTOS -->
+                </table>
+                <!-- /TABLE type 02 DADOS POPULADOS -->
+            </td>
+        </tr>
+    </table>
+
+</apex:page>

@@ -1,5 +1,5 @@
 <aura:component
-	implements="force:hasRecordId,lightning:actionOverride,force:lightningQuickActionWithoutHeader" access="global">
+	implements="force:hasRecordId,lightning:actionOverride,force:lightningQuickActionWithoutHeader,lightning:availableForFlowActions" access="global">
 		<aura:attribute name="recordId" type="String"></aura:attribute>
 		<lightning:navigation aura:id="navService"/>
 		<aura:handler name="init" value="{!this}" action="{!c.doInit}"/>

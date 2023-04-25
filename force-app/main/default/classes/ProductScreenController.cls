@@ -26,7 +26,14 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 
 		context = isOpp(objId) ? 'Opportunity' : 'Quote';
 	}
-
+	@AuraEnabled
+	public static sObject getBaseObject(String objId) {	
+		context = isOpp(objId) ? 'Opportunity' : 'Quote';
+		for (sObject retrievedObj : Database.query('SELECT Id, Name, AccountId, Account.Name, CreatedBy.Name, Pricebook2.Name, CurrencyIsoCode FROM '+context+' WHERE Id = :objId LIMIT 1')) {
+			return retrievedObj;
+		}
+		return null;
+	}
 	@AuraEnabled
 	public static Map<Id, ProductData> getCheckoutData(String objId) {
 		if (String.isBlank(objId)) return new Map<Id, ProductData>();
@@ -37,11 +44,11 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 			initCheckoutStaticVariable(objId);
 
 			if(isOpp(objId)){
-				for (QuoteLineItem retrievedItem : getQuoteLineItemsByQuoteId(objId)) {
+				for (OpportunityLineItem retrievedItem : getOppLineItemsByOpportunityId(objId)) {
 					getCheckoutData(new ProductData(retrievedItem), checkoutProductMap);
 				}
 			}else{
-				for (OpportunityLineItem retrievedItem : getOppLineItemsByOpportunityId(objId)) {
+				for (QuoteLineItem retrievedItem : getQuoteLineItemsByQuoteId(objId)) {
 					getCheckoutData(new ProductData(retrievedItem), checkoutProductMap);
 				}
 			}
@@ -77,9 +84,9 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 										retrievedGroup.isSelected = true;
 										retrievedAccessory.isSelected = true;
 										retrievedAccessory.quantity = accessoryProductData.quantity;
-										retrievedAccessory.unitPrice = accessoryProductData.price;
+										retrievedAccessory.price = accessoryProductData.price;
 										retrievedAccessory.quantity = accessoryProductData.quantity;
-										retrievedAccessory.totalAmount = (retrievedAccessory.unitPrice * retrievedAccessory.quantity).setScale(2);
+										retrievedAccessory.totalAmount = (retrievedAccessory.price * retrievedAccessory.quantity).setScale(2);
 
 										accessoryProductIdSet.remove(retrievedAccessory.productId);
 									}
@@ -226,11 +233,11 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 		for (Id productId : productDataMap.keySet()) {
 			ProductData currentProduct = productDataMap.get(productId);
 
-			if (productIdToImageMap.containsKey(productId)) {
-				ContentVersion currentImage = productIdToImageMap.get(productId);
-				String image = EncodingUtil.base64Encode((Blob)currentImage.VersionData);
-				currentProduct.image = 'data:image/' + currentImage.FileExtension + ';base64,' + image;
-			}
+			// if (productIdToImageMap.containsKey(productId)) {
+			// 	ContentVersion currentImage = productIdToImageMap.get(productId);
+			// 	String image = EncodingUtil.base64Encode((Blob)currentImage.VersionData);
+			// 	currentProduct.image = 'data:image/' + currentImage.FileExtension + ';base64,' + image;
+			// }
 			if (productIdToPriceMap.containsKey(productId)) {
 				PricebookEntry currentPrice = productIdToPriceMap.get(productId);
 				currentProduct.listPrice = currentPrice.UnitPrice;
@@ -283,7 +290,7 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 					PricebookEntry currentPrice = productIdToPriceMap.get(retrievedAccessory.productId);
 
 					if (currentPrice != null) {
-						retrievedAccessory.unitPrice = currentPrice.UnitPrice;
+						retrievedAccessory.price = currentPrice.UnitPrice;
 					}
 				}
 
@@ -298,14 +305,15 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 		Integer stringIndex = index * 2;
 
 		for (Product2 retrievedProduct : getProductList(structureId, currentExternalId)) {
-			String externalId = retrievedProduct.ExternalId__c;
+			// String externalId = retrievedProduct.ExternalId__c;
 
-			if ((stringIndex + 2) >= externalId.length()) {
-				nextExternalIdSet.add(externalId.substring(stringIndex, externalId.length()));
-			}
-			else {
-				nextExternalIdSet.add(externalId.substring(stringIndex, stringIndex + 2));
-			}
+			// if ((stringIndex + 2) >= externalId.length()) {
+			// 	nextExternalIdSet.add(externalId.substring(stringIndex, externalId.length()));
+			// }
+			// else {
+			// 	nextExternalIdSet.add(externalId.substring(stringIndex, stringIndex + 2));
+			// }
+			nextExternalIdSet.add(retrievedProduct.ExternalId__c.replace(currentExternalId, ''));
 		}
 
 		return new List<String>(nextExternalIdSet);
@@ -332,7 +340,7 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 		Savepoint currentSavepoint = Database.setSavepoint();
 
 		try {
-			
+			System.debug(lineItemList);
 			initSaveLineItemsVars(objId, lineItemList);
 
 			for (ProductData retrievedProductData : lineItemList) {
@@ -343,15 +351,18 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 					for (AccessoryData retrievedAccessory : retrievedGroup.accessoryList) {
 						if (!retrievedAccessory.isSelected) continue;
 
-						handleAcessoryDataDML(retrievedAccessory, retrievedProductData.id, objId);					
+						handleAcessoryDataDML(retrievedAccessory, retrievedProductData.productId, objId);					
 					}
 				}
 
 				for (ProductData retrievedAccessoryData : retrievedProductData.exceptionAccessoryList) {
-					handleProductDataDML(retrievedAccessoryData, retrievedProductData.id, objId);
+					handleProductDataDML(retrievedAccessoryData, retrievedProductData.productId, objId);
 				}
 				handleProductDataDML(retrievedProductData, null, objId);
 			}
+			System.debug(insertQuoteLineItemList);
+			System.debug(updateQuoteLineItemList);
+			System.debug(itemKeyToLineItemMap);
 
 			saveLineItemsDML();
 
@@ -366,6 +377,8 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 		return new SaveResponse();
 	}
 	public static void  saveLineItemsDML() {
+		QuoteTriggerHandler.disableTrigger();
+		QuoteLineItemHandler.disableTrigger();
 		if (!itemKeyToLineItemMap.isEmpty()) getDeleteLineItem(itemKeyToLineItemMap.values());
 		if (!insertQuoteLineItemList.isEmpty()) insert insertQuoteLineItemList;
 		if (!updateQuoteLineItemList.isEmpty()) update updateQuoteLineItemList;
@@ -381,15 +394,18 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 		delete sobjList;
 	}
 	public static void handleAcessoryDataDML(AccessoryData retrievedProductData, String parentId, String objId){
-		PricebookEntry currentPrice = productToPriceIdMap.get(retrievedProductData.id);
-		String key = retrievedProductData.id + '-'+String.valueOf(parentId);
+		PricebookEntry currentPrice = productToPriceIdMap.get(retrievedProductData.productId);
+		String key = retrievedProductData.productId + '-'+String.valueOf(parentId);
 
 		if (currentPrice == null) throw new CustomException('Produto ' + retrievedProductData.name + ' não tem preço!!');
 
 		if(context == 'Opportunity'){
 			OpportunityLineItem oppLine = retrievedProductData.getOpportunityLineItem(currentPrice, objId);
-			oppLine.ParentProduct__c = parentId;
+			oppLine.ParentProduct__c = parentId;			
+			oppLine.AcessoryGroup__c = retrievedProductData.GroupId;			
+			oppLine.AcessoryType__c = retrievedProductData.Id;
 			
+			System.debug(key);
 			if (itemKeyToLineItemMap.containsKey(key)) {
 				oppLine.Id = itemKeyToLineItemMap.get(key);
 			
@@ -400,8 +416,11 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 			}
 		}else{
 			QuoteLineItem quoteLine = retrievedProductData.getQuoteLineItem(currentPrice, objId);
-			quoteLine.ParentProduct__c = parentId;
+			quoteLine.ParentProduct__c = parentId;		
+			quoteLine.AcessoryGroup__c = retrievedProductData.GroupId;			
+			quoteLine.AcessoryType__c = retrievedProductData.Id;
 			
+			System.debug(key);
 			if (itemKeyToLineItemMap.containsKey(key)) {
 				quoteLine.Id = itemKeyToLineItemMap.get(key);
 			
@@ -413,8 +432,8 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 		}
 	}	
 	public static void handleProductDataDML(ProductData retrievedProductData, String parentId, String objId){
-		PricebookEntry currentPrice = productToPriceIdMap.get(retrievedProductData.id);
-		String key = retrievedProductData.id + '-'+String.valueOf(parentId);
+		PricebookEntry currentPrice = productToPriceIdMap.get(retrievedProductData.productId);
+		String key = retrievedProductData.productId + '-'+String.valueOf(parentId);
 
 		if (currentPrice == null) throw new CustomException('Produto ' + retrievedProductData.name + ' não tem preço!!');
 
@@ -422,6 +441,7 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 			OpportunityLineItem oppLine = retrievedProductData.getOpportunityLineItem(currentPrice, objId);
 			oppLine.ParentProduct__c = parentId;
 			
+			System.debug(key);
 			if (itemKeyToLineItemMap.containsKey(key)) {
 				oppLine.Id = itemKeyToLineItemMap.get(key);
 			
@@ -434,6 +454,7 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 			QuoteLineItem quoteLine = retrievedProductData.getQuoteLineItem(currentPrice, objId);
 			quoteLine.ParentProduct__c = parentId;
 			
+			System.debug(key);
 			if (itemKeyToLineItemMap.containsKey(key)) {
 				quoteLine.Id = itemKeyToLineItemMap.get(key);
 			
@@ -455,7 +476,7 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 	public static void getPricebookEntries(String objId, List<ProductData> quoteItemList) {
 		Set<Id> product2IdSet = new Set<Id>();
 		for (ProductData retrievedItemData : quoteItemList) {
-			product2IdSet.add(retrievedItemData.id);
+			product2IdSet.add(retrievedItemData.productId);
 
 			for (GroupAccessoryData retrievedGroup : retrievedItemData.groupAccessoryList) {
 				if (!retrievedGroup.isListing) continue;
@@ -468,7 +489,7 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 			}
 
 			for (ProductData retrievedAccessoryData : retrievedItemData.exceptionAccessoryList) {
-				product2IdSet.add(retrievedAccessoryData.id);
+				product2IdSet.add(retrievedAccessoryData.productId);
 			}
 		}
 		productToPriceIdMap = getPrices(objId, product2IdSet);
@@ -485,14 +506,68 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 	}
 
 	public static Boolean isOpp(Id objId){
-		return checkObjectContext(objId, '006');
+		return checkObjectContext(objId, Schema.Opportunity.getSObjectType());
 	}
 	public static Boolean isQuote(Id objId){
-		return checkObjectContext(objId, '0Q0');
+		return checkObjectContext(objId, Schema.Quote.getSObjectType());
 	}
-	public static Boolean checkObjectContext(Id objId, String prefix){
-		return String.valueOf(objId).startsWith(prefix);
+	public static Boolean checkObjectContext(Id objId, Schema.SObjectType obj){
+		return objId.getSobjectType() == obj;
 	}
+
+	
+    @AuraEnabled(cacheable=false)
+    public static List<SObject> getRecords(String objectApiName, String fieldApiName, String fieldApiNames, String filter, String searchTerm, String recordId, Boolean byFocus) {
+        if(recordId == null) {
+            recordId = '';
+        } else if (filter == null) {
+            filter = '';
+        }
+
+        if((recordId != null && recordId != '') && (filter.contains('replace'))) {
+            filter = filter.replace('replace', recordId);
+            System.debug('filter: '+ filter);
+        }
+
+        if(byFocus) {
+            String query = 'SELECT Id, ' + fieldApiNames +
+                            ' FROM '    + objectApiName +
+                            ' WHERE ';
+                List<String> fieldList = fieldApiName.split(';');
+                List<String> conditions = new List<String>();
+                for (String field : fieldList) {
+                    conditions.add(' ' + field + ' LIKE \'%' + searchTerm + '%\'');
+                }
+                query += '(' + String.join(conditions, ' OR ') + ')';
+                query += filter + ' LIMIT 10';
+
+                List<SObject> recordsList =
+                Database.query(query);
+
+                return recordsList;
+        } else {
+            if(String.isNotBlank(searchTerm)) {
+                String query = 'SELECT Id, ' + fieldApiNames +
+                                ' FROM '    + objectApiName +
+                                ' WHERE ';
+                List<String> fieldList = fieldApiName.split(';');
+                List<String> conditions = new List<String>();
+                for (String field : fieldList) {
+                    conditions.add(' ' + field + ' LIKE \'%' + searchTerm + '%\'');
+                }
+                query += '(' + String.join(conditions, ' OR ') + ')';
+                query += filter + ' LIMIT 10';
+
+                List<SObject> recordsList =
+                Database.query(query);
+
+                return recordsList;
+            }
+            else {
+                return NULL;
+            }
+        }
+    }
 
 	@AuraEnabled
 	public static Map<Id, EstruturaProduto__c> getStructures() {
@@ -500,7 +575,8 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 			SELECT Id,
 				   Name,
 				   Agrupador__c,
-				   ImagemProduto__c
+				   ImagemProduto__c,
+				   CodigoInterno__c
 			  FROM EstruturaProduto__c
 			 WHERE Ativo__c = true
 			 LIMIT 10000
@@ -512,15 +588,15 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 		return [
 			SELECT Id,
 				   Name,
+				   EstruturaProduto__r.CodigoInterno__c,
 				   (
 					SELECT Id,
 						   Name,
 						   DescricaoRecurso__c,
 						   RecursoProduto__r.Name,
-						   ExternalId__c
+						   Sequencial__c
 					  FROM ComposicaoProduto__r
 					 WHERE Ativo__c = true
-					 ORDER BY Sequencial__c
 				   )
 			  FROM RecursosProduto__c
 			 WHERE EstruturaProduto__c = :structureId
@@ -658,7 +734,9 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 						   Name,
 						   GrupoAcessorio__c,
 						   Produto__c,
-						   Produto__r.Name
+						   Produto__r.Name,
+						   Produto__r.ProductCode,
+						   Produto__r.ExternalId__c
 					  FROM TipoAcessorios__r
 					 WHERE Ativo__c = true
 				   )
@@ -688,6 +766,7 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 				   UnitPrice,
 				   ParentProduct__c,
 				   ParentProduct__r.KitAcessorios__c,
+				   Product2.Imagem_URL__c,
 				   Product2Id,
 				   Product2.Name,
 				   Product2.ExternalId__c,
@@ -701,9 +780,12 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 		return [
 			SELECT Id,
 				   Quantity,
+				   ListPrice,
+				   Discount,
 				   UnitPrice,
 				   ParentProduct__c,
 				   ParentProduct__r.KitAcessorios__c,
+				   Product2.Imagem_URL__c,
 				   Product2Id,
 				   Product2.Name,
 				   Product2.ExternalId__c,

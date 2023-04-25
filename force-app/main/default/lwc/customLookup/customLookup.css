@@ -1,0 +1,55 @@
+.containerCL {
+  /* width: 280px; */
+  /* height: 15px; */
+  height: 0px;
+}
+
+/*.myCustomClass input{
+text-align: right;
+font-weight: bold;
+padding-top: 12px;
+}*/
+
+.containerCL-records-list {
+  z-index: 99;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 0.072rem;
+  border: 1px solid rgb(221, 219, 218);
+  border-radius: 0.25rem;
+  background-color: #FFF;
+}
+
+.containerCL-records-list-blocked {
+  z-index: 99;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 0.072rem;
+  border: 1px solid;
+  border-color: rgb(201, 199, 197);
+  border-radius: 0.25rem;
+  background-color: rgb(236, 235, 234);
+}
+
+.containerCL-records-list .list-item {
+  cursor: pointer;
+}
+
+.containerCL-records-list .list-item:hover {
+  background-color: #f3f2f2;
+}
+
+.containerCL .selected-record {
+  background-color: #FFF;
+  border: 1px solid rgb(221, 219, 218);
+  border-radius: 0.25rem;
+  max-height: 42px;
+}
+
+.containerCL .selected-record-blocked {
+  background-color: var(--lwc-colorBackgroundInputDisabled,rgb(236, 235, 234));
+  border-radius: 0.25rem;
+  border: var(--lwc-borderWidthThin,1px) solid var(--lwc-colorBorderInputDisabled,rgb(201, 199, 197));
+  max-height: 32px;
+  cursor: not-allowed;
+}

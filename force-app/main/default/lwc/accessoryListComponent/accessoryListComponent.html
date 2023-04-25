@@ -1,0 +1,101 @@
+<template>
+    <template if:true={showIncluded}>
+        <div class="common-catalog-item__info">
+            <div class=" container__accessories-data common-acessory-title">
+                <div class="slds-var-m-top_xxx-small"> INCLUSOS </div>
+            </div>
+            <template for:each={product.groupAccessoryList} for:item="group">
+                <template if:false={group.isListing}>
+                    <div key={group.id} class="container__accessories-data">
+                        <div class="slds-var-m-top_xxx-small">
+                            <p> {group.name} </p>
+                        </div>
+                    </div>
+                </template>
+            </template>
+        </div>
+    </template>
+    <template if:true={showRequired}>
+    <div class="common-catalog-item__info">
+        <div class=" container__accessories-data common-acessory-title">
+            <div class="slds-var-m-top_xxx-small"> OBRIGATORIOS </div>
+        </div>
+        
+        <template for:each={product.groupAccessoryList} for:item="group">
+            <template if:true={group.isRequired}>
+                <lightning-layout  key={group.id}  multiple-rows horizontal-align="spread">        
+		            <lightning-layout-item class="slds-var-p-horizontal_xx-small slds-var-m-top_xxx-small" size="12"
+		            	medium-device-size="12" large-device-size="12">
+                        <template if:true={group.isListing} for:each={group.accessoryList} for:item="accessory">
+                            <div key={accessory.id} if:true={accessory.isSelected}>                                
+                                <c-accessory-component accessory={accessory} product={product} group={group} onhandlechangeacessory={handlechangeacessory}></c-accessory-component>
+                            </div>
+                        </template>
+                    </lightning-layout-item>
+                </lightning-layout>
+            </template>
+        </template>
+    </div>
+    </template>
+    <template if:true={showOptional}>
+    <div class="common-catalog-item__info">
+        <div class=" container__accessories-data common-acessory-title">
+            <div class="slds-var-m-top_xxx-small"> OPCIONAIS</div>
+        </div>
+        
+        <template for:each={product.groupAccessoryList} for:item="group">
+            <template if:false={group.isRequired}>
+                <lightning-layout  key={group.id}  multiple-rows horizontal-align="spread">        
+		            <lightning-layout-item class="slds-var-p-horizontal_xx-small slds-var-m-top_xxx-small" size="12"
+		            	medium-device-size="12" large-device-size="12">
+                        <template if:true={group.isListing} for:each={group.accessoryList} for:item="accessory">
+                            <div key={accessory.id} if:true={accessory.isSelected}>                                
+                                <c-accessory-component accessory={accessory} product={product} group={group} onhandlechangeacessory={handlechangeacessory}></c-accessory-component>
+                            </div>
+                        </template>
+                    </lightning-layout-item>
+                </lightning-layout>
+            </template>
+        </template>
+    </div>
+    </template>    
+    <template if:true={showException}>
+    <div class="common-catalog-item__info">
+        <div class=" container__accessories-data common-acessory-title">
+            <div class="slds-var-m-top_xxx-small"> ADICIONAIS </div>
+        </div>
+        <template for:each={product.exceptionAccessoryList} for:item="group">
+            <template if:true={group.isSelected}>
+                    
+                <lightning-layout key={group.id}  multiple-rows horizontal-align="spread">        
+		            <lightning-layout-item class="slds-var-p-horizontal_xx-small slds-var-m-top_xxx-small" size="12"
+		            	medium-device-size="12" large-device-size="12">
+                        <lightning-layout multiple-rows horizontal-align="spread">
+                            <lightning-layout-item size="9">
+                                <p>
+                                    <b>{group.name} </b>
+                                </p>
+                                <p>
+                                    Quantidade: {group.quantity}
+                                </p>
+                                <p>
+                                    Valor: <lightning-formatted-number class="slds-var-p-left_xxx-small"
+													value={group.price} format-style="currency"
+													currency-code="BRL"
+													maximum-fraction-digits="2"></lightning-formatted-number>
+                                </p>
+                            </lightning-layout-item>
+                            <lightning-layout-item size="3" style="display: flex;justify-content: flex-end;">
+                                <lightning-button-group>
+                                    <lightning-button-icon icon-name="utility:delete" data-id={group.id} class="slds-m-left_xx-small" title="Delete" onclick={onRemoveException}></lightning-button-icon>
+                                    <lightning-button-icon icon-name="utility:edit" data-id={group.id} class="slds-m-left_xx-small" title="Edit" onclick={onEditException}></lightning-button-icon>
+                                </lightning-button-group>
+                            </lightning-layout-item>
+                        </lightning-layout>  
+                    </lightning-layout-item>
+                </lightning-layout>
+            </template>
+        </template>
+    </div>
+    </template>
+</template>

@@ -25,14 +25,7 @@ public with sharing class PDFQuoteController {
 				}
 			}
 
-			Map<Id, List<TiposRecurso__c>> productIdToResourceListMap = getResources(resourceCodeSet, productIdToProductMap);
-			Map<Id, ContentVersion> itemToImageMap = new Map<Id, ContentVersion>();
-
-			if (!productIdToResourceListMap.isEmpty()) {
-				itemToImageMap = getImages(productIdToResourceListMap.keySet());
-			}
-
-			this.quoteData = new QuoteData(currentQuote, productIdToResourceListMap, itemToImageMap);
+			this.quoteData = new QuoteData(currentQuote);
 		}
 		catch (Exception ex) {
 			System.debug('Create Quote PDF Exception => ' + ex.getMessage());
@@ -45,63 +38,20 @@ public with sharing class PDFQuoteController {
 		System.debug('quoteData => ' + quoteData);
 	}
 
-	public Map<Id, List<TiposRecurso__c>> getResources(Set<String> resourceCodeSet, Map<Id, Product2> productIdToProductMap) {
-		Map<Id, List<TiposRecurso__c>> productIdToResourceListMap = new Map<Id, List<TiposRecurso__c>>();
-		Map<String, TiposRecurso__c> resourceTypeMap = new Map<String, TiposRecurso__c>();
-		Set<String> typeCodeSet = new Set<String>();
+	public static Map<String, Map<String, List<TiposRecurso__c>>> getResources(Set<String> estruturaIdSet) {
+		Map<String, Map<String, List<TiposRecurso__c>>> resourceTypeMap = new Map<String, Map<String, List<TiposRecurso__c>>>();
+		for(TiposRecurso__c rec : [SELECT id, Sequencial__c, RecursoProduto__r.EstruturaProduto__c, RecursoProduto__r.EstruturaProduto__r.CodigoInterno__c, RecursoProduto__r.Sequencial__c, RecursoProduto__r.Name, DescricaoRecurso__c FROM TiposRecurso__c WHERE RecursoProduto__r.EstruturaProduto__c IN :estruturaIdSet order by RecursoProduto__r.Sequencial__c ASC]){
+			if(!resourceTypeMap.containsKey(rec.RecursoProduto__r.EstruturaProduto__c)){
+				resourceTypeMap.put(rec.RecursoProduto__r.EstruturaProduto__c, new Map<String, List<TiposRecurso__c>>());
+			}	
 
-		for (String code : resourceCodeSet) {
-			Integer count = 0;
-			String correctCode = '';
+			if(!resourceTypeMap.get(rec.RecursoProduto__r.EstruturaProduto__c).containsKey(String.valueOf(rec.RecursoProduto__r.Sequencial__c))){
+				resourceTypeMap.get(rec.RecursoProduto__r.EstruturaProduto__c).put(String.valueOf(rec.RecursoProduto__r.Sequencial__c), new List<TiposRecurso__c>());
+			}	
 
-			for (String splitCode : code.split('')) {
-				correctCode += splitCode;
-				count++;
-
-				if (count == 2) {
-					typeCodeSet.add(correctCode);
-					correctCode = '';
-					count = 0;
-				}
-			}
+			resourceTypeMap.get(rec.RecursoProduto__r.EstruturaProduto__c).get(String.valueOf(rec.RecursoProduto__r.Sequencial__c)).add(rec);
 		}
-
-		for (TiposRecurso__c retrievedType : [
-			SELECT Id,
-				   DescricaoRecurso__c,
-				   ExternalId__c,
-				   RecursoProduto__r.Name
-			  FROM TiposRecurso__c
-			 WHERE ExternalId__c IN :typeCodeSet
-		]) {
-			resourceTypeMap.put(retrievedType.ExternalId__c, retrievedType);
-		}
-
-		for (Id productId : productIdToProductMap.keySet()) {
-			Product2 currentProduct = productIdToProductMap.get(productId);
-
-			if (!productIdToResourceListMap.containsKey(productId)) {
-				productIdToResourceListMap.put(productId, new List<TiposRecurso__c>());
-			}
-
-			Integer count = 0;
-			String code = '';
-			for (String splitCode : currentProduct.ExternalId__c.split('')) {
-				code += splitCode;
-				count++;
-
-				if (count == 2) {
-					if (resourceTypeMap.containsKey(code)) {
-						productIdToResourceListMap.get(productId).add(resourceTypeMap.get(code));
-					}
-
-					code = '';
-					count = 0;
-				}
-			}
-		}
-
-		return productIdToResourceListMap;
+		return resourceTypeMap;
 	}
 
 	public static Map<Id, ContentVersion> getImages(Set<Id> productIdSet) {
@@ -141,6 +91,9 @@ public with sharing class PDFQuoteController {
 		for (Quote retrievedQuote : [
 			SELECT Id,
 				   Name,
+				   Prazo_de_Entrega__c,
+					Prazo_de_Garantia__c,
+					Instalacao__c,
 				   Account.Name,
 				   Account.ShippingStreet,
 				   Account.ShippingCity,
@@ -149,14 +102,26 @@ public with sharing class PDFQuoteController {
 				   Contact.Name,
 				   Contact.Phone,
 				   Contact.Account.Name,
+				   OP_QT_Identif__c,
+				   Frete__c,
+					TotalPrice,
+					Discount,
 				   (
 					SELECT Id,
 						   Quantity,
 						   Product2Id,
 						   Product2.Name,
-						   Product2.Image_URL__c,
+						   Product2.ProductCode,
+						   Product2.Imagem_URL__c,
 						   Product2.ExternalId__c,
-						   ParentProduct__c
+						   ParentProduct__c,
+						   AcessoryGroup__c,
+						   AcessoryGroup__r.Tipo__c,
+						   AcessoryType__c,
+						   Product2.EstruturaProduto__c,
+						   Product2.EstruturaProduto__r.CodigoInterno__c,
+						   TotalPrice,
+						   UnitPrice
 					  FROM QuoteLineItems
 				   )
 			  FROM Quote
@@ -227,6 +192,21 @@ public with sharing class PDFQuoteController {
 		public String contactPhone {get; set;}
 		public String contactAccountName {get; set;}
 
+		public String accountAddress {get;set;}
+		public String prazoGarantia {get;set;}
+		public String prazoEntrega {get;set;}
+		public String instalacao {get;set;}
+		public String frete {get;set;}
+		public String addressDelivery {get;set;}
+		public String createdBy {get;set;}
+
+		public String today {get;set;}
+		public String proposal {get;set;}
+		public String paymentCondition {get;set;}
+		public String freight {get;set;}
+		public String totalPrice {get;set;}
+		public String discount {get;set;}
+
 		public List<QuoteItem> itemList {get; set;}
 
 		public QuoteData() {
@@ -240,9 +220,19 @@ public with sharing class PDFQuoteController {
 			this.contactPhone = '';
 			this.contactAccountName = '';
 
+			this.accountAddress = '';
+			this.prazoGarantia = '';
+			this.prazoEntrega = '';
+			this.instalacao = '';
+			this.frete = '';
+			this.addressDelivery = '';
+			this.createdBy = '';
+
 			this.itemList = new List<QuoteItem>();
 		}
-		public QuoteData(Quote currenctQuote, Map<Id, List<TiposRecurso__c>> productIdToResourceListMap, Map<Id, ContentVersion> itemToImageMap) {
+		public QuoteData(Quote currenctQuote) {
+            User us = [SELECT id, NAme, Email FROM USER WHERE ID = : UserInfo.getUserId() LIMIT 1];
+
 			this.name = currenctQuote.Name;
 			this.accountName = currenctQuote.Account.Name;
 			this.shippingStreet = currenctQuote.Account.ShippingStreet;
@@ -253,19 +243,32 @@ public with sharing class PDFQuoteController {
 			this.contactPhone = currenctQuote.Contact.Phone;
 			this.contactAccountName = currenctQuote.Contact.Account.Name;
 
-			this.itemList = fillQuoteItemList(currenctQuote.QuoteLineItems, productIdToResourceListMap, itemToImageMap);
+			this.today = DateTime.now().format('dd/MM/yyyy');
+			this.proposal = currenctQuote.OP_QT_Identif__c;
+			this.freight = currenctQuote.Frete__c;
+			this.totalPrice = convertToBRL(currenctQuote.TotalPrice);
+			this.discount = convertToBRL(currenctQuote.Discount * 100);
+
+			
+			this.accountAddress = '';
+            this.prazoEntrega = String.valueOf(currenctQuote.Prazo_de_Entrega__c);
+            this.prazoGarantia = String.valueOf(currenctQuote.Prazo_de_Garantia__c);
+            this.instalacao = currenctQuote.Instalacao__c;
+            this.frete = currenctQuote.Frete__c;
+			this.addressDelivery = currenctQuote.account.ShippingStreet +', '+currenctQuote.account.ShippingCity +', '+currenctQuote.account.ShippingPostalCode;
+			this.createdBy = us.Name;
+
+			this.itemList = fillQuoteItemList(currenctQuote);
 		}
 
-		public List<QuoteItem> fillQuoteItemList(
-			List<QuoteLineItem> itemList,
-			Map<Id, List<TiposRecurso__c>> productIdToResourceListMap,
-			Map<Id, ContentVersion> itemToImageMap
-		) {
+		public List<QuoteItem> fillQuoteItemList(Quote currenctQuote) {
 			List<QuoteItem> quoteItemList = new List<QuoteItem>();
 			List<QuoteLineItem> quoteLineItemList = new List<QuoteLineItem>();
 			Map<Id, List<QuoteLineItem>> parentProductIdToAccessoryItemListMap = new Map<Id, List<QuoteLineItem>>();
 
-			for (QuoteLineItem retrievedItem : itemList) {
+			Set<id> productIdSet = new Set<id>();
+			Set<String> estruturaIdSet = new Set<String>();
+			for (QuoteLineItem retrievedItem : currenctQuote.QuoteLineItems) {
 				if (!String.isBlank(retrievedItem.ParentProduct__c)) {
 					if (!parentProductIdToAccessoryItemListMap.containsKey(retrievedItem.ParentProduct__c)) {
 						parentProductIdToAccessoryItemListMap.put(retrievedItem.ParentProduct__c, new List<QuoteLineItem>());
@@ -275,13 +278,19 @@ public with sharing class PDFQuoteController {
 				else {
 					quoteLineItemList.add(retrievedItem);
 				}
+				productIdSet.add(retrievedItem.Product2Id);
+				estruturaIdSet.add(retrievedItem.Product2.EstruturaProduto__c);
 			}
 
+		
+			Map<String, Map<String, List<TiposRecurso__c>>> productIdToResourceListMap = getResources(estruturaIdSet);
+			Map<Id, ContentVersion> itemToImageMap = getImages(productIdSet);
+		
 			for (QuoteLineItem retrievedItem : quoteLineItemList) {
 				quoteItemList.add(
 					new QuoteItem(
 						retrievedItem,
-						productIdToResourceListMap,
+						productIdToResourceListMap.containsKey(retrievedItem.Product2.EstruturaProduto__c) ? productIdToResourceListMap.get(retrievedItem.Product2.EstruturaProduto__c) : new Map<String, List<TiposRecurso__c>>(),
 						itemToImageMap,
 						parentProductIdToAccessoryItemListMap.get(retrievedItem.Product2Id)
 					)
@@ -291,24 +300,62 @@ public with sharing class PDFQuoteController {
 			return quoteItemList;
 		}
 	}
+    public static String convertToBRL(Decimal num){
+        List<String> args = new String[]{'0','number','###.###.##0,00'};
+        String numConverted =  String.format(num.setScale(2).format(), args);
+
+        if(numConverted.indexOf(',') == -1){
+            numConverted += ',00';
+        }
+        else if (numConverted.indexOf(',') == numConverted.length() - 2){
+            numConverted += '0';
+        }
+        
+        return numConverted;
+    } 
 
 	public class QuoteItem {
 		public String name {get; set;}
+		public String nameWithoutCode {get; set;}
+		public String unitPrice {get; set;}
 		public Object image {get; set;}
 		public String extension {get; set;}
-		public Boolean hasKit {get; set;}
+		public Boolean hasExceptionKit {get; set;}
+		public Boolean hasRequiredKit {get; set;}
+		public Boolean hasOptionalKit {get; set;}
+		public Boolean hasStructures {get; set;}
 
 		public List<OptionalItem> optionalList {get; set;}
-		public List<KitData> kitDataList {get; set;}
+		public List<KitData> kitExceptionDataList {get; set;}
+		public List<KitData> kitRequiredDataList {get; set;}
+		public List<KitData> kitOpcionalDataList {get; set;}
+
+		public Decimal kitExceptionDataSubTotal {get;set;}
+		public Decimal kitRequiredDataSubTotal {get;set;}
+		public Decimal kitOpcionalDataSubTotal {get;set;}
+
+		public String kitExceptionDataTotal {get;set;}
+		public String kitRequiredDataTotal {get;set;}
+		public String kitOpcionalDataTotal {get;set;}
+
+		public Decimal quantity {get;set;}
+		public String totalPriceEquip {get;set;}
+		public String acessoryValues {get;set;}
+		public String discount {get;set;}
+		public String totalPrice {get;set;}
 
 		public QuoteItem(
 			QuoteLineItem currentItem,
-			Map<Id, List<TiposRecurso__c>> productIdToResourceListMap,
+			Map<String, List<TiposRecurso__c>> productIdToResourceListMap,
 			Map<Id, ContentVersion> productIdToImageMap,
 			List<QuoteLineItem> accessoryItemList
 		) {
-			this.name = currentItem.Product2.Name;
-			this.hasKit = accessoryItemList != null;
+			this.name = currentItem.Product2.ProductCode +'-'+currentItem.Product2.Name;
+			this.nameWithoutCode = currentItem.Product2.Name;
+			this.hasStructures = currentItem.Product2.EstruturaProduto__c != null;
+			this.hasExceptionKit = false;
+			this.hasRequiredKit = false;
+			this.hasOptionalKit = false;
 
 			if (productIdToImageMap.containsKey(currentItem.Product2Id)) {
 				Blob imageData = (Blob)productIdToImageMap.get(currentItem.Product2Id).VersionData;
@@ -317,25 +364,62 @@ public with sharing class PDFQuoteController {
 				this.extension = productIdToImageMap.get(currentItem.Product2Id).FileExtension;
 			}
 
-			if (productIdToResourceListMap.containsKey(currentItem.Product2Id)) {
-				this.optionalList = fillOptionals(productIdToResourceListMap.get(currentItem.Product2Id));
-			}
-			else this.optionalList = new List<OptionalItem>();
+			this.optionalList = fillOptionals(currentItem, productIdToResourceListMap);
+
+			this.kitExceptionDataList = new List<KitData>();
+			this.kitRequiredDataList = new List<KitData>();
+			this.kitOpcionalDataList = new List<KitData>();
+
+			this.kitExceptionDataSubTotal = 0;
+			this.kitRequiredDataSubTotal = 0;
+			this.kitOpcionalDataSubTotal = 0;
+
 
 			if (accessoryItemList != null && !accessoryItemList.isEmpty()) {
-				this.kitDataList = new List<KitData>();
-
 				for (QuoteLineItem accessoryItem : accessoryItemList) {
-					this.kitDataList.add(new KitData(accessoryItem));
+					if(accessoryItem.AcessoryGroup__r.Tipo__c == null){
+						this.hasExceptionKit = true;
+						this.kitExceptionDataList.add(new KitData(accessoryItem));
+						this.kitExceptionDataSubTotal += accessoryItem.TotalPrice;
+					}else if(accessoryItem.AcessoryGroup__r.Tipo__c == 'Opcional'){
+						this.hasOptionalKit = true;
+						this.kitOpcionalDataList.add(new KitData(accessoryItem));
+						this.kitOpcionalDataSubTotal += accessoryItem.TotalPrice;
+					}else{
+						this.hasRequiredKit = true;
+						this.kitRequiredDataList.add(new KitData(accessoryItem));
+						this.kitRequiredDataSubTotal += accessoryItem.TotalPrice;
+					}
 				}
 			}
+			this.kitExceptionDataTotal =  convertToBRL(this.kitExceptionDataSubTotal);
+			this.kitRequiredDataTotal =  convertToBRL(this.kitRequiredDataSubTotal);
+			this.kitOpcionalDataTotal =  convertToBRL(this.kitOpcionalDataSubTotal);
+
+			this.quantity = currentItem.Quantity;
+			this.unitPrice =  convertToBRL(currentItem.UnitPrice);
+			this.totalPriceEquip =  convertToBRL(currentItem.TotalPrice);
+			this.acessoryValues =   convertToBRL(this.kitExceptionDataSubTotal + this.kitRequiredDataSubTotal + this.kitOpcionalDataSubTotal);
+			this.totalPrice =  convertToBRL(currentItem.TotalPrice  + this.kitExceptionDataSubTotal + this.kitRequiredDataSubTotal + this.kitOpcionalDataSubTotal);
 		}
 
-		public List<OptionalItem> fillOptionals(List<TiposRecurso__c> typeList) {
+		public List<OptionalItem> fillOptionals(QuoteLineItem currentItem, Map<String, List<TiposRecurso__c>> productIdToResourceListMap) {
+			
 			List<OptionalItem> optionaList = new List<OptionalItem>();
+			String currentExternalid = currentItem.Product2.ExternalId__c != null && currentItem.Product2.EstruturaProduto__c != null ? currentItem.Product2.ExternalId__c.replace(currentItem.Product2.EstruturaProduto__r.CodigoInterno__c, '') : '';
+			for(String seqs : productIdToResourceListMap.keySet()){
+				for(TiposRecurso__c recs : productIdToResourceListMap.get(seqs)){
+					if(recs.Sequencial__c == null){ 
+						optionaList.add(new OptionalItem(recs)); 
+						break;
+					}
 
-			for (TiposRecurso__c retrievedType : typeList) {
-				optionaList.add(new OptionalItem(retrievedType));
+					if(currentExternalid.startsWith(recs.Sequencial__c)){
+						optionaList.add(new OptionalItem(recs));
+						currentExternalid = currentExternalid.right(currentExternalid.length() - recs.Sequencial__c.length());
+						break;
+					}
+				}
 			}
 
 			return optionaList;
@@ -355,10 +439,14 @@ public with sharing class PDFQuoteController {
 	public class KitData {
 		public String name {get; set;}
 		public Decimal quantity {get; set;}
+		public String price {get; set;}
+		public String subTotal {get; set;}
 
 		public KitData(QuoteLineItem accessoryItem) {
-			this.name = accessoryItem.Product2.Name;
+			this.name = accessoryItem.Product2.ProductCode +'-'+accessoryItem.Product2.Name;
 			this.quantity = accessoryItem.Quantity;
+			this.price = ConvertToBRL(accessoryItem.unitPrice);
+			this.subTotal = ConvertToBRL(accessoryItem.TotalPrice);
 		}
 	}
 }

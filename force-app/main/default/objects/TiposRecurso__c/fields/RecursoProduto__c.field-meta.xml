@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>RecursoProduto__c</fullName>
-    <deleteConstraint>SetNull</deleteConstraint>
     <externalId>false</externalId>
     <label>Recursos do Produto</label>
     <referenceTo>RecursosProduto__c</referenceTo>
+    <relationshipLabel>Tipos de Recurso</relationshipLabel>
     <relationshipName>ComposicaoProduto</relationshipName>
-    <required>false</required>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
     <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
-    <type>Lookup</type>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
 </CustomField>
