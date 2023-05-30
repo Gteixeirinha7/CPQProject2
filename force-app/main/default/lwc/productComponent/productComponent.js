@@ -4,12 +4,17 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 export default class ProductComponent extends LightningElement {
 	@api
 	product = {};
+	@api enableCreateAccessory;
 
 	get sizeAcessory(){
 		return this.product.isConfigured ? 8 : 0;
 	}
 	get sizeDescription(){
 		return this.product.isConfigured ? 4 : 12;
+	}
+
+	get showNewAccessory(){
+		return this.product.isSelected && this.enableCreateAccessory && !this.product.isSingleItem;
 	}
 
 	get subTotalProduct(){

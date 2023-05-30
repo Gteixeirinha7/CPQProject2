@@ -1,0 +1,169 @@
+<apex:page showHeader="false" lightningStylesheets="true" controller="CreateStructureResourcesController">
+	<html xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ng-app="app">
+		<head>
+			<title>Importar Recursos dos produtos</title>
+			<apex:slds ></apex:slds>
+        	<script type="text/javascript">
+        	        window.apexController = {
+        	            "urls": {
+        	                "CREATE_RECORDS": '{!$RemoteAction.CreateStructureResourcesController.createRecords}',
+        	                "GET_RECORDS": '{!$RemoteAction.CreateStructureResourcesController.getCurrentRecordsSteris}'
+        	            }
+        	        }
+        	</script>
+			
+			
+
+			<meta name="viewport" content="width=device-width, user-scalable=no" />
+
+			<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.9/angular.min.js"></script>
+			<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/danialfarid-angular-file-upload/12.2.13/ng-file-upload.min.js"></script>
+			<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.5/xlsx.full.min.js"></script>
+			<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.5/jszip.js"></script>
+			<script type="text/javascript" src="{!URLFOR($Resource.createStructureResources_app, 'jquery.js')}"></script>
+			<script type="text/javascript" src="{!URLFOR($Resource.createStructureResources_app, 'toastr.js')}"></script>
+			<script type="text/javascript" src="{!URLFOR($Resource.createStructureResources_app, 'utils.js')}"></script>
+			<script type="text/javascript" src="{!URLFOR($Resource.createStructureResources_app, 'angular.min.js')}"></script>
+			<script type="text/javascript" src="{!URLFOR($Resource.createStructureResources_app, 'angular-infinite-scroll.min.js')}"></script>
+			<script type="text/javascript" src="{!URLFOR($Resource.createStructureResources_app, 'app.js')}"></script>
+
+			<link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.createStructureResources_app, 'toastr.css')}" />
+			<link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.createStructureResources_app, 'app.css')}" />
+			<link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.createStructureResources_app, 'slds.css')}" />
+
+		</head>
+
+		<body ng-controller="ItemController as c" ng-class="{noscroll: c.loading}" style="margin: 10pxç background: white">
+			<div class="lds-css ng-scope loading" ng-if="c.loading == true" ng-model="c.loading">
+				<div class="lds-rolling">
+					<div></div>
+				</div>
+			</div>
+
+			<div class="slds-form-element" style="width: 50%; display: inline-block;  margin: 0; vertical-align: top; padding:20px">
+				<a href="/resource/1643374752000/templateStructureProduct" target="_blank" class="slds-text-link_reset" style="margin-top: 20px">
+					<span class="slds-text-link">Baixar template da tabela de importação</span>
+				</a>
+
+				<span class="slds-form-element__label" id="file-selector-primary-label" style="display: block; margin-top: 10px">Importar Recursos dos Produtos</span>
+
+				<div class="slds-form-element__control" style="display: inline-block;">
+					<div class="slds-file-selector slds-file-selector_files">
+						<div class="slds-file-selector__dropzone">
+							<input ng-click="c.newFile()" onchange="angular.element(this).scope().checkRecords()" type="file" class="slds-file-selector__input slds-assistive-text"
+								id="file-upload-input-01" aria-labelledby="file-selector-primary-label file-selector-secondary-label" />
+
+							<label class="slds-file-selector__body" for="file-upload-input-01" id="file-selector-secondary-label">
+								<span class="slds-file-selector__button slds-button slds-button_neutral" style=" width: 140px; ">Importar Arquivo</span>
+							</label>
+						</div>
+					</div>
+				</div>
+
+				<div style="display: inline-block;" class="slds-form-element__help" id="error-01">Selecione o Arquivo</div>
+
+				<button
+					style="display: block; margin-top: 20px; margin-bottom: 20px"
+					class="slds-button slds-button_brand"
+					ng-click="c.changeInputFile()"
+				>Criar Recursos dos Produtos</button>
+
+			</div>
+
+			<div class="slds-form-element" style="width: 49%; display: inline-block;  margin: 0; padding:20px">
+				<ol class="">
+					<li style="font-weight: bold; color: #A32871;">Tutorial para importação</li>
+
+					<li>
+						<ol class="slds-list_ordered">
+							<li>Baixe o template para preenchimento com as informações dos Recursos dos Produtos: clique em "Baixar template da tabela de importação";</li>
+							<li>O exemplo do template, vem com uma maneira de preencher a tabela, faça os ajustes necessarios;</li>
+							<li>Importe o arquivo Excel valido no botão "Importar Arquivo"</li>
+							<li>Remova qualquer registro que desejar de dentro da tabela depois de anexada</li>
+							<li>Clique no botão "Criar Estrutura do PRoduto"</li>
+							<li>Espere a importação do CRM e Verifique se os registros foram criados com sucesso</li>
+						</ol>
+					</li>
+				</ol>
+				<ol class="">
+					<li style="font-weight: bold; color: #A32871;">Ajuda para melhorar utilização!</li>
+
+					<li><b>Obrigatório o Preenchimento dos campos:</b> Nome Estrutura e Código do Produto.</li>
+					<li><b>Colunas:</b> Colocar em cada coluna da primeira linha, o nome <b>exato</b> do recurso que seja atribuir a este produto.</li>
+					<li><b>Celula:</b> Colocar em cada celular dos produtos, o nome <b>exato</b> do tipo de recurso que deseja tribuir a este produto</li>
+				</ol>
+			</div>
+
+
+			<div class="slds-tabs_default slds-sub-tabs" ng-show="c.tableRecordList.length > 0 || c.tableRecordListError.length > 0">
+				<ul class="slds-tabs_default__nav">
+					<li class="slds-tabs_default__item slds-sub-tabs__item slds-grid slds-grid_vertical-align-center slds-has-success" ng-click="c.showSuccess = true;c.showError = false">
+						<a class="slds-tabs_default__link slds-p-horizontal_xx-small">
+							<span class="slds-indicator-container"></span>
+							<span class="slds-truncate">Dados sem Erro {{c.tableRecordList.length}}</span>
+						</a>
+					</li>
+					<li class="slds-tabs_default__item slds-sub-tabs__item slds-grid slds-grid_vertical-align-center slds-has-error" ng-click="c.showError = true;c.showSuccess = false">
+						<a class="slds-tabs_default__link slds-p-horizontal_xx-small">
+							<span class="slds-truncate">Dados com Erro {{c.tableRecordListError.length}}</span>
+						</a>
+					</li>
+				</ul>
+				<div class="slds-tabs_default__content" ng-show="c.tableRecordList.length > 0 && c.showSuccess">
+					<div style="width: 100%; display: inline-block; margin-top: 20px;">
+						<h2 id="element-with-table-label" class="slds-text-heading_medium slds-m-bottom_xx-small">Registros validos que serão inseridos no sistema {{c.tableRecordList.length}}</h2>
+					
+						<table class="slds-table slds-no-cell-focus slds-table_bordered slds-table_col-bordered ">
+							<!--  slds-table_fixed-layout slds-table_resizable-cols -->
+							<thead>
+								<tr>
+									<th></th>
+									<th ng-repeat="column in c.columnList" id="test">{{column.title}}</th>
+								</tr>
+							</thead>
+					
+							<tbody>
+								<tr ng-repeat="record in c.tableRecordList">
+									<!-- <td><button ng-click="deleteRecord()" style="background-color: red">Del</button></td> -->
+									<td>
+										<span class="slds-icon_container slds-icon-action-delete" title="Remover registro" ng-click="c.removeRecord(record)">
+											<svg aria-hidden="true" class="slds-icon slds-icon_xx-small" style="cursor: pointer;">
+												<use xlink:href="{!URLFOR($Asset.SLDS, 'assets/icons/action-sprite/svg/symbols.svg#delete')}"></use>
+											</svg>
+										</span>
+									</td>
+									<td ng-repeat="column in c.columnList">
+										<span>{{record[column.field]}}</span>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div class="slds-tabs_default__content" ng-show="c.tableRecordListError.length > 0 && c.showError">
+					<div style="width: 100%; display: inline-block; margin-top: 20px;">
+						<h2 id="element-with-table-label" class="slds-text-heading_medium slds-m-bottom_xx-small">Registros que
+							<b>NÃO</b> serão inseridos devido dados invalidos {{c.tableRecordListError.length}}</h2>
+						
+						<table class="slds-table slds-no-cell-focus slds-table_bordered slds-table_col-bordered ">
+							<!--  slds-table_fixed-layout slds-table_resizable-cols -->
+							<thead>
+								<tr>
+									<th ng-repeat="column in c.columnListError" id="test">{{column.title}}</th>
+								</tr>
+							</thead>
+						
+							<tbody>
+								<tr ng-repeat="record in c.tableRecordListError">
+									<td ng-repeat="column in c.columnListError">
+										<span>{{record[column.field]}}</span>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</body>
+	</html>
+</apex:page>

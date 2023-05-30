@@ -26,7 +26,7 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 
 		context = isOpp(objId) ? 'Opportunity' : 'Quote';
 	}
-	@AuraEnabled
+	@AuraEnabled(cacheable=false)
 	public static sObject getBaseObject(String objId) {	
 		context = isOpp(objId) ? 'Opportunity' : 'Quote';
 		for (sObject retrievedObj : Database.query('SELECT Id, Name, AccountId, Account.Name, CreatedBy.Name, Pricebook2.Name, CurrencyIsoCode FROM '+context+' WHERE Id = :objId LIMIT 1')) {
@@ -34,7 +34,7 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 		}
 		return null;
 	}
-	@AuraEnabled
+	@AuraEnabled(cacheable=false)
 	public static Map<Id, ProductData> getCheckoutData(String objId) {
 		if (String.isBlank(objId)) return new Map<Id, ProductData>();
 
@@ -85,7 +85,7 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 										retrievedAccessory.isSelected = true;
 										retrievedAccessory.quantity = accessoryProductData.quantity;
 										retrievedAccessory.price = accessoryProductData.price;
-										retrievedAccessory.quantity = accessoryProductData.quantity;
+										retrievedAccessory.changedQuantity = accessoryProductData.quantity;
 										retrievedAccessory.totalAmount = (retrievedAccessory.price * retrievedAccessory.quantity).setScale(2);
 
 										accessoryProductIdSet.remove(retrievedAccessory.productId);
@@ -152,57 +152,16 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 			}
 		}
 	}
-
-	@AuraEnabled
-	public static Map<Id, ProductData> getExceptionProducts(String objId, String searchValue, Integer quantity) {
-		if (String.isBlank(searchValue)) return new Map<Id, ProductData>();
-
-		Map<Id, ProductData> productDataMap = new Map<Id, ProductData>();
-		Map<Id, Set<Id>> kitIdToProductIdSetMap = new Map<Id, Set<Id>>();
-		Set<Id> kitIdSet = new Set<Id>();
-		String pricebookId;
-
-		searchValue = '%' + searchValue + '%';
-		
-		Map<String, String> masterValuesMap = getMasterValues(objId);
-
-		for (Product2 retrievedProduct : getExceptionProductsByTerm(masterValuesMap.get('Pricebook2Id'), searchValue, quantity)) {
-			productDataMap.put(retrievedProduct.Id, new ProductData(retrievedProduct));
-
-			if (!kitIdToProductIdSetMap.containsKey(retrievedProduct.KitAcessorios__c)) {
-				kitIdToProductIdSetMap.put(retrievedProduct.KitAcessorios__c, new Set<Id>());
-			}
-			kitIdToProductIdSetMap.get(retrievedProduct.KitAcessorios__c).add(retrievedProduct.Id);
-
-			kitIdSet.add(retrievedProduct.KitAcessorios__c);
-		}
-
-		if (!productDataMap.isEmpty()) {
-			fillProductImage(objId, productDataMap);
-			fillKitConfigData(kitIdSet, kitIdToProductIdSetMap, productDataMap, objId);
-		}
-
-		return productDataMap;
-	}
-
-	@AuraEnabled
-	public static Map<Id, ProductData> getProducts(String objId, String structureId, String productCode) {
-		if (String.isBlank(productCode)) return new Map<Id, ProductData>();
-
+    @AuraEnabled(cacheable=false)
+	public static Map<Id, ProductData> getProducts(String objId, String structureId, String productCode, List<String> currentStackTraceCode, Integer quantity) {
 		Map<Id, ProductData> productDataMap = new Map<Id, ProductData>();
 		Map<Id, Set<Id>> kitIdToProductIdSetMap = new Map<Id, Set<Id>>();
 		List<Product2> productList = new List<Product2>();
 		Set<Id> kitIdSet = new Set<Id>();
-		String externalId = '%' + productCode + '%';
+		String externalId = '%' + (String.isBlank(productCode) ? '' : productCode) + '%' ;
+		Map<String, String> masterValuesMap = getMasterValues(objId);
 
-		if (String.isBlank(structureId)) {
-			productList = getProductListWithoutStructure(externalId);
-		}
-		else {
-			productList = getProductListWithStructure(structureId, externalId);
-		}
-
-		for (Product2 retrievedProduct : productList) {
+		for (Product2 retrievedProduct : getProductsByTerms(masterValuesMap.get('Pricebook2Id'), masterValuesMap.get('CurrencyIsoCode'), externalId, currentStackTraceCode, quantity, structureId)) {
 			productDataMap.put(retrievedProduct.Id, new ProductData(retrievedProduct));
 
 			if (retrievedProduct.KitAcessorios__c != null) {
@@ -299,25 +258,61 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 		}
 	}
 
-	@AuraEnabled
-	public static List<String> checkNextTypeResources(String structureId, String currentExternalId, Integer index) {
-		Set<String> nextExternalIdSet = new Set<String>();
-		Integer stringIndex = index * 2;
-
-		for (Product2 retrievedProduct : getProductList(structureId, currentExternalId)) {
-			// String externalId = retrievedProduct.ExternalId__c;
-
-			// if ((stringIndex + 2) >= externalId.length()) {
-			// 	nextExternalIdSet.add(externalId.substring(stringIndex, externalId.length()));
-			// }
-			// else {
-			// 	nextExternalIdSet.add(externalId.substring(stringIndex, stringIndex + 2));
-			// }
-			nextExternalIdSet.add(retrievedProduct.ExternalId__c.replace(currentExternalId, ''));
+	@AuraEnabled(cacheable=false)
+	public static List<String> checkNextTypeResources(String structureId, Integer index, List<String> currentStackTraceCode) {
+		
+		Map<String, List<String>> prodIdMap = new Map<String, List<String>>();
+		for(TipoRecursoProduto__c record : [SELECT id, TipoRecurso__c, TipoRecurso__r.RecursoProduto__c, Produto__c
+											FROM TipoRecursoProduto__c 
+											WHERE Produto__r.EstruturaProduto__c = :structureId
+											AND TipoRecurso__c IN :currentStackTraceCode
+											AND TipoRecurso__r.Ativo__c = true
+											AND Produto__r.IsActive = true
+											ORDER BY Produto__c DESC, TipoRecurso__r.Sequencial__c DESC]){
+			if(!prodIdMap.containsKey(record.Produto__c))
+				prodIdMap.put(record.Produto__c, new List<String>());
+			prodIdMap.get(record.Produto__c).add(record.TipoRecurso__c);
 		}
 
-		return new List<String>(nextExternalIdSet);
+		Set<String> prodIdSet = new Set<String>();
+		for(String prodId : prodIdMap.keySet()){
+			if(prodIdMap.get(prodId).size() == currentStackTraceCode.size()){
+				prodIdSet.add(prodId);
+			}
+		}
+
+		List<String> typeIdSet = new List<String>();
+		for(TipoRecursoProduto__c record : [SELECT id, TipoRecurso__c, TipoRecurso__r.RecursoProduto__c
+											FROM TipoRecursoProduto__c 
+											WHERE Produto__r.EstruturaProduto__c = :structureId
+											AND Produto__c IN :prodIdSet
+											AND Sequencial__c = :index
+											AND TipoRecurso__r.Ativo__c = true
+											AND Produto__r.IsActive = true]){
+			typeIdSet.add(record.TipoRecurso__c);
+		}
+		return typeIdSet;
 	}
+
+	// @AuraEnabled
+	// public static List<String> checkNextTypeResources(String structureId, String currentExternalId, Integer index) {
+	// 	Set<String> nextExternalIdSet = new Set<String>();
+	// 	Integer stringIndex = index * 2;
+
+	// 	for (Product2 retrievedProduct : getProductList(structureId, currentExternalId)) {
+	// 		// String externalId = retrievedProduct.ExternalId__c;
+
+	// 		// if ((stringIndex + 2) >= externalId.length()) {
+	// 		// 	nextExternalIdSet.add(externalId.substring(stringIndex, externalId.length()));
+	// 		// }
+	// 		// else {
+	// 		// 	nextExternalIdSet.add(externalId.substring(stringIndex, stringIndex + 2));
+	// 		// }
+	// 		nextExternalIdSet.add(retrievedProduct.ExternalId__c.replace(currentExternalId, ''));
+	// 	}
+
+	// 	return new List<String>(nextExternalIdSet);
+	// }
 
 
 	public static void initSaveLineItemsVars(String objId, List<ProductData> lineItemList){
@@ -333,7 +328,7 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 	}
 
 
-	@AuraEnabled
+	@AuraEnabled(cacheable=false)
 	public static SaveResponse saveLineItems(String objId, List<ProductData> lineItemList) {
 		if (String.isBlank(objId)) return new SaveResponse('Registro inválido. Entrar em contato com Administrador do Sistema');
 
@@ -569,7 +564,7 @@ public with sharing class ProductScreenController extends ProductScreenModel{
         }
     }
 
-	@AuraEnabled
+	@AuraEnabled(cacheable=false)
 	public static Map<Id, EstruturaProduto__c> getStructures() {
 		return new Map<Id, EstruturaProduto__c>([
 			SELECT Id,
@@ -583,8 +578,18 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 		]);
 	}
 
-	@AuraEnabled
+	@AuraEnabled(cacheable=false)
 	public static List<RecursosProduto__c> getResources(String structureId) {
+		Set<Id> typeIdSet = new Set<Id>();
+		Set<Id> resourceIdSet = new Set<Id>();
+		for(TipoRecursoProduto__c record : [SELECT id, TipoRecurso__c, TipoRecurso__r.RecursoProduto__c
+											FROM TipoRecursoProduto__c 
+											WHERE Produto__r.EstruturaProduto__c = :structureId
+											AND  TipoRecurso__r.Ativo__c = true
+											AND Produto__r.IsActive = true]){
+			typeIdSet.add(record.TipoRecurso__c);
+			resourceIdSet.add(record.TipoRecurso__r.RecursoProduto__c);
+		}
 		return [
 			SELECT Id,
 				   Name,
@@ -596,10 +601,11 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 						   RecursoProduto__r.Name,
 						   Sequencial__c
 					  FROM ComposicaoProduto__r
-					 WHERE Ativo__c = true
+					 WHERE Id IN :typeIdSet
 				   )
 			  FROM RecursosProduto__c
 			 WHERE EstruturaProduto__c = :structureId
+			 AND Id IN: resourceIdSet
 			 ORDER BY Sequencial__c
 			 LIMIT 10000
 		];
@@ -650,6 +656,7 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 			  FROM PricebookEntry
 			 WHERE Pricebook2Id = :pricebook2Id
 			   AND Product2Id IN :product2IdSet
+			   AND UnitPrice != 0
 			   AND CurrencyIsoCode = :currencyIsoCode
 		]) {
 			productIdToPriceMap.put(retrievedPrice.Product2Id, retrievedPrice);
@@ -658,67 +665,65 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 		return productIdToPriceMap;
 	}
 
-	public static List<Product2> getExceptionProductsByTerm(String pricebookId, String searchValue, Integer quantity) {
+	public static List<Product2> getProductsByTerms(String pricebookId, String currencyCode, String searchValue, List<String> currentStackTraceCode, Integer quantity, String structureId) {
 		Set<Id> productIdSet = new Set<Id>();
 
 		if (quantity >= 2000) quantity = 2000;
 
+		Map<String, List<String>> prodIdMap = new Map<String, List<String>>();
+		for(TipoRecursoProduto__c record : [SELECT id, TipoRecurso__c, TipoRecurso__r.RecursoProduto__c, Produto__c
+											FROM TipoRecursoProduto__c 
+											WHERE Produto__r.EstruturaProduto__c = :structureId
+											AND TipoRecurso__c IN :currentStackTraceCode
+											AND TipoRecurso__r.Ativo__c = true
+											AND Produto__r.IsActive = true
+											ORDER BY Produto__c DESC, TipoRecurso__r.Sequencial__c DESC]){
+			if(!prodIdMap.containsKey(record.Produto__c))
+				prodIdMap.put(record.Produto__c, new List<String>());
+			prodIdMap.get(record.Produto__c).add(record.TipoRecurso__c);
+		}
+
+		Set<String> prodIdSet = new Set<String>();
+		for(String prodId : prodIdMap.keySet()){
+			if(prodIdMap.get(prodId).size() == currentStackTraceCode.size()){
+				prodIdSet.add(prodId);
+			}
+		}
+
+		System.debug(prodIdSet);
 		for (PricebookEntry retrievedEntry : [
 			SELECT Product2Id
 			  FROM PricebookEntry
 			 WHERE Pricebook2Id = :pricebookId
 			   AND IsActive = true
+			   AND CurrencyIsoCode = :currencyCode
+			   AND UnitPrice != 0
+			   AND Product2Id IN :prodIdSet
 			   AND (
 					Product2.Name LIKE :searchValue
 				    OR Product2.ProductCode LIKE :searchValue
 				    OR Product2.ExternalId__c LIKE :searchValue
 				)
-			 LIMIT :quantity
+			 ORDER BY ID DESC LIMIT 10000
 		]) {
 			productIdSet.add(retrievedEntry.Product2Id);
 		}
+		System.debug(productIdSet.size());
+		System.debug(productIdSet);
 
-		return [
-			SELECT Id,
-				   Name,
-				   ExternalId__c,
-				   Imagem_URL__c,
-				   KitAcessorios__c
-			  FROM Product2
-			 WHERE IsActive = true
-			   AND Id IN :productIdSet
-			 ORDER BY Name
-			 LIMIT :quantity
-		];
-	}
+		String q = 'SELECT Id, Name, ExternalId__c, ProductCode, Imagem_URL__c, KitAcessorios__c, EstruturaProduto__c FROM Product2 WHERE IsActive = true ';
 
-	public static List<Product2> getProductListWithoutStructure(String externalId) {
-		return [
-			SELECT Id,
-				   Name,
-				   ExternalId__c,
-				   Imagem_URL__c,
-				   KitAcessorios__c
-			  FROM Product2
-			 WHERE IsActive = true
-			   AND ExternalId__c LIKE :externalId
-			 LIMIT 10000
-		];
-	}
+		if(structureId == 'Pronta'){
+			q += ' AND EstruturaProduto__c != null';
+		}else if(structureId == 'Excecao' || structureId == 'SingleProduct' || structureId == 'Estrutura' || structureId == 'Carrinho'){ 
+			q += ' AND EstruturaProduto__c = null ';
+		}else if(structureId != null){
+			q += 'AND Id IN :productIdSet AND EstruturaProduto__c = :structureId ';
+		}
+		q += ' ORDER BY Name';
+		q += ' LIMIT :quantity';
 
-	public static List<Product2> getProductListWithStructure(String structureId, String externalId) {
-		return [
-			SELECT Id,
-				   Name,
-				   ExternalId__c,
-				   Imagem_URL__c,
-				   KitAcessorios__c
-			  FROM Product2
-			 WHERE IsActive = true
-			   AND ExternalId__c LIKE :externalId
-			   AND EstruturaProduto__c = :structureId
-			 LIMIT 10000
-		];
+		return Database.query(q);
 	}
 
 	public static List<GrupoAcessorios__c> getGroupAccessoriesByKitIdSet(Set<Id> kitIdSet) {
@@ -733,6 +738,8 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 					SELECT Id,
 						   Name,
 						   GrupoAcessorio__c,
+						   AcessorioPadrao__c,
+						   QuantidadeSugerida__c,
 						   Produto__c,
 						   Produto__r.Name,
 						   Produto__r.ProductCode,
@@ -770,7 +777,9 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 				   Product2Id,
 				   Product2.Name,
 				   Product2.ExternalId__c,
-				   Product2.KitAcessorios__c
+				   Product2.ProductCode,
+				   Product2.KitAcessorios__c,
+				   ProdutoSemEstrutura__c
 			  FROM OpportunityLineItem
 			 WHERE OpportunityId = :oppId
 		];
@@ -789,7 +798,9 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 				   Product2Id,
 				   Product2.Name,
 				   Product2.ExternalId__c,
-				   Product2.KitAcessorios__c
+				   Product2.ProductCode,
+				   Product2.KitAcessorios__c,
+				   ProdutoSemEstrutura__c
 			  FROM QuoteLineItem
 			 WHERE QuoteId = :quoteId
 		];

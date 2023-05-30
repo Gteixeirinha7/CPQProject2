@@ -5,10 +5,9 @@
     <externalId>false</externalId>
     <label>Produto</label>
     <referenceTo>Product2</referenceTo>
-    <relationshipLabel>Tipo de Recursos dos Produtos</relationshipLabel>
-    <relationshipName>TipoRecurso</relationshipName>
+    <relationshipLabel>Tipos de Recursos do  Produto</relationshipLabel>
+    <relationshipName>TiposRecursosProduto</relationshipName>
     <required>false</required>
-    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>

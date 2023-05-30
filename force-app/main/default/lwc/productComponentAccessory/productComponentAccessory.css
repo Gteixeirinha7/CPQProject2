@@ -1,4 +1,3 @@
-
 .container__image {
 	display: flex;
 	justify-content: center;
@@ -70,10 +69,8 @@
 .common-catalog-item--v2 .common-catalog-item__container-image {
 	background-size: cover;
 	border-radius: 12px;
-	min-height: 110px;
 	display: grid;
 	width: 100%;
-	min-height: 94px;
 	position: relative;
 	background-position: 50%;
 	border-top-right-radius: 4px;
@@ -172,7 +169,7 @@
 	order: 10;
 }
 
-.common-acessory-title{
+.common-acessory-title {
 	border: 1px solid grey;
 	border-radius: 8px;
 	background-color: white;

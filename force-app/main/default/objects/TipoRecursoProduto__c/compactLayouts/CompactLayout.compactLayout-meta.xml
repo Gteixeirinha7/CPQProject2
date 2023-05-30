@@ -2,7 +2,9 @@
 <CompactLayout xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>CompactLayout</fullName>
     <fields>Name</fields>
-    <fields>Produto__c</fields>
     <fields>TipoRecurso__c</fields>
+    <fields>Produto__c</fields>
+    <fields>Sequencial__c</fields>
+    <fields>IdentificadorChave__c</fields>
     <label>CompactLayout</label>
 </CompactLayout>

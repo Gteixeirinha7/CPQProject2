@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>ExternalId__c</fullName>
-    <caseSensitive>false</caseSensitive>
+    <description>Campo para armazenar o Codigo Calculado automaticamente pelos Recursos atribuidos a este produto</description>
     <externalId>true</externalId>
-    <label>External Id</label>
+    <inlineHelpText>Campo para armazenar o Codigo Calculado automaticamente pelos Recursos atribuidos a este produto</inlineHelpText>
+    <label>Codigo Interno (CPQ)</label>
     <length>255</length>
     <required>false</required>
     <trackFeedHistory>false</trackFeedHistory>
     <trackHistory>false</trackHistory>
     <type>Text</type>
-    <unique>true</unique>
+    <unique>false</unique>
 </CustomField>

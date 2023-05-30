@@ -5,28 +5,17 @@
 			<div class="swiper-slide">
 				<a class="common-catalog-item common-catalog-item--v1"
 					style="display: flex;flex-direction: row;justify-content: center;align-items: stretch; padding: 0px;">
-					<lightning-layout multiple-rows horizontal-align="spread">
-						<lightning-layout-item size="6" medium-device-size="6" large-device-size="6">
+					<lightning-layout multiple-rows horizontal-align="spread" style="height: 100%; background-color: rgb(249, 249, 249);">		
+						<lightning-layout-item size="12" style="background-color: white">
 							<lightning-layout multiple-rows horizontal-align="spread" style="padding: 16px;">
 								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12"
-									medium-device-size="12" large-device-size="12">
-									<div class="common-catalog-item__container-image">
-										<img class="common-catalog-item__merchant-image" src={product.image} style="max-height: 200px">
+									medium-device-size="12" large-device-size="12" style="display: flex;justify-content: space-between;">
+									<div >
+										<h2 style="font-size: 18px; font-weight: bold;">{product.internalProdCode} - {product.name}</h2>
 									</div>
-									<div class="common-catalog-item__info">
-										<h2 class="common-catalog-item__name">{product.prodCode} - {product.name}</h2>
-										<span
-											class="common-catalog-item__value common-catalog-item__price--regular card-stack-price__DEFAULT">{product.productCode}</span>
-										<span class="catalog-item-v2-content__delivery">
-											<span class="catalog-item-v2-content__rating  cardstack-rating">
-												<span class="icon-star icon-star--star">
-													<lightning-icon icon-name="utility:money"
-														size="xx-small"></lightning-icon>
-												</span>
-											</span>
-											<span> • </span>
+									<div >
+										<span >
 											<span class="catalog-item-content__delivery--free">
-												Preço de lista:
 												<lightning-formatted-number class="slds-var-p-left_xxx-small"
 													value={product.listPrice} format-style="currency"
 													currency-code="BRL"
@@ -37,9 +26,9 @@
 								</lightning-layout-item>
 							</lightning-layout>
 						</lightning-layout-item>
-						<lightning-layout-item size="12" medium-device-size="2" large-device-size="6" style="height: 100%">
+						<lightning-layout-item size="12" medium-device-size="2" large-device-size="12" style="height: 100%">
 							<lightning-layout multiple-rows horizontal-align="spread"
-								style="border-left: 1px dashed lightgrey;background-color: #F9F9F9; padding: 16px; height: 100%">
+								style="border-top: 1px dashed lightgrey;background-color: #F9F9F9; padding: 16px; height: 100%">
 								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12"
 									medium-device-size="6" large-device-size="6">
 									<lightning-input name="quantity" label="Quantidade" value={product.quantity}

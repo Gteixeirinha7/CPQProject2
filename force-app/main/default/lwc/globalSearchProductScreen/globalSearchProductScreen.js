@@ -17,7 +17,7 @@ export default class GlobalSearchProductScreen extends LightningElement {
     }
     selectFilter(event){
         this.showOptionsCheck();
-		this.dispatchEvents('selectfilter', {value: event.target.dataset.value, filter: this.filterValue});
+		this.dispatchEvents('selectfilter', {value: event.target.value, filter: this.filterValue});
     }
     handleFilter(event){
         this.filterValue = event.target.value;

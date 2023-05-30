@@ -14,7 +14,7 @@
 										<img class="common-catalog-item__merchant-image" src={product.image} style="max-height: 40px;">
 									</div>
 									<div >
-										<h2 style="font-size: 18px; font-weight: bold;">{product.productCode} - {product.name}</h2>
+										<h2 style="font-size: 18px; font-weight: bold;">{product.internalProdCode} - {product.name}</h2>
 									</div>
 									<div >
 										<span >
@@ -31,10 +31,17 @@
 						</lightning-layout-item>				
 						<lightning-layout-item size="12" medium-device-size="12" large-device-size={sizeDescription} style="height: 100%">
 							<lightning-layout multiple-rows horizontal-align="spread"
-								style="border-left: 1px dashed lightgrey;background-color: #F9F9F9; padding: 16px; padding-bottom: 0px; height: 100%">
+								style="border-top: 1px dashed lightgrey;background-color: #F9F9F9; padding: 16px; padding-bottom: 0px; height: 100%">
 								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12"
 									medium-device-size="6" large-device-size="6">
 									<lightning-input name="quantity" label="Quantidade" value={product.quantity}
+										type="number" max-length="8" min="1" onchange={onChangeProductData}
+										>
+									</lightning-input>
+								</lightning-layout-item>
+								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12"
+									medium-device-size="6" large-device-size="6">
+									<lightning-input name="quantityAccessory" label="Quantidade Acessorios" value="1"
 										type="number" max-length="8" min="1" onchange={onChangeProductData}
 										>
 									</lightning-input>
@@ -46,8 +53,8 @@
 										>
 									</lightning-input>
 								</lightning-layout-item>
-								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12"
-									medium-device-size="12" large-device-size="12">
+								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="6"
+									medium-device-size="6" large-device-size="6">
 									<lightning-input if:false={product.isDiscountPercent} name="discountCurrency"
 										label="Desconto" value={product.discountCurrency} type="number"
 										formatter="currency" step="any" min="0" onchange={onChangeProductData}
@@ -84,13 +91,13 @@
 									<lightning-button if:true={product.isSelected} class="slds-var-m-right_x-small" label="Remover" variant="destructive"
 										onclick={onClickRemoveProduct}>
 									</lightning-button>
-									<lightning-button if:true={product.isSelected} class="slds-var-m-right_x-small" label="Novo Acessorio" variant="brand" onclick={onClickCreateAcessory} data-id={product.id}>
+									<lightning-button if:true={showNewAccessory} class="slds-var-m-right_x-small" label="Novo Acessorio" variant="brand" onclick={onClickCreateAcessory} data-id={product.id}>
 									</lightning-button>
 								</lightning-layout-item>
 							</lightning-layout>
 						</lightning-layout-item>
 						<lightning-layout-item size="6" medium-device-size="6" large-device-size={sizeAcessory} if:true={product.isConfigured}
-								style="border-right: 1px dashed lightgrey;background-color: #F9F9F9; padding: 16px; height: 100%">
+								style="border-left: 1px dashed lightgrey;background-color: #F9F9F9; padding: 16px; height: 100%">
 							<lightning-layout multiple-rows horizontal-align="spread">
 								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12"
 									medium-device-size="12" large-device-size="12">
@@ -103,213 +110,4 @@
 			</div>
 		</lightning-layout-item>
 	</lightning-layout>
-	<!-- <lightning-layout if:true={product.isShowProduct}>
-
-		<lightning-layout-item class="slds-var-p-around_x-small" size="12">
-
-			<article class="slds-card">
-				<div class="slds-card__header slds-grid">
-					<header class="slds-media slds-media_center slds-has-flexi-truncate">
-						<div class="slds-media__body">
-							<h2 class="slds-card__header-title">
-								{product.name}
-							</h2>
-						</div>
-					</header>
-				</div>
-
-				<div class="slds-card__body slds-card__body_inner">
-					<lightning-layout multiple-rows horizontal-align="space" vertical-align="center">
-
-						<lightning-layout-item class="container__image" size="3">
-							<img class="structure__image" src={product.image} />
-						</lightning-layout-item>
-
-						<lightning-layout-item size="8">
-
-							<lightning-layout class="slds-var-p-horizontal_xx-small slds-text-title_bold">
-								Código: {product.productCode}
-							</lightning-layout>
-
-							<lightning-layout multiple-rows horizontal-align="spread">
-								<lightning-layout-item
-									class="slds-var-p-horizontal_xx-small"
-									size="12" medium-device-size="6" large-device-size="6"
-								>
-									<lightning-input
-										name="quantity"
-										label="Quantity"
-										value={product.quantity}
-										type="number"
-										max-length="8"
-										min="1"
-										onchange={onChangeProductData}
-										
-									>
-									</lightning-input>
-								</lightning-layout-item>
-
-								<lightning-layout-item
-									class="slds-var-p-horizontal_xx-small"
-									size="12" medium-device-size="6" large-device-size="6"
-								>
-									<lightning-input
-										name="price"
-										label="Preço"
-										value={product.price}
-										type="number"
-										formatter="currency"
-										step="any"
-										min="0"
-										onchange={onChangeProductData}
-										
-									>
-									</lightning-input>
-								</lightning-layout-item>
-
-								<lightning-layout-item
-									class="slds-var-p-horizontal_xx-small"
-									size="12" medium-device-size="6" large-device-size="6"
-								>
-									<lightning-input
-										if:false={product.isDiscountPercent}
-										name="discountCurrency"
-										label="Desconto"
-										value={product.discountCurrency}
-										type="number"
-										formatter="currency"
-										step="any"
-										min="0"
-										onchange={onChangeProductData}
-										
-									>
-									</lightning-input>
-
-									<lightning-input
-										if:true={product.isDiscountPercent}
-										name="discountPercent"
-										label="% Desconto"
-										value={product.discountPercent}
-										type="number"
-										formatter="fixed-percent"
-										step="any"
-										min="0"
-										onchange={onChangeProductData}
-										
-									>
-									</lightning-input>
-								</lightning-layout-item>
-
-								<lightning-layout-item
-									class="slds-var-p-horizontal_xx-small"
-									size="12" medium-device-size="6" large-device-size="6"
-								>
-									<lightning-combobox
-										name="discountType"
-										label="Tipo de desconto"
-										value={product.discountType}
-										options={discountTypeOptionList}
-										onchange={onChangeProductData}
-										
-									>
-									</lightning-combobox>
-								</lightning-layout-item>
-							</lightning-layout>
-
-							<lightning-layout class="slds-var-m-top_x-small slds-var-p-horizontal_xx-small">
-								Preço de lista:
-								<lightning-formatted-number
-									class="slds-var-p-left_xxx-small"
-									value={product.listPrice}
-									format-style="currency"
-									currency-code="BRL"
-									maximum-fraction-digits="2"
-								>
-								</lightning-formatted-number>
-							</lightning-layout>
-
-							<lightning-layout class="slds-var-m-top_xxx-small slds-var-p-horizontal_xx-small">
-								Preço total:
-								<lightning-formatted-number
-									class="slds-var-p-left_xxx-small"
-									value={product.totalPrice}
-									format-style="currency"
-									currency-code="BRL"
-									maximum-fraction-digits="2"
-								>
-								</lightning-formatted-number>
-							</lightning-layout>
-
-						</lightning-layout-item>
-
-						<!-/- TO CHECK ! -/->
-						<lightning-layout-item class="slds-var-p-horizontal_small" size="12">
-							<p if:true={product.isConfigured} class="title__accessories">
-								Acessórios
-							</p>
-
-							<template if:true={product.isConfigured} for:each={product.groupAccessoryList} for:item="group">
-								<div key={group.id} class="container__accessories-data">
-									<div class="slds-var-m-top_xxx-small">
-										{group.name}: <p><b if:true={group.value}>{group.value}</b></p>
-
-										<template if:true={group.isListing} for:each={group.accessoryList} for:item="accessory">
-											<p if:true={accessory.isSelected} key={accessory.id}><b>
-												{accessory.name} (
-													<lightning-formatted-number
-														value={accessory.price}
-														format-style="currency"
-														currency-code="BRL"
-														maximum-fraction-digits="2">
-													</lightning-formatted-number>
-												)
-											</b></p>
-										</template>
-									</div>
-								</div>
-							</template>
-						</lightning-layout-item>
-						<!-/- TO CHECK ! -/->
-
-						<lightning-layout-item if:true={product.isDisabledButtons} class="slds-var-m-top_small container__buttons" size="12">
-							<lightning-button
-								label="Configurar"
-								variant="brand"
-								onclick={onClickConfigureKit}>
-							</lightning-button>
-						</lightning-layout-item>
-
-						<lightning-layout-item if:false={product.isDisabledButtons} class="slds-var-m-top_small container__buttons" size="12">
-							<div if:true={product.isHasKit}>
-								<lightning-button
-									if:false={product.isSelected}
-									class="slds-var-m-right_x-small"
-									label="Limpar"
-									variant="destructive"
-									onclick={onClickClearKitConfiguration}>
-								</lightning-button>
-							</div>
-
-							<lightning-button
-								if:false={product.isSelected}
-								label="Adicionar"
-								variant="brand"
-								onclick={onClickSelectProduct}>
-							</lightning-button>
-
-							<lightning-button
-								if:true={product.isSelected}
-								label="Remover"
-								variant="destructive"
-								onclick={onClickRemoveProduct}>
-							</lightning-button>
-						</lightning-layout-item>
-
-					</lightning-layout>
-				</div>
-			</article>
-
-		</lightning-layout-item>
-
-	</lightning-layout> -->
 </template>

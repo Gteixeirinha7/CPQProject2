@@ -594,13 +594,10 @@
         </div>
     </div>
     <div id="renderPDF" class="container">
-        <!-- TABLE WRAP-->
         <div id="renderPDF2" style="margin-bottom: 70px;margin-right: 10px;">
         <table width="100%" border="0" class="tb-wrap" style="margin-bottom: 0px;margin-right: 0px;margin-left: 0px;">
-
             <tr>
                 <td class="pb-0">
-                    <!-- CABEÇALHO -->
                     <table width="100%" border="0">
                         <tbody>
                             <tr>
@@ -633,16 +630,11 @@
                             </tr>
                         </tbody>
                     </table>
-                    <!-- /CABEÇALHO -->
                 </td>
             </tr>
-
-            <!-- INICIO A SECAO DE TABLE -->
             <tr>
                 <td class="td-sub-title bg-light color-border-lv2">
-                    <!-- SUB-CABEÇALHO -->
                     <span>&rsaquo;</span> INFORMAÇÕES DA COTAÇÃO
-                    <!-- /SUB-CABEÇALHO -->
                 </td>
             </tr>
 
@@ -706,27 +698,20 @@
                     </table>
                 </td>
             </tr>
-                    <tr class="new-page">
-                        <td style="padding: 0;">
-                            <!-- CONDIÇÃO PAGTO E VALOR -->
-                            <table class="tb-dados mb-1">
-                                <tr class="no-border flex-end">
-                                    <td width="360" class="text-right">
-                                        <div class="box-total">
-                                            <span class="lb">Valor Total:</span>
-                                            <span class="valor total">R$ {!quoteData.totalPrice}</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </table>
-                            <!-- /CONDIÇÃO PAGTO E VALOR -->
-                        </td>
-                    </tr>
-
-            <!-- /FINAL A DE SECAO TABLE -->
-
-            <!-- INICIO D SECAO DE TABLE -->
-            <!-- INICIO B SECAO DE TABLE -->
+            <tr class="new-page">
+                <td style="padding: 0;">
+                    <table class="tb-dados mb-1">
+                        <tr class="no-border flex-end">
+                            <td width="360" class="text-right">
+                                <div class="box-total">
+                                    <span class="lb">Valor Total:</span>
+                                    <span class="valor total">R$ {!quoteData.totalPrice}</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
         <apex:repeat value="{!quoteData.itemList}" var="item" >
 
                 <tr class="html2pdf__page-break">
@@ -1031,10 +1016,70 @@
 
             <!-- /FINAL B DE SECAO TABLE -->
         </apex:repeat>
-
-
+        <apex:outputPanel rendered="{!quoteData.hasProductExceptionDataTotal}">        
+            <tr class="html2pdf__page-break">
+                <td class="">
+                </td>
+            </tr>
+                <tr>
+                    <td style="padding: 0px">
+                        <table style="border-collapse: collapse;">
+                            <tr class="new-page">
+                                <td width="40%" class="td-sub-title bg-light color-border-lv2">
+                                    <span>&rsaquo;</span> Produtos Adicionais
+                                </td>
+                                <td width="60%" class="td-sub-title bg-light color-border-lv2 text-right">
+                                    <span class="valor">SubTotal Produtos Adicionais: {!quoteData.productExceptionDataTotal}</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <table class="tb-dados">
+        
+                            <tr class="tr-lista-header">
+                                <th width="40%" class="text-left">Nome</th>
+                                <th width="20%" class="text-left">Quantidade</th>
+                                <th width="20%" class="text-left">Valor</th>
+                                <th width="20%" class="text-right">SubTotal</th>
+                            </tr>
+                            <apex:repeat value="{!quoteData.itemWithoutStructureList}" var="item">
+                                <tr class="tr-lista-valores new-page">
+                                    <td width="40%">
+                                        <span class="valor">{!item.name}</span>
+                                    </td>
+                                    <td width="20%">
+                                        <span class="valor">{!item.quantity}</span>
+                                    </td>
+                                    <td width="20%">
+                                        <span class="valor">${!item.unitPrice}</span>
+                                    </td>
+                                    <td width="20%" class="text-right">
+                                        <span class="valor">{!item.totalPrice}</span>
+                                    </td>
+                                </tr>        
+                            </apex:repeat>
+                        </table>
+                    </td>
+                </tr>
+            <tr class="new-page">
+                <td style="padding: 0;">
+                    <table class="tb-dados mb-1">
+                        <tr class="no-border flex-end">
+                            <td width="360" class="text-right">
+                                <div class="box-total">
+                                    <span class="lb">Valor Total:</span>
+                                    <span class="valor total">R$ {!quoteData.productExceptionDataTotal}</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </apex:outputPanel>
         </table>
-        <!-- /TABLE WRAP-->
         </div>
     </div>
     <table width="100%" style="border: 2px solid #5cb85c; position: fixed; height: 50px; bottom: 0; width: 100%;text-align: center;"> 

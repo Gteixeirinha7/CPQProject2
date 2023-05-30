@@ -7,22 +7,21 @@ import getCheckoutData from '@salesforce/apex/ProductScreenController.getCheckou
 import getStructures from '@salesforce/apex/ProductScreenController.getStructures';
 import getResources from '@salesforce/apex/ProductScreenController.getResources';
 import getProducts from '@salesforce/apex/ProductScreenController.getProducts';
-import getExceptionProducts from '@salesforce/apex/ProductScreenController.getExceptionProducts';
 import saveLineItems from '@salesforce/apex/ProductScreenController.saveLineItems';
 import getBaseObject from '@salesforce/apex/ProductScreenController.getBaseObject';
 import checkNextTypeResources from '@salesforce/apex/ProductScreenController.checkNextTypeResources';
 
 export default class ProductScreen extends NavigationMixin(LightningElement) {
+	defaultQuantitySearch = 50;
+	currentTab = 'Estrutura';
 	@track
 	selectedStructure = {};
 	@track
 	resourceList = [];
 	@track
-	checkoutProductMap = {};
-	@track
 	productMap = {};
 	@track
-	productMapException = {}
+	exceptionProducts= {};
 	@track
 	currentProductConfig = {};
 	@track
@@ -41,13 +40,13 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 			selected : true,
 			label : "Produto",			
 			filter : "",
-			value : "Name"
+			value : "name"
 		},
 		{
 			selected : false,
 			label : "Código do Produto",			
 			filter : "",
-			value : "ProductCode"
+			value : "productCode"
 		}
 	]
 	@track
@@ -85,7 +84,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	productCode = '';
 	grouper = '';
 	structureName = '';
-	currentStackTraceCode = '';
+	@track currentStackTraceCode = [];
 	activatedResourceIndex = '0';
 
 	pricebookFilter = ' AND id IN (SELECT CatalogoDePreco__c FROM ContaXCatalogoDePreco__c where Conta__c = {accountId})';
@@ -98,7 +97,6 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	isShowStructures = false;
 	isShowProducts = false;
 	isShowResources = false;
-	isShowCheckout = false;
 	isShowSearchProduct = false;
 	isOpenConfigKit = false;
 	isOpenNewAccessoryModal = false;
@@ -108,6 +106,41 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	isTablet = false;
 
 	currentPageReference;
+
+	get showCarrinho(){
+		return this.currentTab == 'Carrinho';
+	}
+	get showEstrutura(){
+		return this.currentTab == 'Estrutura';
+	}
+	get showProduto(){
+		return this.currentTab == 'Pronta';
+	}
+	get showExcecao(){
+		return this.currentTab == 'Excecao';
+	}
+	get showSingleProduct(){
+		return this.currentTab == 'SingleProduct';
+	}
+	get getClassEstrutura(){
+		return this.getClassTabItem('Estrutura');
+	}
+	get getClassProduto(){
+		return this.getClassTabItem('Pronta');
+	}
+	get getClassExcecao(){
+		return this.getClassTabItem('Excecao');
+	}
+	get getClassCarrinho(){
+		return this.getClassTabItem('Carrinho');
+	}
+	get getClassSingleProduct(){
+		return this.getClassTabItem('SingleProduct');
+	}
+
+	getClassTabItem(item){
+		return 'slds-vertical-tabs__nav-item '+(this.currentTab == item ? 'slds-is-active' : '');
+	}
 
 	get currentGroupShowId(){
 		return this.currentGroupShow('id');
@@ -142,16 +175,30 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		}.bind(this));
 	}
 
+	get excpProducts(){
+		return Object.values(this.exceptionProducts);
+	}
 	get products() {
-		return Object.values(this.productMap);
+		return this.filterProductList(Object.values(this.productMap));
+	}
+	get singleProduts() {
+		return this.filterProductList(Object.values(this.productMap).filter(item => !item.isShowNewStructure));
+	}
+	get newStructures() {
+		return this.filterProductList(Object.values(this.productMap).filter(item => item.isShowNewStructure));
+	}
+	get checkoutProducts() {	
+		return this.filterProductList(Object.values(this.productMap).filter(item => item.showCheckout));
 	}
 
-	get checkoutProducts() {
-		return Object.values(this.checkoutProductMap);
-	}
-
-	get exceptionProducts() {
-		return Object.values(this.productMapException);
+	filterProductList(context){
+		var filter = this.filterListProducts.find(filters => filters.selected);
+		return context.filter(function(item){
+			if(filter.filter)
+				return item[filter.value].toLocaleLowerCase().includes(filter.filter.toLocaleLowerCase());
+			else
+				return true;
+		}.bind(this), {filter});
 	}
 
 	@wire(CurrentPageReference)
@@ -160,59 +207,21 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		const { state } = currentPageReference;
 
 		this.clearAll();
-		this.checkoutProductMap = {};
 
 		if (state) {
 			this.quoteId = state.c__quoteId;
-
-			getCheckoutData({ objId: this.quoteId })
-				.then(resolve => {
-					this.checkoutProductMap = resolve;
-				})
-				.catch(error => {
-					console.log('Error =>', error);
-					this.handlerDispatchToast('Erro!', 'Contate um administrador!!\n' + error, 'error');
-				})
-				.finally(() => {
-					this.isWireConnectedLoading = false;
-					this.handleLoadingConnected();
-				});
-		}
-		else {
-			this.isWireConnectedLoading = false;
-			this.handleLoadingConnected();
+			this.getBaseObjectData();
 		}
 	}
 
 	connectedCallback() {
-		getStructures({})
-			.then(resolve => {
-				if (!resolve || Object.keys(resolve).length === 0) {
-					this.handlerDispatchToast('Atenção!', 'Nenhuma estrutura de produto encontrada.', 'warning');
-				}
-				else this.structureMap = resolve;
-			})
-			.catch(error => {
-				console.log('Error =>', error);
-				this.handlerDispatchToast('Erro!', 'Contate um administrador!!\n' + error, 'error');
-			})
-			.finally(() => {
-				this.isConnectedLoading = false;
-				this.handleLoadingConnected();
-			});
-
 		this.isDesktop = FORM_FACTOR == 'Large';
 		this.isMobile = FORM_FACTOR == 'Small';
 		this.isTablet = FORM_FACTOR == 'Medium';
 	}
 
-	handleLoadingConnected() {
-		if (!this.isConnectedLoading && !this.isWireConnectedLoading) {
-			this.getBaseObjectData();
-		}
-	}
-
 	getBaseObjectData() {
+		this.isLoading = true;
 		getBaseObject({objId : this.quoteId})
 			.then(resolve => {
 				this.baseObject = resolve;
@@ -224,11 +233,41 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 					this.isShowStructures = false;
 				}
 				this.isLoading = false;
+				return getStructures({});
+			})
+			.then(resolve => {
+				this.structureMap = resolve;
+				return getCheckoutData({ objId: this.quoteId });
+			})
+			.then(resolve => {
+				this.updateProductsMap(resolve);
+				this.isLoading = false;
 			})
 			.catch(error => {
+				this.isLoading = false;
 				console.log('Error =>', error);
 				this.handlerDispatchToast('Erro!', 'Contate um administrador!!\n' + error, 'error');
 			})
+	}
+
+	updateProductsMap(resolve){		
+		Object.keys(resolve).forEach(function(key){
+			this.productMap[key] = resolve[key];
+		}.bind(this), {resolve});
+	}
+
+	selectFilterProductomponent(event){
+		const { value } = event.detail;
+		this.filterListProducts.forEach(function(item){
+			item.selected = (item.value == value);
+		});
+		this.handlefilterProductComponent(event);
+	}
+	handlefilterProductComponent(event){
+		const { value, filter } = event.detail;
+		this.filterListProducts.forEach(function(item){
+			if(item.selected) item.filter = filter;
+		}, {value, filter});
 	}
 
 	selectFilterComponent(event){
@@ -241,12 +280,20 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	handlefilterComponent(event){
 		const { value, filter } = event.detail;
 		this.filterList.forEach(function(item){
-			if(item.selected){
-				item.filter = filter;
-			};
+			if(item.selected) item.filter = filter;
 		}, {value, filter});
 	}
 
+	showComponentTab(event){
+		this.currentTab = event.currentTarget.dataset.component;
+		this.productMap = JSON.parse(JSON.stringify(this.productMap));
+		this.structureMap = JSON.parse(JSON.stringify(this.structureMap));
+		this.isLoading = true;
+		getProducts({objId: this.quoteId, quantity: this.defaultQuantitySearch, structureId: this.currentTab}).then(resolve => {
+			this.updateProductsMap(resolve);
+			this.isLoading = false;
+		});
+	}
 	async handleSelectStructure(id) {
 
 		this.isLoading = true;
@@ -280,7 +327,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		this.currentResourceActiveted = this.resourceList[0];
 		this.activatedResourceIndex = '0';
 
-		this.currentStackTraceCode = this.resourceList[0].EstruturaProduto__r.CodigoInterno__c;
+		// this.currentStackTraceCode = this.resourceList[0].EstruturaProduto__r.CodigoInterno__c;
 
 		this.selectedStructure = this.structureMap[id];
 		this.isShowStructures = false;
@@ -375,16 +422,31 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 
 		this.fillStackTraceCode();
 
+		// if (nextResourceIndex < this.resourceList.length) {
+		// 	const externalIdList = await checkNextTypeResources({
+		// 		structureId: this.selectedStructure.Id,
+		// 		currentExternalId: this.currentStackTraceCode,
+		// 		index: nextResourceIndex
+		// 	});
+
+		// 	this.resourceList[nextResourceIndex].isResourceDisabled = false;
+		// 	this.resourceList[nextResourceIndex].ComposicaoProduto__r.forEach(item => {
+		// 		if (externalIdList.find(extId => extId.includes(item.Sequencial__c)) || !item.Sequencial__c) {
+		// 			item.isShowType = true;
+		// 		}
+		// 	}, {externalIdList});
+		// }
+
 		if (nextResourceIndex < this.resourceList.length) {
 			const externalIdList = await checkNextTypeResources({
 				structureId: this.selectedStructure.Id,
-				currentExternalId: this.currentStackTraceCode,
-				index: nextResourceIndex
+				currentStackTraceCode : this.currentStackTraceCode,
+				index: (nextResourceIndex +1)
 			});
 
 			this.resourceList[nextResourceIndex].isResourceDisabled = false;
 			this.resourceList[nextResourceIndex].ComposicaoProduto__r.forEach(item => {
-				if (externalIdList.find(extId => extId.includes(item.Sequencial__c)) || !item.Sequencial__c) {
+				if (externalIdList.includes(item.Id)) {
 					item.isShowType = true;
 				}
 			}, {externalIdList});
@@ -402,36 +464,45 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		this.isLoading = false;
 	}
 
-	async handleSearchProduct() {
+	async handleSearchProductStructure() {
 		this.isLoading = true;
 
-		if (!this.currentStackTraceCode) {
+		this.fillStackTraceCode();
+
+		if (!this.selectedStructure.Id) {
 			this.handlerDispatchToast('Atenção!', 'Não é possível buscar produtos sem nenhuma estrutura.', 'warning');
 			this.isLoading = false;
 			return;
 		}
 
-		this.productMap = await getProducts({
+		Object.values(this.productMap).forEach(item => item.showSelectedStructure = false);
+		var resolve = await getProducts({
 			objId: this.quoteId,
 			structureId: this.selectedStructure.Id,
-			productCode: this.currentStackTraceCode
+			currentStackTraceCode: this.currentStackTraceCode,
+			quantity: this.defaultQuantitySearch
 		});
+		Object.values(resolve).forEach(item => item.showSelectedStructure = true);
+		
+		this.updateProductsMap(resolve);
 
 		this.isShowProducts = true;
 		this.isShowStructures = false;
 		this.isShowResources = false;
-		this.isShowCheckout = false;
 		this.isShowSearchProduct = false;
 
 		this.isLoading = false;
 	}
 
 	handleAcessoryData(event){
-		const { name, value, id, Product2Id, groupId } = event.detail;
+		this.handleAcessory(event.detail);
+	}
+	handleAcessory(event){
+		const { name, value, id, Product2Id, groupId } = event;
 
 		let productData = {};
 		
-		let checkoutProduct = this.checkoutProductMap[Product2Id] ?  this.checkoutProductMap[Product2Id] : this.productMap[Product2Id];
+		let checkoutProduct = this.productMap[Product2Id];
 		let groupAccessory = checkoutProduct.groupAccessoryList.find(item => item.id === groupId);
 		if(groupAccessory){
 			groupAccessory.accessoryList.forEach(item => {
@@ -444,16 +515,18 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 			productData = checkoutProduct.exceptionAccessoryList.find(item => item.id === id);
 		}
 
-		if (!value || (name !== 'discountType' && value < 0)) {
-			productData.price = 0;
-			productData.discountCurrency = 0;
-			productData.discountPercent = 0;
-			productData.totalPrice = 0;
-			productData[name] = undefined;
-			return;
-		}
+		// if (!value || (name !== 'discountType' && value < 0)) {
+		// 	productData.price = 0;
+		// 	productData.discountCurrency = 0;
+		// 	productData.discountPercent = 0;
+		// 	productData.totalPrice = 0;
+		// 	productData[name] = undefined;
+		// 	return;
+		// }
 
-		productData[name] = (name === 'discountType' ? value : Number(value));
+		if(name !== 'changedQuantity'){
+			productData[name] = (name === 'discountType' ? value : Number(value));
+		}
 
 		if (name === 'discountType') {
 			if (value === 'percent') {
@@ -476,22 +549,42 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 			productData.price = Number((productData.listPrice - productData.discountCurrency).toFixed(2));
 		}
 
+		if(name === 'quantity'){
+			productData['changedQuantity'] = Number(value);
+		}
+
+		if(name === 'changedQuantity'){
+			productData['quantity'] = Number(value);
+		}
+
 		productData.totalPrice = Number((productData.price * productData.quantity).toFixed(2));
 
 	}
 
+	handleNewAcessoryProductData(event) {
+		const { name, value, id } = event.detail;
+		this.handleProducts(event, this.exceptionProducts[id]);
+	}
+
 	handleProductData(event) {
 		const { name, value, id } = event.detail;
-
-		if(this.productMap[id])
-			this.handleProducts(event, this.productMap[id]);
-		if(this.checkoutProductMap[id])
-			this.handleProducts(event, this.checkoutProductMap[id]);
-		if(this.productMapException[id])
-			this.handleProducts(event, this.productMapException[id]);
+		this.handleProducts(event, this.productMap[id]);
 	}
 	handleProducts(event, productData){
 		const { name, value, id } = event.detail;
+		if(name == 'quantityAccessory'){
+			productData.exceptionAccessoryList.forEach(function(item){
+				var newQuantity = value * item.changedQuantity;
+				this.handleAcessory( { name : 'changedQuantity', value : newQuantity, id : item.id, Product2Id : productData.id, groupId: item.id });
+			}.bind(this), {productData});
+			productData.groupAccessoryList.forEach(function(item){
+				item.accessoryList.forEach(function(acesss){
+					var newQuantity = value * acesss.changedQuantity;
+					this.handleAcessory( { name : 'changedQuantity', value : newQuantity, id : acesss.id, Product2Id : productData.id, groupId: item.id });
+				}.bind(this), {productData});
+			}.bind(this), {productData});
+			return;
+		}
 		if (!value || (name !== 'discountType' && value < 0)) {
 			productData.price = 0;
 			productData.discountCurrency = 0;
@@ -504,12 +597,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		productData[name] = (name === 'discountType' ? value : Number(value));
 
 		if (name === 'discountType') {
-			if (value === 'percent') {
-				productData.isDiscountPercent = true;
-			}
-			else {
-				productData.isDiscountPercent = false;
-			}
+			productData.isDiscountPercent = value === 'percent';
 		}
 		else if (name === 'price') {
 			productData.discountCurrency = Number((productData.listPrice - productData.price).toFixed(2));
@@ -530,43 +618,39 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	handleConfigureKit(event) {
 		const id = event.detail.id;
 
-		this.currentProductConfig = JSON.parse(JSON.stringify(this.productMap[id] ?  this.productMap[id] : this.productMapException[id]));
-		this.currentProductConfig.groupAccessoryList.forEach(item => item.isShowGroup = false);
-		this.currentProductConfig.groupAccessoryList[0].isShowGroup = true;
-		this.currentProductConfig.groupAccessoryList[0].isCurrentGroup = true;
-		console.log('this.currentProductConfig =>', JSON.parse(JSON.stringify(this.currentProductConfig)));
+		this.productMap[id].groupAccessoryList.forEach(item => item.isShowGroup = false);
+		this.productMap[id].groupAccessoryList[0].isShowGroup = true;
+		this.productMap[id].groupAccessoryList[0].isCurrentGroup = true;
+
+		this.currentProductConfig = JSON.parse(JSON.stringify(this.productMap[id]));
 
 		this.isOpenConfigKit = true;
 	}
 
 	handleClearKitConfiguration(event) {
-		const id = event.detail.id;
-
-		this.clearConfig(this.productMap[id] ?  this.productMap[id] : this.productMapException[id]);
+		this.clearConfig(this.productMap[event.detail.id]);
 	}
 
 	handleSelectProduct(event) {
-		const id = event.detail.id; // target.database
-		let addProduct = this.productMap[id] ?  this.productMap[id] : this.productMapException[id];
+		let addProduct = this.productMap[event.detail.id];
 
 		if (!this.checkProductIsValid(addProduct)) return;
 
 		addProduct.isSelected = true;
-		this.checkoutProductMap[id] = { ...addProduct };
+		addProduct.showCheckout = true;
+		addProduct.isSingleItem = this.currentTab == 'SingleProduct';
+
+		this.currentTab = 'Carrinho';
+		this.handleNewStructure();
 	}
 
 	handleRemoveProduct(event) {
-		const id = event.detail.id;
+		let removeProduct = this.productMap[ event.detail.id];
 
-		let removeProduct = this.productMap[id] ?  this.productMap[id] : this.productMapException[id];
-
-		if(removeProduct){
-			removeProduct.isSelected = false;
-			removeProduct.quantity = 1;
-			removeProduct.price = removeProduct.listPrice;
-		}
-
-		delete this.checkoutProductMap[id];
+		removeProduct.isSelected = false;
+		removeProduct.showCheckout = false;
+		removeProduct.quantity = 1;
+		removeProduct.price = removeProduct.listPrice;
 	}
 
 	checkProductIsValid(addProduct) {
@@ -586,7 +670,6 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 			this.handlerDispatchToast('Atenção!', 'Porcetagem do desconto inválido', 'warning');
 			return false;
 		}
-
 		return true;
 	}
 
@@ -596,16 +679,20 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 
 
 	handleStructure(event){
-		const structure = event.detail.structure;
-		if(structure.Name == "Estrutura Manual"){
-			this.onClickNewStructure();
-		}else{
-			this.handleSelectStructure(structure.Id);
-		}
-
+		// const structure = event.detail.structure;
+		// if(structure.Name == "Estrutura Manual"){
+		// 	this.onClickNewStructure();
+		// }else{
+		// 	this.handleSelectStructure(structure.Id);
+		// }
+		this.handleSelectStructure(event.detail.structure.Id);
 	}
 	handleNewStructure() {
-		this.clearAll();
+		this.isShowStructures = true;
+		this.isShowResources = false;
+		this.isShowProducts = false;
+		// this.clearAll();
+		// this.productMap.forEach(item => item.showSelectedStructure = false);
 	}
 
 	handleFilter(event) {
@@ -613,13 +700,22 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		this[name] = value;
 	}
 
-	onClickNewStructure() {
-		this.handleSearchProductCode();
-	}
+	// onClickNewStructure() {
+	// 	this.handleSearchProductCode();
+	// }
 
-	handleSearchProductCode() {
-		this.clearAll(false);
-		this.isShowSearchProduct = true;
+	// handleSearchProductCode() {
+	// 	this.clearAll(false);
+	// 	this.isShowSearchProduct = true;
+	// }
+
+	onClickSeeMoreProduct(){
+		this.isLoading = true;
+		getProducts({objId: this.quoteId, quantity: this.prodcutMap.length + this.defaultQuantitySearch, structureId: this.currentTab})
+		.then(resolve => {
+			this.isLoading = false;
+			this.updateProductsMap(resolve);
+		});
 	}
 
 	handleProductCode(event) {
@@ -635,10 +731,9 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 				this.isLoading = true;
 				this.isLoadingModal = true;
 
-				getExceptionProducts({ objId: this.quoteId, searchValue: this.productCode, quantity: 30 })
-					.then(resolve => {
-						this.productMapException = resolve;
-						console.log('this.productMap =>', JSON.parse(JSON.stringify(this.productMap)));
+				getProducts({ objId: this.quoteId, productCode: this.productCode, quantity: this.defaultQuantitySearch, structureId: this.currentTab })
+					.then(resolve => {				
+						this.exceptionProducts = resolve;
 					})
 					.catch(error => {
 						console.log('Error Search Product By Code =>', error);
@@ -657,40 +752,17 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		}
 	}
 
-	onClickSeeMoreExceptionProduct() {
-		if (this.productCode > ' ') {
-			this.isLoading = true;
-
-			getExceptionProducts({ objId: this.quoteId, searchValue: this.productCode, quantity: (this.products.length + 30) })
-				.then(resolve => {
-					this.productMapException = resolve;
-				})
-				.catch(error => {
-					console.log('Error Search Product By Code =>', error);
-					this.handlerDispatchToast('Falha!', ('Erro inesperado! ' + error), 'error');
-				})
-				.finally(() => {
-					if (this.products.length > 0) this.isShowSeeMoreButton = true;
-					this.isLoading = false;
-				});
-		}
-		else {
-			this.isShowSeeMoreButton = false;
-			this.handlerDispatchToast('Atenção!', 'Pesquise pelo nome do produto!', 'warning');
-		}
-	}
 
 	onClickAddExceptionAccessoryEvent(event) {
-		const id = event.detail.id;
-
-		this.addNewAccessory.productId = id;
-
+		if(!(this.addNewAccessory?.productId))
+			this.addNewAccessory = {};
+		this.addNewAccessory.productId = event.detail.id;
 		this.isOpenNewAccessoryModal = true;
 	}
 
 	clickSelectExceptionAccessoryEvent(event) {
 		const id = event.detail.id;
-		let addProduct = this.productMapException[id];
+		let addProduct = this.exceptionProducts[id];
 
 		if (!this.checkProductIsValid(addProduct)) return;
 
@@ -699,15 +771,15 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		addProduct.discountCurrency = 0;
 		addProduct.discountType = 'currency';
 		addProduct.isSelected = true;
-		this.checkoutExceptionProductMap[id] = { ...addProduct };
+		addProduct.showCheckout = true;
+		addProduct.showException = true;
 	}
 
 	onClickRemoveExceptionAccessory(event) {
 		const { name, value, id, Product2Id, groupId } = event.detail;
-
 		
 		let removeProduct = {};
-		let checkoutProduct = this.checkoutProductMap[Product2Id] ?  this.checkoutProductMap[Product2Id] : this.productMap[Product2Id];
+		let checkoutProduct = this.productMap[Product2Id];
 		let groupAccessory = checkoutProduct.groupAccessoryList.find(item => item.id === groupId);
 		if(groupAccessory){
 			groupAccessory.accessoryList.forEach(item => {
@@ -717,19 +789,18 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 				}
 			}, {removeProduct});
 		}else{
-			removeProduct = checkoutProduct.exceptionAccessoryList.find(item => item.id === id);
+			delete checkoutProduct.exceptionAccessoryList[id];
 		}			
 		removeProduct.isSelected = false;
+		removeProduct.showCheckout = false;
 		removeProduct.quantity = 1;
 		removeProduct.price = removeProduct.listPrice;
-
-		delete this.checkoutExceptionProductMap[id];
 	}
 
 	onClickRemoveExceptionAccessoryCheckout(event) {
 		const { id, productId } = event.target.dataset;
 
-		let checkoutProduct = this.checkoutProductMap[productId] ?  this.checkoutProductMap[productId] : this.productMap[productId];
+		let checkoutProduct = this.productMap[productId];
 		checkoutProduct.exceptionAccessoryList = checkoutProduct.exceptionAccessoryList.filter(item => item.id !== id);
 
 		if (checkoutProduct.exceptionAccessoryList.length <= 0) {
@@ -740,21 +811,19 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	onClickCancelNewAccessory() {
 		this.productCode = '';
 		this.addNewAccessory = {};
-		this.checkoutExceptionProductMap = {};
 		this.currentExceptionEdit = {};
-		this.productMapException = {};
 		this.isOpenNewAccessoryModal = false;
 		this.isOpenEditAccessoryModal = false;
 	}
 
 	onClickSaveNewAccessory() {
-		if (Object.values(this.checkoutExceptionProductMap).length <= 0) {
+		if (Object.values(this.exceptionProducts).length <= 0) {
 			this.handlerDispatchToast('Atenção!', 'Nenhum acessório selecionado!', 'warning');
 			return;
 		}
 
-		Object.values(this.checkoutExceptionProductMap).forEach(item => {
-			let currentProductCheckout = this.checkoutProductMap[this.addNewAccessory.productId];
+		Object.values(this.exceptionProducts).forEach(item => {
+			let currentProductCheckout = this.productMap[this.addNewAccessory.productId];
 
 			if (!currentProductCheckout.exceptionAccessoryList) currentProductCheckout.exceptionAccessoryList = [];
 
@@ -788,7 +857,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	onChangeExceptionAccessoryQuantity(event) {
 		const { id, productId } = event.target.dataset;
 
-		let checkoutProduct = this.checkoutProductMap[productId] ?  this.checkoutProductMap[productId] : this.productMap[productId];
+		let checkoutProduct = this.productMap[productId];
 		let accessory = checkoutProduct.exceptionAccessoryList.find(item => item.id === id);
 		accessory.quantity = Number(event.target.value);
 		accessory.totalAmount = Number(Number(accessory.quantity * accessory.price).toFixed(2));
@@ -796,13 +865,13 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 
 	handleClearConfigKit(event) {
 		const id = event.target.dataset.id;
-		this.clearConfig(this.productMap[id] ?  this.productMap[id] : this.productMapException[id]);
+		this.clearConfig(this.productMap[id]);
 	}
 
 	handleConfigKit(event) {
 		const id = event.target.dataset.id;
 
-		this.currentProductConfig = JSON.parse(JSON.stringify(this.productMap[id] ?  this.productMap[id] : this.productMapException[id]));
+		this.currentProductConfig = JSON.parse(JSON.stringify(this.productMap[id]));
 
 		this.isOpenConfigKit = true;
 	}
@@ -899,7 +968,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 			return;
 		}
 
-		let product = this.productMap[this.currentProductConfig.id] ? this.productMap[this.currentProductConfig.id] : this.productMapException[this.currentProductConfig.id];
+		let product = this.productMap[this.currentProductConfig.id];
 
 		product.groupAccessoryList = JSON.parse(JSON.stringify(this.currentProductConfig.groupAccessoryList));
 		product.groupAccessoryList.forEach(group => {
@@ -979,7 +1048,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	onClickRemoveAccessoryCheckout(event) {
 		const { id, groupId, productId } = event.target.dataset;
 
-		let checkoutProduct = this.checkoutProductMap[productId] ?  this.checkoutProductMap[productId] : this.productMap[productId];
+		let checkoutProduct = this.productMap[productId];
 		let groupAccessory = checkoutProduct.groupAccessoryList.find(item => item.id === groupId);
 		groupAccessory.accessoryList.forEach(item => {
 			if (!groupAccessory.isRequired && item.id === id) {
@@ -993,7 +1062,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	handleCheckoutProductData(event) {
 		const { name, value, dataset } = event.target;
 
-		let productData = this.checkoutProductMap[dataset.id];
+		let productData = this.prodcutMap[dataset.id];
 
 		if (!value || (name !== 'discountType' && value < 0)) {
 			productData.price = 0;
@@ -1032,21 +1101,23 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	}
 
 	handleRemoveCheckoutProduct(event) {
-		const id = event.target.dataset.id;
-		delete this.checkoutProductMap[id];
+		const id = event.target.dataset.id;		
+		let addProduct = this.productMap[id];
+		addProduct.isSelected = false;
+		addProduct.showCheckout = false;
 	}
 
 	handleremoveexception(event){
 		const { id, groupId } = event.detail;
 		
-		let currentGroup = this.checkoutProductMap[id].exceptionAccessoryList.find(group => group.id === groupId);
+		let currentGroup = this.productMap[id].exceptionAccessoryList.find(group => group.id === groupId);
 		currentGroup.isSelected = false;
 
 	}
 
 	handleeditexception(event){
 		const { id, groupId } = event.detail;
-		this.currentExceptionEdit = this.checkoutProductMap[id].exceptionAccessoryList.find(group => group.id === groupId);
+		this.currentExceptionEdit = this.productMap[id].exceptionAccessoryList.find(group => group.id === groupId);
 		this.currentExceptionEdit.Product2Id = id;
 		this.currentExceptionEdit.groupId = groupId;
 		this.isOpenEditAccessoryModal = true;
@@ -1054,7 +1125,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	handleChangeAcessory(event){
 		const {  name, value, id, groupId, productId } = event.detail;
 		
-		let checkoutProduct = this.checkoutProductMap[productId] ?  this.checkoutProductMap[productId] : this.productMap[productId];
+		let checkoutProduct = this.productMap[productId];
 		let currentGroup = checkoutProduct.groupAccessoryList.find(group => group.id === groupId);
 		let currentAccessory = currentGroup ? currentGroup.accessoryList.find(item => item.id === id) : null;
 		if(currentAccessory)
@@ -1071,11 +1142,6 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 			this.currentExceptionEdit.isShowProduct = true;
 		}
 
-	}
-
-	handleCheckout() {
-		this.clearAll(false);
-		this.isShowCheckout = true;
 	}
 
 	handleSaveProducts() {
@@ -1110,7 +1176,6 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 					this.handlerDispatchToast('Sucesso!!', 'Itens salvo com exito!!!', 'success');
 
 					this.clearAll();
-					this.checkoutProductMap = {};
 
 					this[NavigationMixin.Navigate]({
 						type: 'standard__recordPage',
@@ -1177,12 +1242,20 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	}
 
 	fillStackTraceCode() {
-		this.currentStackTraceCode = this.resourceList[0].EstruturaProduto__r.CodigoInterno__c;
+		// this.currentStackTraceCode = this.resourceList[0].EstruturaProduto__r.CodigoInterno__c;
 
+		// this.resourceList.forEach(resource => {
+		// 	resource.ComposicaoProduto__r.forEach(item => {
+		// 		if (item.isSelected && item.Sequencial__c) {
+		// 			this.currentStackTraceCode += item.Sequencial__c;
+		// 		}
+		// 	});
+		// });
+		this.currentStackTraceCode = [];
 		this.resourceList.forEach(resource => {
 			resource.ComposicaoProduto__r.forEach(item => {
-				if (item.isSelected && item.Sequencial__c) {
-					this.currentStackTraceCode += item.Sequencial__c;
+				if (item.isSelected) {
+					this.currentStackTraceCode.push(item.Id);
 				}
 			});
 		});
@@ -1193,13 +1266,12 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		this.productMap = {};
 		this.selectedStructure = {};
 		this.addNewAccessory = {};
-		this.currentStackTraceCode = '';
+		this.currentStackTraceCode = [];
 		this.productCode = '';
 
 		this.isShowStructures = isShowStructures;
 		this.isShowProducts = false;
 		this.isShowResources = false;
-		this.isShowCheckout = false;
 		this.isShowSearchProduct = false;
 	}
 

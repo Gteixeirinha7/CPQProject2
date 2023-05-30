@@ -40,7 +40,12 @@
 						<lightning-layout-item class="slds-var-m-top_medium slds-var-p-horizontal_small" size="12"  style=" display: flex; justify-content: center;">
 							<p><b>{currentGroupShowName}</b></p>
 						</lightning-layout-item>
-						<lightning-layout-item class="slds-var-m-top_medium slds-var-p-horizontal_small" size="3" >
+						<!-- <lightning-layout-item class="slds-var-m-top_medium slds-var-p-horizontal_small" size="3" >
+							<lightning-layout multiple-rows horizontal-align="center">
+								<lightning-layout-item class="slds-var-m-top_medium slds-var-p-horizontal_small" size="12" >
+									<p><b>ACESSORIOS SELECIONADOS</b></p>
+								</lightning-layout-item>
+								<lightning-layout-item class="slds-var-m-top_medium slds-var-p-horizontal_small" size="12" >
 								<div style="display: flex; flex-direction: row;">
     								<div class="container__header-title">
 										<template for:each={currentProductConfig.groupAccessoryList} for:item="group" for:index="groupIndex">
@@ -68,9 +73,10 @@
 										</template>
 									</div>
 								</div>
-
-						</lightning-layout-item>
-						<lightning-layout-item class="slds-var-m-top_medium slds-var-p-horizontal_small" size="9" >
+								</lightning-layout-item>
+							</lightning-layout>
+						</lightning-layout-item> -->
+						<lightning-layout-item class="slds-var-m-top_medium slds-var-p-horizontal_small" size="12" >
 							<lightning-layout multiple-rows horizontal-align="center">
 								<template for:each={currentProductConfig.groupAccessoryList} for:item="group" for:index="groupIndex">
 									<template if:true={group.isCurrentGroup}>
@@ -178,7 +184,7 @@
 				</div>
 
 				<footer class="slds-modal__footer">
-					<button class="slds-button slds-button_neutral" onclick={handleCloseConfigKit} title="Cancel">Cancel</button>
+					<button class="slds-button slds-button_neutral" onclick={handleCloseConfigKit} title="Cancel">Cancelar</button>
 					<button class="slds-button slds-button_brand" onclick={handleSaveConfigKit} title="Salvar">Salvar</button>
 				</footer>
 			</div>
@@ -228,7 +234,7 @@
 					</lightning-layout>
 
 					<lightning-layout multiple-rows horizontal-align="space">
-						<template for:each={exceptionProducts} for:item="products">
+						<template for:each={excpProducts} for:item="products">
 
 							<lightning-layout-item
 								key={products.id}
@@ -238,7 +244,7 @@
 								
 								<c-product-component-accessory
 									product={products}
-									onhandleproductdata={handleProductData}
+									onhandleproductdata={handleNewAcessoryProductData}
 									onclickselectexceptionaccessoryevent={clickSelectExceptionAccessoryEvent}
 									onremoveexception={onClickRemoveExceptionAccessory}
 								>
@@ -339,18 +345,16 @@
 			      <div class="slds-page-header__controls">
 			        <div class="slds-page-header__control">
 			          <lightning-button-group>
-			            <lightning-button label="Estrutura" onclick={handleNewStructure}   icon-name="utility:search" ></lightning-button>
-			            <lightning-button label="Produto" onclick={handleSearchProductCode}  icon-name="utility:search" ></lightning-button>
-			            <lightning-button label="Carrinho" onclick={handleCheckout} icon-name="utility:cart"></lightning-button>
-			            <lightning-button if:false={isShowCheckout} label="Buscar" icon-name="utility:search" variant="brand" onclick={handleSearchProduct} disabled={isShowProducts}></lightning-button>
-			            <lightning-button if:true={isShowCheckout}  label="Salvar" variant="brand" onclick={handleSaveProducts}></lightning-button>
+			            <lightning-button label="Inicio" onclick={handleNewStructure} icon-name="utility:home" ></lightning-button>
+			            <lightning-button if:true={isShowResources} label="Buscar" icon-name="utility:search" variant="brand" onclick={handleSearchProductStructure} disabled={isShowProducts}></lightning-button>
+			            <lightning-button if:true={showCarrinho}  label="Concluir" variant="brand" onclick={handleSaveProducts}></lightning-button>
 			          </lightning-button-group>
 			        </div>
 			      </div>
 			    </div>
 			  </div>
 			  <div class="slds-page-header__row slds-page-header__row_gutters">
-			    <div class="slds-page-header__col-details">
+			    <div class="slds-page-header__col-details"> 	
 			      <ul class="slds-page-header__detail-row">
 			        <li class="slds-page-header__detail-block">
 			          <div class="slds-text-title slds-truncate">Conta</div>
@@ -377,21 +381,62 @@
 
 
 	<lightning-layout if:true={isShowStructures} multiple-rows horizontal-align="space">
-		<lightning-layout-item class="slds-var-p-horizontal_x-small container__items" size="12" medium-device-size="9" large-device-size="10">
-    		<lightning-tabset variant="vertical">
-    		    <lightning-tab label="Buscar Estrutura">
-					<lightning-layout multiple-rows horizontal-align="space">
+		<lightning-layout-item class="slds-var-p-horizontal_x-small container__items" size="12">
+			<div class="slds-vertical-tabs">
+			  <div class="slds-vertical-tabs__nav">
+			    <div onclick={showComponentTab} data-component='Estrutura' class={getClassEstrutura}>
+			      <a class="slds-vertical-tabs__link">
+			        <span class="slds-vertical-tabs__left-icon">
+			          <lightning-icon icon-name="standard:asset_hierarchy"></lightning-icon>
+			        </span>
+			        <span class="slds-truncate">Montar Configuração</span>
+			        <span class="slds-vertical-tabs__right-icon"></span>
+			      </a>
+			    </div>
+			    <div onclick={showComponentTab} data-component='Pronta' class={getClassProduto}>
+			      <a class="slds-vertical-tabs__link">
+			        <span class="slds-vertical-tabs__left-icon">
+			          <lightning-icon icon-name="standard:asset_audit"></lightning-icon>
+			        </span>
+			        <span class="slds-truncate" title="Cases">Configuração Pronta</span>
+			        <span class="slds-vertical-tabs__right-icon"></span>
+			      </a>
+			    </div>
+			    <div onclick={showComponentTab} data-component='Excecao' class={getClassExcecao}>
+			      <a class="slds-vertical-tabs__link">
+			        <span class="slds-vertical-tabs__left-icon">
+			          <lightning-icon icon-name="standard:data_transforms"></lightning-icon>
+			        </span>
+			        <span class="slds-truncate" title="Cases">Configuração Exceção</span>
+			        <span class="slds-vertical-tabs__right-icon"></span>
+			      </a>
+			    </div>
+			    <div onclick={showComponentTab} data-component='SingleProduct' class={getClassSingleProduct}>
+			      <a class="slds-vertical-tabs__link">
+			        <span class="slds-vertical-tabs__left-icon">
+			          <lightning-icon icon-name="standard:product"></lightning-icon>
+			        </span>
+			        <span class="slds-truncate" title="Cases">Produtos</span>
+			        <span class="slds-vertical-tabs__right-icon"></span>
+			      </a>
+			    </div>
+			    <div onclick={showComponentTab} data-component='Carrinho' class={getClassCarrinho}>
+			      <a class="slds-vertical-tabs__link">
+			        <span class="slds-vertical-tabs__left-icon">
+			          <lightning-icon icon-name="standard:webcart"></lightning-icon>
+			        </span>
+			        <span class="slds-truncate" title="Cases">Carrinho</span>
+			        <span class="slds-vertical-tabs__right-icon"></span>
+			      </a>
+			    </div>
+			  </div>
+			  	<template if:true={showEstrutura}>
+					<lightning-layout multiple-rows horizontal-align="space" style="width: 100%;">
 						<lightning-layout-item
 							class="slds-var-m-vertical_xx-small slds-var-p-horizontal_x-small"
 							size="12" style="text-align: center;font-size: 16px;font-weight: bold;"
 						>
 							<c-global-search-product-screen filter-list={filterList} onselectfilter={selectFilterComponent} onhandlefilter={handlefilterComponent}></c-global-search-product-screen>
-						</lightning-layout-item>
-						<lightning-layout-item
-							class="slds-var-m-vertical_xx-small slds-var-p-horizontal_x-small"
-							size="12" style="text-align: center;font-size: 16px;font-weight: bold;"
-						>
-							ESTRUTURAS DISPONIVEIS
 						</lightning-layout-item>
 						<template for:each={structures} for:item="structure">
 							<lightning-layout-item key={structure.Id} class="slds-var-p-around_xx-small container__cart-structure" size="2" medium-device-size="2" small-device-size="4">
@@ -401,39 +446,171 @@
 								</c-structure-component>
 							</lightning-layout-item>
 						</template>	
-						<lightning-layout-item class="slds-var-p-around_xx-small container__cart-structure" size="2" medium-device-size="2" small-device-size="4">
+						<!-- <lightning-layout-item class="slds-var-p-around_xx-small container__cart-structure" size="2" medium-device-size="2" small-device-size="4">
 							<c-structure-component 
 								structure={structureException}
 								onhandlestructure={handleStructure}>
 							</c-structure-component>
-						</lightning-layout-item>
+						</lightning-layout-item> -->
 					</lightning-layout>
-				</lightning-tab>
-    		    <lightning-tab label="Estrutura Simplificada">
+				</template>
+			  	<template if:true={showProduto}>
 					<lightning-layout multiple-rows horizontal-align="space">
 						<lightning-layout-item
 							class="slds-var-m-vertical_xx-small slds-var-p-horizontal_x-small"
 							size="12" style="text-align: center;font-size: 16px;font-weight: bold;"
 						>
-							<c-global-search-product-screen filter-list={filterListProducts} onselectfilter={selectFilterComponent} onhandlefilter={handlefilterComponent}></c-global-search-product-screen>
+							<c-global-search-product-screen filter-list={filterListProducts} onselectfilter={selectFilterProductomponent} onhandlefilter={handlefilterProductComponent}></c-global-search-product-screen>
 						</lightning-layout-item>
+						<template for:each={newStructures} for:item="product">						
+							<lightning-layout-item
+								key={product.id}
+								class="slds-var-p-around_x-small"
+								size="8"
+							>						
+								<c-product-component
+									product={product}
+									enable-create-accessory
+									onhandleproductdata={handleProductData}
+									onhandleconfigkit={handleConfigureKit}
+									onhandleclearconfigkit={handleClearKitConfiguration}
+									onhandleselectproduct={handleSelectProduct}
+									onhandleremoveproduct={handleRemoveProduct}
+									onhandlechangeacessory={handleChangeAcessory}
+									onhandleremoveexception={handleremoveexception}
+									onhandleeditexception={handleeditexception}
+									onaddexceptionaccessory={onClickAddExceptionAccessoryEvent}
+								>
+								</c-product-component>
+							
+							</lightning-layout-item>
+						
+						</template>
+					
+						<lightning-layout-item class="container__button-more" size="12">
+							<lightning-button-icon
+								icon-name="utility:down"
+								size="medium"
+								variant="brand"
+								alternative-text="View More"
+								onclick={onClickSeeMoreProduct}
+							>
+							</lightning-button-icon>
+						</lightning-layout-item>
+					</lightning-layout>
+				</template>
+			  	<template if:true={showExcecao}>
+					<lightning-layout multiple-rows horizontal-align="space">
 						<lightning-layout-item
 							class="slds-var-m-vertical_xx-small slds-var-p-horizontal_x-small"
 							size="12" style="text-align: center;font-size: 16px;font-weight: bold;"
 						>
-							PRODUTOS DISPONIVEIS
+							<c-global-search-product-screen filter-list={filterListProducts} onselectfilter={selectFilterProductomponent} onhandlefilter={handlefilterProductComponent}></c-global-search-product-screen>
 						</lightning-layout-item>
-						<template for:each={products} for:item="structure">
-							<lightning-layout-item key={structure.Id} class="slds-var-p-around_xx-small container__cart-structure" size="2" medium-device-size="2" small-device-size="4">
-								<c-structure-component 
-									structure={structure}
-									onhandlestructure={handleStructure}>
-								</c-structure-component>
+						<template for:each={products} for:item="product">						
+							<lightning-layout-item
+								key={product.id}
+								class="slds-var-p-around_x-small"
+								size="8"
+							>						
+								<c-product-component
+									product={product}
+									enable-create-accessory
+									onhandleproductdata={handleProductData}
+									onhandleconfigkit={handleConfigureKit}
+									onhandleclearconfigkit={handleClearKitConfiguration}
+									onhandleselectproduct={handleSelectProduct}
+									onhandleremoveproduct={handleRemoveProduct}
+									onhandlechangeacessory={handleChangeAcessory}
+									onhandleremoveexception={handleremoveexception}
+									onhandleeditexception={handleeditexception}
+									onaddexceptionaccessory={onClickAddExceptionAccessoryEvent}
+								>
+								</c-product-component>
+							
 							</lightning-layout-item>
-						</template>	
+						
+						</template>
+					
+						<lightning-layout-item class="container__button-more" size="12">
+							<lightning-button-icon
+								icon-name="utility:down"
+								size="medium"
+								variant="brand"
+								alternative-text="View More"
+								onclick={onClickSeeMoreExceptionProduct}
+							>
+							</lightning-button-icon>
+						</lightning-layout-item>
 					</lightning-layout>
-				</lightning-tab>
-			</lightning-tabset>
+				</template>
+			  	<template if:true={showSingleProduct}>
+					<lightning-layout multiple-rows horizontal-align="space">
+						<lightning-layout-item
+							class="slds-var-m-vertical_xx-small slds-var-p-horizontal_x-small"
+							size="12" style="text-align: center;font-size: 16px;font-weight: bold;"
+						>
+							<c-global-search-product-screen filter-list={filterListProducts} onselectfilter={selectFilterProductomponent} onhandlefilter={handlefilterProductComponent}></c-global-search-product-screen>
+						</lightning-layout-item>
+						<template for:each={singleProduts} for:item="product">		
+							<lightning-layout-item
+								key={product.id}
+								class="slds-var-p-around_x-small"
+								size="8"
+							>						
+								<c-product-component
+									product={product}
+									onhandleproductdata={handleProductData}
+									onhandleconfigkit={handleConfigureKit}
+									onhandleclearconfigkit={handleClearKitConfiguration}
+									onhandleselectproduct={handleSelectProduct}
+									onhandleremoveproduct={handleRemoveProduct}
+									onhandlechangeacessory={handleChangeAcessory}
+									onhandleremoveexception={handleremoveexception}
+									onhandleeditexception={handleeditexception}
+									onaddexceptionaccessory={onClickAddExceptionAccessoryEvent}
+								>
+								</c-product-component>
+							
+							</lightning-layout-item>
+						</template>
+					
+						<lightning-layout-item class="container__button-more" size="12">
+							<lightning-button-icon
+								icon-name="utility:down"
+								size="medium"
+								variant="brand"
+								alternative-text="View More"
+								onclick={onClickSeeMoreExceptionProduct}
+							>
+							</lightning-button-icon>
+						</lightning-layout-item>
+					</lightning-layout>
+				</template>
+				<template if:true={showCarrinho}>
+					<lightning-layout multiple-rows horizontal-align="space">
+						<template for:each={checkoutProducts} for:item="product">
+							<lightning-layout-item key={product.id} class="slds-var-m-vertical_medium container__product-checkout" size="12" style="max-width: 85%;">
+								<c-product-component
+									product={product}
+									enable-create-accessory
+									onhandleproductdata={handleProductData}
+									onhandleconfigkit={handleConfigureKit}
+									onhandleclearconfigkit={handleClearKitConfiguration}
+									onhandleselectproduct={handleSelectProduct}
+									onhandleremoveproduct={handleRemoveProduct}
+									onhandlechangeacessory={handleChangeAcessory}
+									onhandleremovecheckoutacessory={handleRemoveCheckoutAcessory}
+									onhandleremoveexception={handleremoveexception}
+									onhandleeditexception={handleeditexception}
+									onaddexceptionaccessory={onClickAddExceptionAccessoryEvent}
+								>
+								</c-product-component>
+							</lightning-layout-item>
+						</template>
+					</lightning-layout>
+				</template>
+			</div>
 		</lightning-layout-item>
 	</lightning-layout>
 
@@ -451,67 +628,6 @@
 	</lightning-layout>
 
 
-		<lightning-layout if:true={isShowSearchProduct} multiple-rows horizontal-align="space">
-			<lightning-layout-item class="slds-var-p-around_small" size="12">
-
-				<lightning-layout horizontal-align="center">
-
-					<lightning-layout-item size="6">
-						<lightning-input
-							name="productCode"
-							label="Pesquisar produto..."
-							value={productCode}
-							type="search"
-							field-level-help="Digite o nome ou código do produto"
-							is-loading={productCodeLoading}
-							onchange={handleProductCode}>
-						</lightning-input>
-					</lightning-layout-item>
-
-				</lightning-layout>
-
-			</lightning-layout-item>
-
-			<template for:each={exceptionProducts} for:item="product">
-
-				<lightning-layout-item
-					key={product.id}
-					class="slds-var-p-around_x-small"
-					size="12" medium-device-size="5" large-device-size="5"
-				>
-
-					<c-product-component
-						product={product}
-						onhandleproductdata={handleProductData}
-						onhandleconfigkit={handleConfigureKit}
-						onhandleclearconfigkit={handleClearKitConfiguration}
-						onhandleselectproduct={handleSelectProduct}
-						onhandleremoveproduct={handleRemoveProduct}
-						onhandlechangeacessory={handleChangeAcessory}
-						onhandleremovecheckoutacessory={handleRemoveCheckoutAcessory}
-						onhandleremoveexception={handleremoveexception}
-						onhandleeditexception={handleeditexception}
-						onaddexceptionaccessory={onClickAddExceptionAccessoryEvent}
-					>
-					</c-product-component>
-
-				</lightning-layout-item>
-
-			</template>
-
-			<lightning-layout-item if:true={isShowSeeMoreButton} class="container__button-more" size="12">
-				<lightning-button-icon
-					icon-name="utility:down"
-					size="medium"
-					variant="brand"
-					alternative-text="View More"
-					onclick={onClickSeeMoreExceptionProduct}
-				>
-				</lightning-button-icon>
-			</lightning-layout-item>
-		</lightning-layout>
-
-
 		<lightning-layout if:true={isShowProducts} class="container__product" multiple-rows horizontal-align="space" style=" display: flex; flex-direction: row; justify-content: flex-start;">
 			<lightning-layout-item size="12" medium-device-size="4" large-device-size="4" style=" display: flex; flex-direction: row; justify-content: center; align-items: stretch;">
 				<c-selected-structure-component 
@@ -521,10 +637,11 @@
 			</lightning-layout-item>
 			<lightning-layout-item class="slds-var-p-around_x-small" size="12" medium-device-size="8" large-device-size="8">
 				<template for:each={products} for:item="product">
-					<lightning-layout key={product.id} class="container__product" multiple-rows horizontal-align="space">
+					<lightning-layout if:true={product.showSelectedStructure} key={product.id} class="container__product" multiple-rows horizontal-align="space">
 						<lightning-layout-item class="slds-var-p-around_x-small" size="12" medium-device-size="12" large-device-size="12">
 							<c-product-component
 								product={product}
+								enable-create-accessory
 								onhandleproductdata={handleProductData}
 								onhandleconfigkit={handleConfigureKit}
 								onhandleclearconfigkit={handleClearKitConfiguration}
@@ -539,29 +656,8 @@
 							</c-product-component>
 						</lightning-layout-item>
 					</lightning-layout>
-
 				</template>
 			</lightning-layout-item>
-		</lightning-layout>
-		<lightning-layout if:true={isShowCheckout} multiple-rows  style="justify-content: center;">
-			<template for:each={checkoutProducts} for:item="product">
-				<lightning-layout-item key={product.id} class="slds-var-m-vertical_medium container__product-checkout" size="12" style="max-width: 85%;">
-					<c-product-component
-						product={product}
-						onhandleproductdata={handleProductData}
-						onhandleconfigkit={handleConfigureKit}
-						onhandleclearconfigkit={handleClearKitConfiguration}
-						onhandleselectproduct={handleSelectProduct}
-						onhandleremoveproduct={handleRemoveProduct}
-						onhandlechangeacessory={handleChangeAcessory}
-						onhandleremovecheckoutacessory={handleRemoveCheckoutAcessory}
-						onhandleremoveexception={handleremoveexception}
-						onhandleeditexception={handleeditexception}
-						onaddexceptionaccessory={onClickAddExceptionAccessoryEvent}
-					>
-					</c-product-component>
-				</lightning-layout-item>
-			</template>
 		</lightning-layout>
 	</div>
 </template>

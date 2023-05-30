@@ -4,6 +4,7 @@ public abstract class ProductScreenModel {
 		@AuraEnabled public String id {get; set;}
 		@AuraEnabled public String name {get; set;}
 		@AuraEnabled public Decimal quantity {get; set;}
+		@AuraEnabled public Decimal changedQuantity {get; set;}
 		@AuraEnabled public Decimal totalPrice {get; set;}
 		@AuraEnabled public Decimal listPrice {get; set;}
 		@AuraEnabled public Decimal price {get; set;}
@@ -11,6 +12,7 @@ public abstract class ProductScreenModel {
 		@AuraEnabled public Decimal discountCurrency {get; set;}
 		@AuraEnabled public String discountType {get; set;}
 		@AuraEnabled public String productCode {get; set;}
+		@AuraEnabled public String internalProdCode {get; set;}
 		@AuraEnabled public String image {get; set;}
 		@AuraEnabled public String extension {get; set;}
 		@AuraEnabled public String productId {get; set;}
@@ -21,10 +23,13 @@ public abstract class ProductScreenModel {
         @AuraEnabled public String ParentProduct {get;set;}
 
 		@AuraEnabled public Boolean isSelected {get; set;}
+		@AuraEnabled public Boolean showCheckout {get; set;}
 		@AuraEnabled public Boolean isShowProduct {get; set;}
 		@AuraEnabled public Boolean isDiscountPercent {get; set;}
 		@AuraEnabled public Boolean isHasKit {get; set;}
 		@AuraEnabled public Boolean isDisabledButtons {get; set;}
+		@AuraEnabled public Boolean isShowNewStructure {get; set;}
+		@AuraEnabled public Boolean isSingleItem {get; set;}
 		@AuraEnabled public Boolean isConfigured {get; set;}
 		@AuraEnabled public Boolean hasExceptionAccessory {get; set;}
 
@@ -45,6 +50,7 @@ public abstract class ProductScreenModel {
 			this.isDiscountPercent = false;
 			this.isConfigured = false;
 			this.hasExceptionAccessory = false;
+			this.isSingleItem = false;
 		}
 		public ProductData(Product2 product) {
 			this();
@@ -53,31 +59,40 @@ public abstract class ProductScreenModel {
 			this.name = product.Name;
 			this.image = product.Imagem_URL__c;
 			this.quantity = 1;
+			this.changedQuantity = 1;
 			this.price = 0;
 			this.productCode = product.ExternalId__c;
+			this.internalProdCode = product.ProductCode;
 			this.isSelected = false;
 			this.isShowProduct = false;
 			this.isHasKit = product.KitAcessorios__c <> null;
 			this.isDisabledButtons = product.KitAcessorios__c <> null;
+			this.isShowNewStructure = product.EstruturaProduto__c <> null && this.isDisabledButtons;
+			this.isSingleItem = false;
 		}
 		public ProductData(QuoteLineItem currentQuoteLineItem) {
 			this();
 			this.id = currentQuoteLineItem.Product2Id;
+			this.showCheckout = true;
 			this.name = currentQuoteLineItem.Product2.Name;
 			this.quantity = currentQuoteLineItem.Quantity;
+			this.changedQuantity = currentQuoteLineItem.Quantity;
 			this.image = currentQuoteLineItem.Product2.Imagem_URL__c;
 			this.price = currentQuoteLineItem.UnitPrice;
 			this.productCode = currentQuoteLineItem.Product2.ExternalId__c;
+			this.internalProdCode = currentQuoteLineItem.Product2.ProductCode;
 			this.isSelected = true;
 			this.isShowProduct = true;
 			this.isHasKit = currentQuoteLineItem.Product2.KitAcessorios__c != null;
 			this.isDisabledButtons = currentQuoteLineItem.Product2.KitAcessorios__c != null;
+			this.isShowNewStructure = false;
 
             this.Product2KitAcessoriosId = currentQuoteLineItem.Product2.KitAcessorios__c;
             this.ParentProductKitAcessoriosId = currentQuoteLineItem.ParentProduct__r.KitAcessorios__c;
             this.Product2Id = currentQuoteLineItem.Product2Id;
             this.ParentProduct = currentQuoteLineItem.ParentProduct__c;
 			this.productId = currentQuoteLineItem.Product2Id;
+			this.isSingleItem = currentQuoteLineItem.ProdutoSemEstrutura__c;
 
 			
 			this.totalPrice = 0;
@@ -89,27 +104,33 @@ public abstract class ProductScreenModel {
 		public ProductData(OpportunityLineItem currentOpporunityLineItem) {
 			this();
 			this.id = currentOpporunityLineItem.Product2Id;
+			this.showCheckout = true;
 			this.name = currentOpporunityLineItem.Product2.Name;
 			this.quantity = currentOpporunityLineItem.Quantity;
+			this.changedQuantity = currentOpporunityLineItem.Quantity;
 			this.image = currentOpporunityLineItem.Product2.Imagem_URL__c;
 			this.price = currentOpporunityLineItem.UnitPrice;
 			this.productCode = currentOpporunityLineItem.Product2.ExternalId__c;
+			this.internalProdCode = currentOpporunityLineItem.Product2.ProductCode;
 			this.isSelected = true;
 			this.isShowProduct = true;
 			this.isHasKit = currentOpporunityLineItem.Product2.KitAcessorios__c != null;
 			this.isDisabledButtons = currentOpporunityLineItem.Product2.KitAcessorios__c != null;
+			this.isShowNewStructure = false;
 
             this.Product2KitAcessoriosId = currentOpporunityLineItem.Product2.KitAcessorios__c;
             this.ParentProductKitAcessoriosId = currentOpporunityLineItem.ParentProduct__r.KitAcessorios__c;
             this.Product2Id = currentOpporunityLineItem.Product2Id;
             this.ParentProduct = currentOpporunityLineItem.ParentProduct__c;
 			this.productId = currentOpporunityLineItem.Product2Id;
+			this.isSingleItem = currentOpporunityLineItem.ProdutoSemEstrutura__c;
 		}
 		public QuoteLineItem getQuoteLineItem(PricebookEntry currentPrice, Id quoteId){
 				return new QuoteLineItem(
 					QuoteId = quoteId,
 					UnitPrice = this.price,
 					Quantity = this.quantity,
+					ProdutoSemEstrutura__c = this.isSingleItem,
 					// DescontoAplicado__c = currentPrice.UnitPrice - this.price,
 					Discount = (1 - (this.price / currentPrice.UnitPrice)) * 100,
 					Product2Id = this.productId,
@@ -121,6 +142,7 @@ public abstract class ProductScreenModel {
 				OpportunityId = opportunityId,
 				UnitPrice = this.price,
 				Quantity = this.quantity,
+				ProdutoSemEstrutura__c = this.isSingleItem,
 				// DescontoAplicado__c = currentPrice.UnitPrice - this.unitPrice,
 				Discount = (1 - (this.price / currentPrice.UnitPrice)) * 100,
 				Product2Id = this.productId,
@@ -180,6 +202,9 @@ public abstract class ProductScreenModel {
 
 			for (TipoAcessorios__c currentAccessory : currentGroup.TipoAcessorios__r) {
 				this.accessoryList.add(new AccessoryData(currentAccessory));
+				if(currentAccessory.AcessorioPadrao__c){
+					this.isSelected = true;
+				}
 			}
 		}
 	}
@@ -191,12 +216,14 @@ public abstract class ProductScreenModel {
 		@AuraEnabled public String prodCode {get; set;}
 		@AuraEnabled public Decimal price {get; set;}
 		@AuraEnabled public Decimal quantity {get; set;}
+		@AuraEnabled public Decimal changedQuantity {get; set;}
 		@AuraEnabled public Decimal totalAmount {get; set;}
 		@AuraEnabled public String productId {get; set;}
 		@AuraEnabled public String groupId {get; set;}
 		@AuraEnabled public Boolean isSelected {get; set;}
 		@AuraEnabled public Boolean isDisabled {get; set;}
 		@AuraEnabled public Decimal discountPercent {get; set;}
+		@AuraEnabled public Decimal suggessQuantity {get; set;}
 		@AuraEnabled public Decimal discountCurrency {get; set;}
 		@AuraEnabled public String discountType {get; set;}
 
@@ -206,13 +233,15 @@ public abstract class ProductScreenModel {
 			this.name = currentAccessory.Produto__r.Name;
 			this.prodCode = currentAccessory.Produto__r.ProductCode != null ? currentAccessory.Produto__r.ProductCode : currentAccessory.Produto__r.ExternalId__c;
 			this.code = currentAccessory.Name;
-			this.quantity = 1;
+			this.quantity = currentAccessory.QuantidadeSugerida__c;
+			this.changedQuantity = currentAccessory.QuantidadeSugerida__c;
+			this.suggessQuantity = currentAccessory.QuantidadeSugerida__c;
 			this.price = 0;
 			this.totalAmount = 0;
 			this.productId = currentAccessory.Produto__c;
 			this.groupId = currentAccessory.GrupoAcessorio__c;
 
-			this.isSelected = false;
+			this.isSelected = currentAccessory.AcessorioPadrao__c;
 			this.isDisabled = false;
 		}
 		public QuoteLineItem getQuoteLineItem(PricebookEntry currentPrice, Id quoteId){

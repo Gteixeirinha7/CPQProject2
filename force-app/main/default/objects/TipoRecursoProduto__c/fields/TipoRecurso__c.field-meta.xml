@@ -3,12 +3,11 @@
     <fullName>TipoRecurso__c</fullName>
     <deleteConstraint>Restrict</deleteConstraint>
     <externalId>false</externalId>
-    <label>Tipos de Recurso</label>
+    <label>Tipo de Recursos do Produto</label>
     <referenceTo>TiposRecurso__c</referenceTo>
-    <relationshipLabel>Tipo de Recursos dos Produtos</relationshipLabel>
-    <relationshipName>TipoRecursoProduto</relationshipName>
+    <relationshipLabel>Produtos</relationshipLabel>
+    <relationshipName>Produtos</relationshipName>
     <required>true</required>
-    <trackHistory>false</trackHistory>
     <trackTrending>false</trackTrending>
     <type>Lookup</type>
 </CustomField>
