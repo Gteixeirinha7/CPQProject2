@@ -40,142 +40,57 @@
 						<lightning-layout-item class="slds-var-m-top_medium slds-var-p-horizontal_small" size="12"  style=" display: flex; justify-content: center;">
 							<p><b>{currentGroupShowName}</b></p>
 						</lightning-layout-item>
-						<!-- <lightning-layout-item class="slds-var-m-top_medium slds-var-p-horizontal_small" size="3" >
-							<lightning-layout multiple-rows horizontal-align="center">
-								<lightning-layout-item class="slds-var-m-top_medium slds-var-p-horizontal_small" size="12" >
-									<p><b>ACESSORIOS SELECIONADOS</b></p>
-								</lightning-layout-item>
-								<lightning-layout-item class="slds-var-m-top_medium slds-var-p-horizontal_small" size="12" >
-								<div style="display: flex; flex-direction: row;">
-    								<div class="container__header-title">
-										<template for:each={currentProductConfig.groupAccessoryList} for:item="group" for:index="groupIndex">
-											<template if:true={group.isListing}>
-												<template for:each={group.accessoryList} for:item="accessory">
-													<div key={accessory.id}>
-														<template if:true={accessory.isSelected}>
-															<c-selected-resource-component title={accessory.name} subs={accessory.prodCode}></c-selected-resource-component>
-														</template>
-													</div>
-												</template>
-											</template>
-											<template if:false={group.isListing}>
-												<template if:true={group.isNA}>
-													<div key={group.id}>
-														<c-selected-resource-component subs='ESTE ACESSÓRIO NÃO SE APLICA A MONTAGEM' title={group.nameCompleted}></c-selected-resource-component>
-													</div>
-												</template>
-												<template if:true={group.isIncluded}>
-													<div key={group.id}>
-														<c-selected-resource-component subs='Incluso' title={group.nameCompleted}></c-selected-resource-component>
-													</div>
-												</template>
-											</template>
-										</template>
-									</div>
-								</div>
-								</lightning-layout-item>
-							</lightning-layout>
-						</lightning-layout-item> -->
 						<lightning-layout-item class="slds-var-m-top_medium slds-var-p-horizontal_small" size="12" >
-							<lightning-layout multiple-rows horizontal-align="center">
+							<lightning-layout multiple-rows horizontal-align="center" style="display: flex;align-items: center;">
 								<template for:each={currentProductConfig.groupAccessoryList} for:item="group" for:index="groupIndex">
 									<template if:true={group.isCurrentGroup}>
-									<lightning-layout-item
-										if:true={group.isShowGroup}
-										key={group.id}
-										class="slds-var-m-top_medium slds-var-p-horizontal_small"
-										style="display: flex; flex-direction: column;"
-										size="6"
-									>
-										<template if:true={group.isListing}>
 										
-											<div class="container__accessory-item">
-												<template for:each={group.accessoryList} for:item="accessory">
-												
-													<div key={accessory.id}>
-														<input
-															data-id={accessory.id}
-															data-group-id={accessory.groupId}
-															type="checkbox"
-															checked={accessory.isSelected}
-															onclick={handlerSelectAccessory}
-															disabled={group.isNotCurrentGroup}
-														/>
-														<label
-															data-id={accessory.id}
-															data-group-id={accessory.groupId}
-															style="margin-left: 3px; cursor: pointer;"
-															onclick={handlerSelectAccessory}
-														>
-															{accessory.prodCode} - {accessory.name} <b>(
-																<lightning-formatted-number
-																	value={accessory.price}
-																	format-style="currency"
-																	currency-code="BRL"
-																	maximum-fraction-digits="2">
-																</lightning-formatted-number>
-															)</b>
-														</label>
-													</div>
-												
+										<lightning-layout-item key={group.id} class="slds-var-p-around_x-small" size="1" medium-device-size="1" large-device-size="1" style="display: flex; justify-content: space-around;">
+											<lightning-button-icon 
+												if:false={group.isFirstGroup}
+												data-id={group.id}
+												data-index={groupIndex}
+												icon-name="utility:arrow_left"  
+												variant="border-filled" 
+												onclick={onClickBackAccessoryGroup}>
+											</lightning-button-icon>
+										</lightning-layout-item>
+										<lightning-layout-item key={group.id} class="slds-var-p-around_x-small" size="10" medium-device-size="10" large-device-size="10" style="display: flex; justify-content: space-around;">
+											<lightning-layout multiple-rows horizontal-align="center">
+												<template if:true={group.isShowGroup} >
+													<template if:true={group.isListing}>
+														<template for:each={group.accessoryList} for:item="accessory">								
+															<lightning-layout-item key={accessory.id} class="slds-var-p-around_x-small" size="12" medium-device-size="4" large-device-size="4" >							
+																	<c-product-component-accessory
+																	product={accessory}
+																	onhandleproductdataconfig={handleAcessoryDataConfig}
+																	onselectconfig={handlerSelectAccessory}
+																	isconfig={defaultTrue}>
+																</c-product-component-accessory>
+															</lightning-layout-item>
+														</template>
+													</template>
+													<template if:false={group.isListing}>
+														<div key={group.id} class="container__accessory-item">
+															<p> <b>{group.nameCompleted}:</b> </p>
+															<p if:true={group.isNA}> ESTE ACESSÓRIO NÃO SE APLICA A MONTAGEM </p>
+															<p if:true={group.isIncluded}> Incluso </p>
+														</div>
+													</template>
 												</template>
-											
-												<lightning-layout if:true={group.isCurrentGroup} class="slds-var-m-top_x-small" horizontal-align="spread">
-													<lightning-button
-														data-id={group.id}
-														data-index={groupIndex}
-														label="Voltar"
-														onclick={onClickBackAccessoryGroup}
-														disabled={group.isFirstGroup}
-													>
-													</lightning-button>
-												
-													<lightning-button
-														data-id={group.id}
-														data-index={groupIndex}
-														label="Próximo"
-														variant="brand"
-														onclick={onClickNextAccessoryGroup}
-														disabled={group.isLastGroup}
-													>
-													</lightning-button>
-												</lightning-layout>
-											</div>
+											</lightning-layout>
+										</lightning-layout-item>
 										
-										</template>
-									
-										<template if:false={group.isListing}>
-											<div class="container__accessory-item">
-												<p>
-													<b>{group.nameCompleted}:</b>
-												</p>
-												<p if:true={group.isNA}> ESTE ACESSÓRIO NÃO SE APLICA A MONTAGEM </p>
-												<p if:true={group.isIncluded}> Incluso </p>
-											
-												<lightning-layout if:true={group.isCurrentGroup} class="slds-var-m-top_x-small" horizontal-align="spread">
-													<lightning-button
-														data-id={group.id}
-														data-index={groupIndex}
-														label="Voltar"
-														onclick={onClickBackAccessoryGroup}
-														disabled={group.isFirstGroup}
-													>
-													</lightning-button>
-												
-													<lightning-button
-														data-id={group.id}
-														data-index={groupIndex}
-														label="Próximo"
-														variant="brand"
-														onclick={onClickNextAccessoryGroup}
-														disabled={group.isLastGroup}
-													>
-													</lightning-button>
-												</lightning-layout>
-											</div>
-										</template>
-									
-									</lightning-layout-item>
+										<lightning-layout-item key={group.id} class="slds-var-p-around_x-small" size="1" medium-device-size="1" large-device-size="1" style="display: flex; justify-content: space-around;">
+											<lightning-button-icon 
+												if:false={group.isLastGroup}
+												data-id={group.id}
+												data-index={groupIndex}
+												icon-name="utility:arrow_right"  
+												variant="brand" 
+												onclick={onClickNextAccessoryGroup}>
+											</lightning-button-icon>
+										</lightning-layout-item>
 									</template>
 								</template>
 							</lightning-layout>

@@ -1079,6 +1079,30 @@
                 </td>
             </tr>
         </apex:outputPanel>
+            <tr class="html2pdf__page-break">
+                <td class="td-sub-title bg-light color-border-lv2">
+                    <span>&rsaquo;</span> OBSERVAÇÕES
+                </td>
+            </tr>
+        
+            <tr>
+                <td style="padding: 0px 15px;">
+                    <p style="text-align: center;">
+                        <strong style="font-size: 7pt;">TERMOS E CONDIÇÕES GERAIS</strong>
+                    </p>
+                    <p style="text-align: justify;">
+                        <span style="font-size: 7pt;">A STERIS é uma fornecedora líder global de produtos e serviços que apoiam o atendimento ao paciente com ênfase na prevenção
+                        de infecções. Ajudamos nossos clientes a criar um mundo mais saudável e seguro, fornecendo produtos e serviços inovadores
+                        para a saúde. Fundada como Innovative Medical Technologies em Ohio em 1985, a empresa foi renomeada para STERIS em 1987.
+                        No entanto, algumas das empresas que foram adquiridas e integradas à STERIS, principalmente a American Sterilizer Company,
+                        têm históricos operacionais muito mais longos. Temos aproximadamente 16.000 associados em todo o mundo e operamos em mais
+                        de 100 países. A STERIS oferece aos clientes uma combinação única de produtos inovadores de equipamentos de capital, como
+                        esterilizadores e lavadores, mesas cirúrgicas, luzes e sistemas de gerenciamento de equipamentos e soluções de conectividade,
+                        como integração de sala de cirurgia; produtos consumíveis como detergentes e acessórios para endoscopia gastrointestinal,
+                        outros produtos e serviços, incluindo instalação e manutenção de equipamentos.</span>
+                    </p>
+                </td>
+            </tr>
         </table>
         </div>
     </div>

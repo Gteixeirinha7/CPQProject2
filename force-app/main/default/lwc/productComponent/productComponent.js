@@ -79,6 +79,14 @@ export default class ProductComponent extends LightningElement {
 		this.dispatchEvents('handleremoveproduct', { id: this.product.id});
 	}
 
+	timesQuantity(event){
+		const { name } = event.target;
+		const { operation } = event.target.dataset;
+		var newValue =  this.product.quantityAccessory + Number(operation);
+		if(newValue > 0)
+			this.dispatchEvents('handleproductdata', { name: name, value: newValue, id: this.product.id});
+	}
+
 	dispatchEvents(evt, details){
 		this.dispatchEvent(new CustomEvent(
 			evt, { detail: details }

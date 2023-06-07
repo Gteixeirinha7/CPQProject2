@@ -4,6 +4,7 @@ public abstract class ProductScreenModel {
 		@AuraEnabled public String id {get; set;}
 		@AuraEnabled public String name {get; set;}
 		@AuraEnabled public Decimal quantity {get; set;}
+		@AuraEnabled public Decimal quantityAccessory {get; set;}
 		@AuraEnabled public Decimal changedQuantity {get; set;}
 		@AuraEnabled public Decimal totalPrice {get; set;}
 		@AuraEnabled public Decimal listPrice {get; set;}
@@ -51,6 +52,7 @@ public abstract class ProductScreenModel {
 			this.isConfigured = false;
 			this.hasExceptionAccessory = false;
 			this.isSingleItem = false;
+			this.quantityAccessory = 1;
 		}
 		public ProductData(Product2 product) {
 			this();
@@ -214,8 +216,12 @@ public abstract class ProductScreenModel {
 		@AuraEnabled public String name {get; set;}
 		@AuraEnabled public String code {get; set;}
 		@AuraEnabled public String prodCode {get; set;}
+		@AuraEnabled public String internalProdCode {get; set;}
 		@AuraEnabled public Decimal price {get; set;}
 		@AuraEnabled public Decimal quantity {get; set;}
+		@AuraEnabled public Decimal discount {get; set;}
+		@AuraEnabled public Decimal listPrice {get; set;}
+		@AuraEnabled public Boolean isDiscountPercent {get; set;}
 		@AuraEnabled public Decimal changedQuantity {get; set;}
 		@AuraEnabled public Decimal totalAmount {get; set;}
 		@AuraEnabled public String productId {get; set;}
@@ -226,23 +232,30 @@ public abstract class ProductScreenModel {
 		@AuraEnabled public Decimal suggessQuantity {get; set;}
 		@AuraEnabled public Decimal discountCurrency {get; set;}
 		@AuraEnabled public String discountType {get; set;}
+		@AuraEnabled public Boolean isShowProduct {get; set;}
 
 		public AccessoryData() {}
 		public AccessoryData(TipoAcessorios__c currentAccessory) {
 			this.id = currentAccessory.Id;
 			this.name = currentAccessory.Produto__r.Name;
 			this.prodCode = currentAccessory.Produto__r.ProductCode != null ? currentAccessory.Produto__r.ProductCode : currentAccessory.Produto__r.ExternalId__c;
+			this.internalProdCode = this.prodCode;
 			this.code = currentAccessory.Name;
 			this.quantity = currentAccessory.QuantidadeSugerida__c;
 			this.changedQuantity = currentAccessory.QuantidadeSugerida__c;
 			this.suggessQuantity = currentAccessory.QuantidadeSugerida__c;
+			this.discountPercent = 0;
+			this.discountType = 'currency';
+			this.discountCurrency = 0;
 			this.price = 0;
+			this.listPrice = 0;
 			this.totalAmount = 0;
 			this.productId = currentAccessory.Produto__c;
 			this.groupId = currentAccessory.GrupoAcessorio__c;
 
 			this.isSelected = currentAccessory.AcessorioPadrao__c;
 			this.isDisabled = false;
+			this.isShowProduct = true;
 		}
 		public QuoteLineItem getQuoteLineItem(PricebookEntry currentPrice, Id quoteId){
 			return new QuoteLineItem(

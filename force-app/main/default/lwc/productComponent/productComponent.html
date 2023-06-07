@@ -5,7 +5,7 @@
 			<div class="swiper-slide">
 				<a class="common-catalog-item common-catalog-item--v1"
 					style="display: flex;flex-direction: row;justify-content: center;align-items: stretch; padding: 0px;">
-					<lightning-layout multiple-rows horizontal-align="spread" style="height: 100%; background-color: rgb(249, 249, 249);">		
+					<lightning-layout multiple-rows horizontal-align="spread" style="height: 100%; width:100%; background-color: rgb(249, 249, 249);">		
 						<lightning-layout-item size="12" style="background-color: white">
 							<lightning-layout multiple-rows horizontal-align="spread" style="padding: 16px;">
 								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12"
@@ -41,13 +41,6 @@
 								</lightning-layout-item>
 								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12"
 									medium-device-size="6" large-device-size="6">
-									<lightning-input name="quantityAccessory" label="Quantidade Acessorios" value="1"
-										type="number" max-length="8" min="1" onchange={onChangeProductData}
-										>
-									</lightning-input>
-								</lightning-layout-item>
-								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12"
-									medium-device-size="6" large-device-size="6">
 									<lightning-input name="price" label="Preço" value={product.price} type="number"
 										formatter="currency" step="any" min="0" onchange={onChangeProductData}
 										>
@@ -66,8 +59,8 @@
 										>
 									</lightning-input>
 								</lightning-layout-item>
-								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12"
-									medium-device-size="12" large-device-size="12">
+								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="6"
+									medium-device-size="6" large-device-size="6">
 									<lightning-combobox name="discountType" label="Tipo de desconto"
 										value={product.discountType} options={discountTypeOptionList}
 										onchange={onChangeProductData} >
@@ -102,6 +95,15 @@
 								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12"
 									medium-device-size="12" large-device-size="12">
 									<c-accessory-list-component product={product} onhandlechangeacessory={handlechangeacessory} onhandleremoveexception={handleremoveexception} onhandleeditexception={handleeditexception}  ></c-accessory-list-component>
+								</lightning-layout-item>	
+								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12"
+									medium-device-size="12" large-device-size="12" style=" display: flex; justify-content: center; align-items: flex-end;">
+									<lightning-button-icon icon-name="utility:add" name="quantityAccessory" variant="border-filled" onclick={timesQuantity} data-operation="1"></lightning-button-icon>
+									<lightning-input name="quantityAccessory" label="Multiplicador de  Acessorios" value={product.quantityAccessory}
+										type="number" max-length="8" min="1" onchange={onChangeProductData} style="max-width: 160px;"
+										>
+									</lightning-input>
+									<lightning-button-icon icon-name="utility:dash" name="quantityAccessory" variant="border-filled" onclick={timesQuantity} data-operation="-1"></lightning-button-icon>
 								</lightning-layout-item>	
 							</lightning-layout>
 						</lightning-layout-item>

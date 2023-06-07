@@ -13,6 +13,7 @@ import checkNextTypeResources from '@salesforce/apex/ProductScreenController.che
 
 export default class ProductScreen extends NavigationMixin(LightningElement) {
 	defaultQuantitySearch = 50;
+	defaultTrue = true;
 	currentTab = 'Estrutura';
 	@track
 	selectedStructure = {};
@@ -179,13 +180,13 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		return Object.values(this.exceptionProducts);
 	}
 	get products() {
-		return this.filterProductList(Object.values(this.productMap));
+		return this.filterProductList(Object.values(this.productMap).filter(item => !item.showCheckout));
 	}
 	get singleProduts() {
-		return this.filterProductList(Object.values(this.productMap).filter(item => !item.isShowNewStructure));
+		return this.filterProductList(Object.values(this.productMap).filter(item => !item.isShowNewStructure && !item.showCheckout));
 	}
 	get newStructures() {
-		return this.filterProductList(Object.values(this.productMap).filter(item => item.isShowNewStructure));
+		return this.filterProductList(Object.values(this.productMap).filter(item => item.isShowNewStructure && !item.showCheckout));
 	}
 	get checkoutProducts() {	
 		return this.filterProductList(Object.values(this.productMap).filter(item => item.showCheckout));
@@ -252,7 +253,8 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 
 	updateProductsMap(resolve){		
 		Object.keys(resolve).forEach(function(key){
-			this.productMap[key] = resolve[key];
+			if(!this.productMap[key]?.showCheckout)
+				this.productMap[key] = resolve[key];
 		}.bind(this), {resolve});
 	}
 
@@ -497,6 +499,14 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	handleAcessoryData(event){
 		this.handleAcessory(event.detail);
 	}
+	handleAcessoryDataConfig(event){
+		const { id, groupId } = event.detail;
+		
+		let groupAccessory = this.currentProductConfig.groupAccessoryList.find(item => item.id === groupId);
+		let productData = groupAccessory.accessoryList.find(item => item.id === id);
+
+		this.handleAcessoryProductData({ name:event.detail.name, value:event.detail.value } , productData);
+	}
 	handleAcessory(event){
 		const { name, value, id, Product2Id, groupId } = event;
 
@@ -514,16 +524,11 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		}else{
 			productData = checkoutProduct.exceptionAccessoryList.find(item => item.id === id);
 		}
+		this.handleAcessoryProductData(event, productData);
+	}
 
-		// if (!value || (name !== 'discountType' && value < 0)) {
-		// 	productData.price = 0;
-		// 	productData.discountCurrency = 0;
-		// 	productData.discountPercent = 0;
-		// 	productData.totalPrice = 0;
-		// 	productData[name] = undefined;
-		// 	return;
-		// }
-
+	handleAcessoryProductData(event, productData){
+		const { name, value, id, Product2Id, groupId } = event;
 		if(name !== 'changedQuantity'){
 			productData[name] = (name === 'discountType' ? value : Number(value));
 		}
@@ -557,7 +562,8 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 			productData['quantity'] = Number(value);
 		}
 
-		productData.totalPrice = Number((productData.price * productData.quantity).toFixed(2));
+		if(productData.price && productData.quantity)
+			productData.totalPrice = Number((productData.price * productData.quantity).toFixed(2));
 
 	}
 
@@ -583,6 +589,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 					this.handleAcessory( { name : 'changedQuantity', value : newQuantity, id : acesss.id, Product2Id : productData.id, groupId: item.id });
 				}.bind(this), {productData});
 			}.bind(this), {productData});
+			productData[name] = Number(value);
 			return;
 		}
 		if (!value || (name !== 'discountType' && value < 0)) {
@@ -934,7 +941,8 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	}
 
 	handlerSelectAccessory(event) {
-		const { id, groupId } = event.target.dataset;
+		const { id, groupId } = event.detail;
+		// const { id, groupId } = event.target.dataset;
 
 		let groupAccessory = this.currentProductConfig.groupAccessoryList.find(group => group.id === groupId);
 
@@ -1175,7 +1183,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 				if (!resolve.hasError) {
 					this.handlerDispatchToast('Sucesso!!', 'Itens salvo com exito!!!', 'success');
 
-					this.clearAll();
+					this.getBaseObjectData();
 
 					this[NavigationMixin.Navigate]({
 						type: 'standard__recordPage',

@@ -250,6 +250,7 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 
 					if (currentPrice != null) {
 						retrievedAccessory.price = currentPrice.UnitPrice;
+						retrievedAccessory.listPrice = currentPrice.UnitPrice;
 					}
 				}
 

@@ -3,8 +3,11 @@ import { LightningElement, api } from 'lwc';
 export default class AccessoryListComponent extends LightningElement {
     @api product
 
+    get showNA(){
+        return this.product.groupAccessoryList?.find(item => item.isNA) ? true : false;
+    }
     get showIncluded(){
-        return this.product.groupAccessoryList?.find(item => !item.isListing) ? true : false;
+        return this.product.groupAccessoryList?.find(item => item.isIncluded) ? true : false;
     }
     get showRequired(){
         return this.product.groupAccessoryList?.filter(item => item.isRequired && item.isListing)?.find(item => item.isSelected) ? true : false;

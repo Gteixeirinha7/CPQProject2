@@ -18,6 +18,7 @@ public class CreateAcessoryResourcesController {
 
 	@RemoteAction
 	public static String createRecords(String entryList){
+		System.debug(entryList);
 		AllAcessoryData excelDataList = (AllAcessoryData)JSON.deserialize(entryList, AllAcessoryData.class);
 
         insertKit(excelDataList);
@@ -33,7 +34,7 @@ public class CreateAcessoryResourcesController {
 		}
 
 		if (!kitMap.isEmpty()){
-			Database.upsert(kitMap.values(), KitAcessorios__c.CodigoInterno__c, false);
+			debugUpsert(Database.upsert(kitMap.values(), KitAcessorios__c.CodigoInterno__c, false));
 		}
     }
     public static void insertGroup(AllAcessoryData excelDataList){
@@ -44,7 +45,7 @@ public class CreateAcessoryResourcesController {
 		}
         
 		if (!kitMap.isEmpty()){
-			Database.upsert(kitMap.values(), GrupoAcessorios__c.CodigoInterno__c, false);
+			debugUpsert(Database.upsert(kitMap.values(), GrupoAcessorios__c.CodigoInterno__c, false));
 		}
     }
     public static void insertAcessory(AllAcessoryData excelDataList){
@@ -55,7 +56,7 @@ public class CreateAcessoryResourcesController {
 		}
         
 		if (!kitMap.isEmpty()){
-			Database.upsert(kitMap.values(), TipoAcessorios__c.CodigoInterno__c, false);
+			debugUpsert(Database.upsert(kitMap.values(), TipoAcessorios__c.CodigoInterno__c, false));
 		}
 
     }
@@ -65,10 +66,20 @@ public class CreateAcessoryResourcesController {
             kitUpdateMap.put(oppData.productCode,  oppData.getRecord());
 		}
 		if (!kitUpdateMap.isEmpty()){
-			Database.upsert(kitUpdateMap.values(), Product2.ProductCodeExternalId__c, false);
+			debugUpsert(Database.upsert(kitUpdateMap.values(), Product2.ProductCodeExternalId__c, false));
 		}
 
     }
+
+	public static void debugUpsert(Database.UpsertResult[] results){
+		for(Database.UpsertResult res : results){
+			if(!res.isSuccess()){
+				for(Database.Error err : res.getErrors()){
+					System.debug(err.getMessage() +', '+ String.join(err.getFields(), ', '));
+				}
+			}
+		}
+	}
 
 	public class ProductListData{
 		public List<String> productList {get; set;}
