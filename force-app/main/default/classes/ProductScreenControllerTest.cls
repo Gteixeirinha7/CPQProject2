@@ -2,6 +2,11 @@
 private with sharing class ProductScreenControllerTest {
 	@TestSetup
 	static void makeData() {
+		update new Pricebook2(
+			Id = Test.getStandardPricebookId(),
+			IsActive = true
+		);
+
 		Account newAccount = new Account(
 			Name = 'Account Test'
 		);
@@ -11,7 +16,8 @@ private with sharing class ProductScreenControllerTest {
 			AccountId = newAccount.Id,
 			Name = 'Opportunity Test',
 			CloseDate = Date.today() + 30,
-			StageName = 'Qualification'
+			StageName = 'Qualification',
+			Pricebook2Id = Test.getStandardPricebookId()
 		);
 		insert newOpportunity;
 
@@ -30,6 +36,14 @@ private with sharing class ProductScreenControllerTest {
 		);
 		insert newStructure;
 
+		KitAcessorios__c newKit = new KitAcessorios__c(
+			Name = 'Kit Test',
+			CodigoInterno__c = '01',
+			PossuiObrigatorios__c = false,
+			Ativo__c = true
+		);
+		insert newKit;
+
 		List<Product2> newProductList = new List<Product2>{
 			new Product2(
 				Name = 'Product 1',
@@ -41,12 +55,25 @@ private with sharing class ProductScreenControllerTest {
 				Name = 'Product 2',
 				ExternalId__c = '020406',
 				EstruturaProduto__c = newStructure.Id,
+				KitAcessorios__c = newKit.Id,
+				IsActive = true
+			),
+			new Product2(
+				Name = 'Product 3',
+				ExternalId__c = '020407',
+				EstruturaProduto__c = newStructure.Id,
+				IsActive = true
+			),
+			new Product2(
+				Name = 'Product 4',
+				ExternalId__c = '020408',
+				EstruturaProduto__c = newStructure.Id,
 				IsActive = true
 			)
 		};
 		insert newProductList;
 
-		insert new List<PricebookEntry>{
+		List<PricebookEntry> pricebookEntryList = new List<PricebookEntry>{
 			new PricebookEntry(
 				UnitPrice = 100,
 				Pricebook2Id = Test.getStandardPricebookId(),
@@ -58,6 +85,65 @@ private with sharing class ProductScreenControllerTest {
 				Pricebook2Id = Test.getStandardPricebookId(),
 				Product2Id = newProductList[1].Id,
 				IsActive = true
+			),
+			new PricebookEntry(
+				UnitPrice = 100,
+				Pricebook2Id = Test.getStandardPricebookId(),
+				Product2Id = newProductList[2].Id,
+				IsActive = true
+			),
+			new PricebookEntry(
+				UnitPrice = 100,
+				Pricebook2Id = Test.getStandardPricebookId(),
+				Product2Id = newProductList[3].Id,
+				IsActive = true
+			)
+		};
+		insert pricebookEntryList;
+
+		insert new List<OpportunityLineItem>{
+			new OpportunityLineItem(
+				Quantity = 100,
+				UnitPrice = 100,
+				Product2Id = newProductList[0].Id,
+				OpportunityId = newOpportunity.Id
+			),
+			new OpportunityLineItem(
+				Quantity = 100,
+				UnitPrice = 100,
+				Product2Id = newProductList[1].Id,
+				OpportunityId = newOpportunity.Id
+			),
+			new OpportunityLineItem(
+				Quantity = 100,
+				UnitPrice = 100,
+				ParentProduct__c = newProductList[0].Id,
+				Product2Id = newProductList[2].Id,
+				OpportunityId = newOpportunity.Id
+			),
+			new OpportunityLineItem(
+				Quantity = 100,
+				UnitPrice = 100,
+				ParentProduct__c = newProductList[1].Id,
+				Product2Id = newProductList[3].Id,
+				OpportunityId = newOpportunity.Id
+			)
+		};
+
+		insert new List<QuoteLineItem>{
+			new QuoteLineItem(
+				Quantity = 100,
+				UnitPrice = 100,
+				Product2Id = newProductList[0].Id,
+				PricebookEntryId = pricebookEntryList[0].Id,
+				QuoteId = newQuote.Id
+			),
+			new QuoteLineItem(
+				Quantity = 100,
+				UnitPrice = 100,
+				Product2Id = newProductList[1].Id,
+				PricebookEntryId = pricebookEntryList[1].Id,
+				QuoteId = newQuote.Id
 			)
 		};
 
@@ -126,9 +212,25 @@ private with sharing class ProductScreenControllerTest {
 		};
 
 		insert new TipoRecursoProduto__c(
-                Produto__c =  [SELECT id FROM Product2 LIMIT 1].Id,
-                TipoRecurso__c = [SELECT id FROM TiposRecurso__c LIMIT 1].Id
-			);
+			Produto__c =  [SELECT id FROM Product2 LIMIT 1].Id,
+			TipoRecurso__c = [SELECT id FROM TiposRecurso__c LIMIT 1].Id
+		);
+	}
+
+	@IsTest
+	static void getBaseObjectTest() {
+		Quote currentQuote = getQuote();
+
+		ProductScreenController.getBaseObject(currentQuote.Id);
+	}
+
+	@IsTest
+	static void getCheckoutDataTest() {
+		Quote currentQuote = getQuote();
+		ProductScreenController.getCheckoutData(currentQuote.Id);
+
+		Opportunity currentOpportunity = getOpportunity();
+		ProductScreenController.getCheckoutData(currentOpportunity.Id);
 	}
 
 	@IsTest
@@ -170,8 +272,8 @@ private with sharing class ProductScreenControllerTest {
 			PDFQuoteController.createPDF('', getQuote().Id, '1212');
 		}catch(Exception ex){
 
-		}PDFQuoteController.remember();
-			
+		}
+
 	}
 
 	@IsTest
@@ -250,5 +352,19 @@ private with sharing class ProductScreenControllerTest {
 		}
 
 		return currentQuote;
+	}
+
+	static Opportunity getOpportunity() {
+		Opportunity currentOpportunity;
+
+		for (Opportunity retrievedOpportunity : [
+			SELECT Id
+			  FROM Opportunity
+			 LIMIT 1
+		]) {
+			currentOpportunity = retrievedOpportunity;
+		}
+
+		return currentOpportunity;
 	}
 }
