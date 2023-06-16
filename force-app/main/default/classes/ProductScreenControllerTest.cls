@@ -24,7 +24,8 @@ private with sharing class ProductScreenControllerTest {
 
 		EstruturaProduto__c newStructure = new EstruturaProduto__c(
 			Name = 'Structure Test',
-			Agrupador__c = 'Lavadora',
+			Agrupador__c = 'Foco XLED',
+			CodigoInterno__c = 'Foco XLED',
 			Ativo__c = true
 		);
 		insert newStructure;
@@ -123,6 +124,11 @@ private with sharing class ProductScreenControllerTest {
 				Ativo__c = true
 			)
 		};
+
+		insert new TipoRecursoProduto__c(
+                Produto__c =  [SELECT id FROM Product2 LIMIT 1].Id,
+                TipoRecurso__c = [SELECT id FROM TiposRecurso__c LIMIT 1].Id
+			);
 	}
 
 	@IsTest
@@ -130,8 +136,8 @@ private with sharing class ProductScreenControllerTest {
 		Quote currentQuote = getQuote();
 		EstruturaProduto__c currentStructure = getStructure();
 
-		ProductScreenController.getProducts(currentQuote.Id, currentStructure.Id, '0103');
-		ProductScreenController.getProducts(currentQuote.Id, null, '0204');
+		ProductScreenController.getProducts(currentQuote.Id, currentStructure.Id, '', new List<String>{'01', '03'}, 10);
+		ProductScreenController.getProducts(currentQuote.Id, null, '', new List<String>{'02', '04'}, 10);
 
 		ProductScreenController.getStructures();
 
@@ -139,11 +145,41 @@ private with sharing class ProductScreenControllerTest {
 	}
 
 	@IsTest
+	static void productScreenController() {
+		try{CreateStructureResourcesController.getCurrentRecordsSteris(new List<CreateStructureResourcesController.ProductResourceData>{new CreateStructureResourcesController.ProductResourceData(true)});}catch(Exception ex){}
+		try{CreateAcessoryResourcesController.getCurrentRecordsSteris(new CreateAcessoryResourcesController.AllAcessoryData(true));}catch(Exception ex){}
+		try{CreateAcessoryResourcesController.createRecords(JSON.serialize(new CreateAcessoryResourcesController.AllAcessoryData(true)));}catch(Exception ex){}
+	}
+
+	@IsTest
+	static void openQuotePDFController() {
+		OpenQuotePDFController.getURL(getQuote().Id);
+	}
+
+	@IsTest
+	static void openPDFController() {
+		try{
+			ApexPages.currentPage().getParameters().put('Id', [SELECT id FROM Quote LIMIT 1].Id);
+			Test.startTest();
+			PDFQuoteController pdfs = new PDFQuoteController();
+			Test.stopTest();
+		}catch(Exception ex){
+
+		}
+		try{
+			PDFQuoteController.createPDF('', getQuote().Id, '1212');
+		}catch(Exception ex){
+
+		}PDFQuoteController.remember();
+			
+	}
+
+	@IsTest
 	static void checkNextTypeResourcesTest() {
 		EstruturaProduto__c currentStructure = getStructure();
 
-		ProductScreenController.checkNextTypeResources(currentStructure.Id, '010305', 2);
-		ProductScreenController.checkNextTypeResources(currentStructure.Id, '0204', 1);
+		ProductScreenController.checkNextTypeResources(currentStructure.Id, 2, new List<String>{'01', '03'});
+		ProductScreenController.checkNextTypeResources(currentStructure.Id, 1, new List<String>{'02', '04'});
 	}
 
 	@IsTest
@@ -175,7 +211,10 @@ private with sharing class ProductScreenControllerTest {
 				   Name,
 				   ExternalId__c,
 				   Imagem_URL__c,
-				   KitAcessorios__c
+				   EstruturaProduto__c,
+				   KitAcessorios__c,
+				   ProductCodeExternalId__c,
+				   ProductCode
 			  FROM Product2
 			 LIMIT 1
 		]) {

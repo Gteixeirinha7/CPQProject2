@@ -3,7 +3,7 @@
 
     <head>
         <title>Importar Recursos dos produtos</title>
-        <apex:slds></apex:slds>
+        <apex:slds ></apex:slds>
         <script type="text/javascript">
             window.apexController = {
                 "urls": {

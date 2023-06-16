@@ -8,6 +8,5 @@
     <relationshipLabel>Itens da linha da Oportunidade</relationshipLabel>
     <relationshipName>ParentOppLines</relationshipName>
     <required>false</required>
-    <trackHistory>false</trackHistory>
     <type>Lookup</type>
 </CustomField>

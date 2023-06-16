@@ -5,10 +5,10 @@
     <formulas>
         <name>InternalId</name>
         <dataType>String</dataType>
-        <expression>{!$Record.KitAcessorios__r.Name}+&quot; - &quot;+{!$Record.Name}</expression>
+        <expression>{!$Record.ProductCode}</expression>
     </formulas>
-    <interviewLabel>[GrupoAcessorios__c] - UpdateInternalId {!$Flow.CurrentDateTime}</interviewLabel>
-    <label>[GrupoAcessorios__c] - UpdateInternalId</label>
+    <interviewLabel>[Product2] - UpdateInternalId {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>[Product2] - UpdateInternalId</label>
     <processMetadataValues>
         <name>BuilderType</name>
         <value>
@@ -32,9 +32,9 @@
         <name>UpdateInternalId</name>
         <label>UpdateInternalId</label>
         <locationX>176</locationX>
-        <locationY>335</locationY>
+        <locationY>311</locationY>
         <inputAssignments>
-            <field>CodigoInterno__c</field>
+            <field>ProductCodeExternalId__c</field>
             <value>
                 <elementReference>InternalId</elementReference>
             </value>
@@ -47,9 +47,9 @@
         <connector>
             <targetReference>UpdateInternalId</targetReference>
         </connector>
-        <object>GrupoAcessorios__c</object>
+        <object>Product2</object>
         <recordTriggerType>CreateAndUpdate</recordTriggerType>
-        <triggerType>RecordAfterSave</triggerType>
+        <triggerType>RecordBeforeSave</triggerType>
     </start>
     <status>Active</status>
 </Flow>

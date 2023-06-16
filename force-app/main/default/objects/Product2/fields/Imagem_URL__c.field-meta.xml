@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Imagem_URL__c</fullName>
+    <defaultValue>&quot;https://c.na30.content.force.com/servlet/servlet.ImageServer?id=01536000002SKID&amp;oid=00D36000000Yc59&amp;lastMod=1479819637000&quot;</defaultValue>
     <externalId>false</externalId>
     <label>Imagem URL</label>
     <length>255</length>

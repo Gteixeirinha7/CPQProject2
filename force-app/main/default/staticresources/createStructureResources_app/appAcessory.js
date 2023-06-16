@@ -352,7 +352,7 @@ app.controller('ItemController', ['$scope', '$http', '$sce', function ($scope, $
 			c.productCodeSet = result.productList;
 
 			var recordList = c.getRecordList(acessoryRows, groupsRows, kitsRows, productsRows);
-			c.tableProductsRecordList = fillRecordList(recordList.productsRows, true);
+			c.tableProductsRecordList = fillRecordList(recordList.acessoryDatas, true);
 			c.tableAcessorysRecordList = fillRecordList(recordList.acessoryDatas, true);
 			c.tableGroupsRecordList = fillRecordList(recordList.groupDatas, true);
 			c.tableKitsRecordList = fillRecordList(recordList.kitDatas, true);

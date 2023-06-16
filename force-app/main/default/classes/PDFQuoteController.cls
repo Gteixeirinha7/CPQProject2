@@ -219,13 +219,13 @@ public with sharing class PDFQuoteController {
 			this.today = DateTime.now().format('dd/MM/yyyy');
 			this.proposal = currenctQuote.OP_QT_Identif__c;
 			this.freight = currenctQuote.Frete__c;
-			this.totalPrice = convertToBRL(currenctQuote.TotalPrice);
-			this.discount = convertToBRL(currenctQuote.Discount * 100);
+			this.totalPrice = currenctQuote.TotalPrice == null ? '' : convertToBRL(currenctQuote.TotalPrice);
+			this.discount = currenctQuote.Discount == null ? '' : convertToBRL(currenctQuote.Discount * 100);
 
 			
 			this.accountAddress = '';
-            this.prazoEntrega = String.valueOf(currenctQuote.Prazo_de_Entrega__c);
-            this.prazoGarantia = String.valueOf(currenctQuote.Prazo_de_Garantia__c);
+            this.prazoEntrega = currenctQuote.Prazo_de_Entrega__c == null ? '' : String.valueOf(currenctQuote.Prazo_de_Entrega__c);
+            this.prazoGarantia = currenctQuote.Prazo_de_Garantia__c == null ? '' : String.valueOf(currenctQuote.Prazo_de_Garantia__c);
             this.instalacao = currenctQuote.Instalacao__c;
             this.frete = currenctQuote.Frete__c;
 			this.addressDelivery = currenctQuote.account.ShippingStreet +', '+currenctQuote.account.ShippingCity +', '+currenctQuote.account.ShippingPostalCode;

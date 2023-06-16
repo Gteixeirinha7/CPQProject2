@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ValidaSequencial</fullName>
+    <active>true</active>
+    <description>Valida o sequencial para ser sempre maior do que 0</description>
+    <errorConditionFormula>Sequencial__c &lt;= 0</errorConditionFormula>
+    <errorDisplayField>Sequencial__c</errorDisplayField>
+    <errorMessage>Não é possivel preencher um sequencial menor igual a 0</errorMessage>
+</ValidationRule>

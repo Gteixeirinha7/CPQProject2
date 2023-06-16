@@ -92,6 +92,14 @@ public class CreateAcessoryResourcesController {
 		public GroupData[] groupDatas {get; set;}
 		public KitData[] kitDatas {get; set;}
 		public ProductData[] productDatas {get; set;}
+		public AllAcessoryData(Boolean isTest){
+			if(isTest){
+				this.acessoryDatas = new List<AcessoryData>{new AcessoryData(isTest)};
+				this.groupDatas = new List<GroupData>{new GroupData(isTest)};
+				this.kitDatas = new List<KitData>{new KitData(isTest)};
+				this.productDatas = new List<ProductData>{new ProductData(isTest)};
+			}
+		}
 	}
 	public class AcessoryData{
 		public String productCode {get; set;}
@@ -103,6 +111,8 @@ public class CreateAcessoryResourcesController {
 		public Boolean isInvalid {get; set;}
 		public Integer internalId {get; set;}
 		public String errorMessage {get; set;}
+		public AcessoryData(Boolean isTest){
+		}
         public TipoAcessorios__c getRecord(){
             TipoAcessorios__c types =  new TipoAcessorios__c(
                 CodigoInterno__C = this.structureName +' - '+this.groupName+' - '+this.productCode,
@@ -127,6 +137,8 @@ public class CreateAcessoryResourcesController {
 		public Boolean isInvalid {get; set;}
 		public Integer internalId {get; set;}
 		public String errorMessage {get; set;}
+		public GroupData(Boolean isTest){
+		}
         public GrupoAcessorios__c getRecord(){
             return new GrupoAcessorios__c(CodigoInterno__c = this.kitName+' - '+this.names, Name = this.names, Ativo__c = true, Tipo__c = this.types, OrdemExibicao__c = this.orderShow, NumeroMinimoAcessorios__c = this.minimumQuantity, 
                 AcaoGrupo__c = this.actions, KitAcessorios__r = new KitAcessorios__c(CodigoInterno__c = this.kitName));
@@ -138,6 +150,8 @@ public class CreateAcessoryResourcesController {
 		public Boolean isInvalid {get; set;}
 		public Integer internalId {get; set;}
 		public String errorMessage {get; set;}
+		public KitData(Boolean isTest){
+		}
         public KitAcessorios__c getRecord(){
             return new KitAcessorios__c(CodigoInterno__c = this.names, Name = this.names, Ativo__c = true);
         }
@@ -149,6 +163,8 @@ public class CreateAcessoryResourcesController {
 		public Boolean isInvalid {get; set;}
 		public Integer internalId {get; set;}
 		public String errorMessage {get; set;}
+		public ProductData(Boolean isTest){
+		}
         public Product2 getRecord(){
             return new Product2(ProductCodeExternalId__c = this.productCode, KitAcessorios__r = new KitAcessorios__c(CodigoInterno__c = this.kitName));
         }

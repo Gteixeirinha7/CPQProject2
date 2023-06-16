@@ -1080,6 +1080,10 @@
             </tr>
         </apex:outputPanel>
             <tr class="html2pdf__page-break">
+                <td class="">
+                </td>
+            </tr>
+            <tr>
                 <td class="td-sub-title bg-light color-border-lv2">
                     <span>&rsaquo;</span> OBSERVAÇÕES
                 </td>

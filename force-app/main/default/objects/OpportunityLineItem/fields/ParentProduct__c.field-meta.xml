@@ -8,6 +8,5 @@
     <relationshipLabel>Itens da linha de cotação</relationshipLabel>
     <relationshipName>ParentProductsOpportunity</relationshipName>
     <required>false</required>
-    <trackHistory>false</trackHistory>
     <type>Lookup</type>
 </CustomField>
