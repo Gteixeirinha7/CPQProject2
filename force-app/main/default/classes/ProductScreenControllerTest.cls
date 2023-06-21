@@ -44,6 +44,17 @@ private with sharing class ProductScreenControllerTest {
 		);
 		insert newKit;
 
+		GrupoAcessorios__c newGroup = new GrupoAcessorios__c(
+			CodigoInterno__c = 'Test',
+			AcaoGrupo__c = 'Listar',
+			NumeroMinimoAcessorios__c = 1,
+			Tipo__c = 'Obrigatório',
+			OrdemExibicao__c = 1.0,
+			Ativo__c = true,
+			KitAcessorios__c = newKit.Id
+		);
+		insert newGroup;
+
 		List<Product2> newProductList = new List<Product2>{
 			new Product2(
 				Name = 'Product 1',
@@ -68,10 +79,26 @@ private with sharing class ProductScreenControllerTest {
 				Name = 'Product 4',
 				ExternalId__c = '020408',
 				EstruturaProduto__c = newStructure.Id,
+				KitAcessorios__c = newKit.Id,
+				IsActive = true
+			),
+			new Product2(
+				Name = 'Product 5',
+				ExternalId__c = '020409',
+				EstruturaProduto__c = newStructure.Id,
 				IsActive = true
 			)
 		};
 		insert newProductList;
+
+		TipoAcessorios__c newAccessory = new TipoAcessorios__c(
+			CodigoInterno__c = 'Test',
+			AcessorioPadrao__c = true,
+			Ativo__c = true,
+			Produto__c = newProductList[3].Id,
+			GrupoAcessorio__c = newGroup.Id
+		);
+		insert newAccessory;
 
 		List<PricebookEntry> pricebookEntryList = new List<PricebookEntry>{
 			new PricebookEntry(
@@ -96,6 +123,12 @@ private with sharing class ProductScreenControllerTest {
 				UnitPrice = 100,
 				Pricebook2Id = Test.getStandardPricebookId(),
 				Product2Id = newProductList[3].Id,
+				IsActive = true
+			),
+			new PricebookEntry(
+				UnitPrice = 100,
+				Pricebook2Id = Test.getStandardPricebookId(),
+				Product2Id = newProductList[4].Id,
 				IsActive = true
 			)
 		};
@@ -127,6 +160,13 @@ private with sharing class ProductScreenControllerTest {
 				ParentProduct__c = newProductList[1].Id,
 				Product2Id = newProductList[3].Id,
 				OpportunityId = newOpportunity.Id
+			),
+			new OpportunityLineItem(
+				Quantity = 100,
+				UnitPrice = 100,
+				ParentProduct__c = newProductList[1].Id,
+				Product2Id = newProductList[4].Id,
+				OpportunityId = newOpportunity.Id
 			)
 		};
 
@@ -143,6 +183,14 @@ private with sharing class ProductScreenControllerTest {
 				UnitPrice = 100,
 				Product2Id = newProductList[1].Id,
 				PricebookEntryId = pricebookEntryList[1].Id,
+				QuoteId = newQuote.Id
+			),
+			new QuoteLineItem(
+				Quantity = 100,
+				UnitPrice = 100,
+				ParentProduct__c = newProductList[1].Id,
+				Product2Id = newProductList[3].Id,
+				PricebookEntryId = pricebookEntryList[3].Id,
 				QuoteId = newQuote.Id
 			)
 		};
@@ -166,7 +214,7 @@ private with sharing class ProductScreenControllerTest {
 		};
 		insert newResourceList;
 
-		insert new List<TiposRecurso__c>{
+		List<TiposRecurso__c> newResourceTypeList = new List<TiposRecurso__c>{
 			new TiposRecurso__c(
 				DescricaoRecurso__c = 'D1',
 				Sequencial__c = '1',
@@ -210,17 +258,27 @@ private with sharing class ProductScreenControllerTest {
 				Ativo__c = true
 			)
 		};
+		insert newResourceTypeList;
 
-		insert new TipoRecursoProduto__c(
-			Produto__c =  [SELECT id FROM Product2 LIMIT 1].Id,
-			TipoRecurso__c = [SELECT id FROM TiposRecurso__c LIMIT 1].Id
-		);
+		insert new List<TipoRecursoProduto__c>{
+			new TipoRecursoProduto__c(
+				Produto__c = newProductList[0].Id,
+				TipoRecurso__c = newResourceTypeList[0].Id
+			),
+			new TipoRecursoProduto__c(
+				Produto__c = newProductList[1].Id,
+				TipoRecurso__c = newResourceTypeList[1].Id
+			),
+			new TipoRecursoProduto__c(
+				Produto__c = newProductList[2].Id,
+				TipoRecurso__c = newResourceTypeList[2].Id
+			)
+		};
 	}
 
 	@IsTest
 	static void getBaseObjectTest() {
 		Quote currentQuote = getQuote();
-
 		ProductScreenController.getBaseObject(currentQuote.Id);
 	}
 
@@ -231,6 +289,8 @@ private with sharing class ProductScreenControllerTest {
 
 		Opportunity currentOpportunity = getOpportunity();
 		ProductScreenController.getCheckoutData(currentOpportunity.Id);
+
+		ProductScreenController.getCheckoutData('a' + currentOpportunity.Id);
 	}
 
 	@IsTest
@@ -279,9 +339,10 @@ private with sharing class ProductScreenControllerTest {
 	@IsTest
 	static void checkNextTypeResourcesTest() {
 		EstruturaProduto__c currentStructure = getStructure();
+		List<TiposRecurso__c> resourceTypeList = getResourceTypes();
 
-		ProductScreenController.checkNextTypeResources(currentStructure.Id, 2, new List<String>{'01', '03'});
-		ProductScreenController.checkNextTypeResources(currentStructure.Id, 1, new List<String>{'02', '04'});
+		ProductScreenController.checkNextTypeResources(currentStructure.Id, 2, new List<String>{ resourceTypeList[0].Id });
+		ProductScreenController.checkNextTypeResources(currentStructure.Id, 1, new List<String>{ resourceTypeList[1].Id });
 	}
 
 	@IsTest
@@ -302,7 +363,62 @@ private with sharing class ProductScreenControllerTest {
 
 		quoteItemList[0].id = null;
 		ProductScreenController.saveLineItems(currentQuote.Id, quoteItemList);
-		ProductScreenController.saveLineItems(null, quoteItemList);
+		ProductScreenController.saveLineItems('a' + currentQuote.Id, quoteItemList);
+
+		Opportunity currentOpportunity = getOpportunity();
+		Map<Id, ProductScreenModel.ProductData> response = ProductScreenController.getCheckoutData(currentOpportunity.Id);
+		ProductScreenController.saveLineItems(currentOpportunity.Id, response.values());
+	}
+
+	@IsTest
+	static void saveQuoteLineItemsTest() {
+		Quote currentQuote = getQuote();
+		Map<Id, ProductScreenModel.ProductData> response = ProductScreenController.getCheckoutData(currentQuote.Id);
+
+		ProductScreenController.context = 'Quote';
+		ProductScreenController.updateQuoteLineItemList = new List<QuoteLineItem>();
+		ProductScreenController.itemKeyToLineItemMap = new Map<String, Id>{
+			response.values()[0].productId + '-' + response.values()[0].productId => currentQuote.QuoteLineItems[0].Id
+		};
+		ProductScreenController.productToPriceIdMap = new Map<Id, PricebookEntry>{
+			response.values()[0].productId => getPricebookEntry(response.values()[0].productId)
+		};
+		ProductScreenController.handleProductDataDML(response.values()[0], response.values()[0].productId, currentQuote.Id);
+	}
+
+	@IsTest
+	static void saveQuoteLineItemsAccessoryTest() {
+		Quote currentQuote = getQuote();
+		Boolean isQuote = ProductScreenController.isQuote(currentQuote.Id);
+		ProductScreenModel.AccessoryData acessoryData = new ProductScreenModel.AccessoryData(
+			getAcessory()
+		);
+
+		ProductScreenController.context = 'Quote';
+		ProductScreenController.updateQuoteLineItemList = new List<QuoteLineItem>();
+		ProductScreenController.itemKeyToLineItemMap = new Map<String, Id>{
+			acessoryData.productId + '-' + acessoryData.productId => currentQuote.QuoteLineItems[0].Id
+		};
+		ProductScreenController.productToPriceIdMap = new Map<Id, PricebookEntry>{
+			acessoryData.productId => getPricebookEntry(acessoryData.productId)
+		};
+		ProductScreenController.handleAcessoryDataDML(acessoryData, acessoryData.productId, currentQuote.Id);
+	}
+
+	@IsTest
+	static void getRecordsTest() {
+		List<SObject> sobjectList = ProductScreenController.getRecords(
+			'Quote', 'Name', 'Name', '', '', '', true
+		);
+		sobjectList = ProductScreenController.getRecords(
+			'Quote', 'Name', 'Name', '', '', '', false
+		);
+		sobjectList = ProductScreenController.getRecords(
+			'Quote', 'Name', 'Name', '', 'Test', '', false
+		);
+
+		EstruturaProduto__c currentStructure = getStructure();
+		ProductScreenController.getProductList(currentStructure.Id, '');
 	}
 
 	static Product2 getProduct() {
@@ -340,11 +456,23 @@ private with sharing class ProductScreenControllerTest {
 		return currentStructure;
 	}
 
+	static List<TiposRecurso__c> getResourceTypes() {
+		return [
+			SELECT Id
+			  FROM TiposRecurso__c
+			 LIMIT 2
+		];
+	}
+
 	static Quote getQuote() {
 		Quote currentQuote;
 
 		for (Quote retrievedQuote : [
-			SELECT Id
+			SELECT Id,
+				   (
+					SELECT Id
+					  FROM QuoteLineItems
+				   )
 			  FROM Quote
 			 LIMIT 1
 		]) {
@@ -366,5 +494,43 @@ private with sharing class ProductScreenControllerTest {
 		}
 
 		return currentOpportunity;
+	}
+
+	static PricebookEntry getPricebookEntry(String productId) {
+		PricebookEntry currentPricebookEntry;
+
+		for (PricebookEntry retrievedPricebookEntry : [
+			SELECT Id,
+				   UnitPrice
+			  FROM PricebookEntry
+			 WHERE Product2Id = :productId
+			 LIMIT 1
+		]) {
+			currentPricebookEntry = retrievedPricebookEntry;
+		}
+
+		return currentPricebookEntry;
+	}
+
+	static TipoAcessorios__c getAcessory() {
+		TipoAcessorios__c currentAcessory;
+
+		for (TipoAcessorios__c retrievedAcessory : [
+			SELECT Id,
+				   Name,
+				   QuantidadeSugerida__c,
+				   Produto__c,
+				   GrupoAcessorio__c,
+				   AcessorioPadrao__c,
+				   Produto__r.Name,
+				   Produto__r.ProductCode,
+				   Produto__r.ExternalId__c
+			  FROM TipoAcessorios__c
+			 LIMIT 1
+		]) {
+			currentAcessory = retrievedAcessory;
+		}
+
+		return currentAcessory;
 	}
 }
