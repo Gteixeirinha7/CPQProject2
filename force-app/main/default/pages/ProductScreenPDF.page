@@ -9,23 +9,27 @@
 
     <apex:includeScript value="{!URLFOR($Resource.libs, 'forcetk.js')}" />
 
-    <apex:includeScript value="/support/console/37.0/integration.js" /><script>
+    <apex:includeScript value="/support/console/37.0/integration.js" />
+    <script>
         var downloadPDF = function () {
             document.body.scrollTop = 0;
             document.documentElement.scrollTop = 0;
 
             var element = document.getElementById('renderPDF');
+            document.getElementById('main_load_Capa').style.display = 'table';
+            document.getElementById('main_load_Capa2').style.display = 'table';
             var fileName = '{!quoteData.name}';
             var quoteId = '{!quoteId}';
             var options = {
-                margin: 0,
+                margin: [3, -2, 0, 0],
                 filename: fileName,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+                image: { type: 'jpeg', quality: 1 },
+                jsPDF: { format: 'a4', orientation: 'landscape', compress : true, hotfixes: [1] }
             };
 
             html2pdf(element, options).output('blob').then(function (pdf) {
+                document.getElementById('main_load_Capa').style.display = 'none';
+                document.getElementById('main_load_Capa2').style.display = 'none';
                 Visualforce.remoting.Manager.invokeAction(
                     '{!$RemoteAction.PDFQuoteController.getUserSessionKey}',
                     function (result, event) {
@@ -186,7 +190,7 @@
         /* Listando produtos */
 
         .tr-lista-header th {
-            font-size: 0.6rem;
+            font-size: 0.7rem;
             text-transform: uppercase;
             color: #4F91CD;
             padding: 2px 10px 8px 10px;
@@ -197,7 +201,7 @@
             color: #000;
             font-weight: bold;
             text-transform: uppercase;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             padding-left: 5px;
         }
 
@@ -266,7 +270,7 @@
         }
 
         .tb-wrap .td-sub-title {
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             font-weight: bold;
             padding: 12px ​5px 10px 10p;
         }
@@ -289,7 +293,7 @@
             color: #000;
             font-weight: bold;
             text-transform: uppercase;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             padding-left: 5px;
         }
 
@@ -310,7 +314,7 @@
         }
 
         .box-total .lb {
-            font-size: 0.6rem !important;
+            font-size: 0.7rem !important;
             color: #333;
         }
 
@@ -329,7 +333,12 @@
         .box-assin .valor {
             padding-left: 0 !important;
         }
-
+        .fontSizes {
+            font-size: 10pt !important;
+        }
+        .fontSizes15 {
+            font-size: 15pt !important;
+        }
         .local-assin {
             padding: 10px 10px;
             border: 1px dashed #ddd;
@@ -595,6 +604,74 @@
     </div>
     <div id="renderPDF" class="container">
         <div id="renderPDF2" style="margin-bottom: 70px;margin-right: 10px;">
+        <table id="main_load_Capa" width="100%" border="0" class="tb-wrap html2pdf__page-break fontSizes" style="margin-top: 25%;border: 0px;margin-bottom: 0px;margin-right: 0px;margin-left: 0px;display:none">
+            <tr>
+                <td class="pb-0">
+                    <table width="100%" border="0">
+                        <tbody>
+                            <tr>
+                                <td width="250" class="text-center" style="padding-bottom: 0;font-size: 12pt;">
+                                    <apex:image value="{!URLFOR($Resource.PDFLOGO)}" width="370" height="80" style="padding-bottom: 10px;" />
+                                    <span>{!($Label.PDFBaseURL)}</span>
+                                </td>
+                                <td class="td-title" style="padding-bottom: 0;font-size: 12pt;">
+                                    <p>
+                                        <strong>STERIS BRASIL</strong>
+                                    </p>
+                                    <p>Av. Bem-te-vi, 77 - 3 andar</p>
+                                    <p>SÃO PAULO | CEP: 04524-030</p>
+                                    <p>CNPJ: 07.374.508/0001-07 | IE: 15/04/2005</p>
+                                    <p>Fone:
+                                        <strong>(11) 2149-1726</strong>
+                                    </p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        <table id="main_load_Capa2" width="100%" border="0" class="tb-wrap html2pdf__page-break" style="border: 0px;margin-bottom: 0px;margin-right: 0px;margin-left: 0px;display:none">
+            <tr>
+                <td class="pb-0">
+                </td>
+            </tr>        
+            <tr>
+                <td>
+                    <p style="text-align: justify;">
+                        <span class="fontSizes15">Apresentação Steris</span>
+                    </p>
+                </td>
+            </tr>    
+            <tr>
+                <td>
+                    <p style="text-align: justify;">
+                        <span class="fontSizes15">A STERIS é uma fornecedora líder global de produtos e serviços que apoiam o atendimento ao paciente com ênfase na prevenção
+                        de infecções. Ajudamos nossos clientes a criar um mundo mais saudável e seguro, fornecendo produtos e serviços inovadores
+                        para a saúde.</span>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p style="text-align: justify;">
+                        <span class="fontSizes15">Fundada como Innovative Medical Technologies em Ohio em 1985, a empresa foi renomeada para STERIS em 1987. No entanto, algumas
+                        das empresas que foram adquiridas e integradas à STERIS, principalmente a American Sterilizer Company, têm históricos operacionais
+                        muito mais longos. Temos aproximadamente 16.000 associados em todo o mundo e operamos em mais de 100 países.</span>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p style="text-align: justify;">
+                        <span class="fontSizes15">A STERIS oferece aos clientes uma combinação única de produtos inovadores de equipamentos de capital, como esterilizadores
+                        e lavadores, mesas cirúrgicas, luzes e sistemas de gerenciamento de equipamentos e soluções de conectividade, como integração
+                        de sala de cirurgia; produtos consumíveis como detergentes e acessórios para endoscopia gastrointestinal, outros produtos
+                        e serviços, incluindo instalação e manutenção de equipamentos.</span>
+                    </p>
+                </td>
+            </tr>
+        </table>
         <table width="100%" border="0" class="tb-wrap" style="margin-bottom: 0px;margin-right: 0px;margin-left: 0px;">
             <tr>
                 <td class="pb-0">
@@ -617,7 +694,7 @@
                                     <table class="td-border-top no-padding py-2">
                                         <tr class="space-between">
                                             <td class="lb-pedido flex-col" width="375">
-                                                <span style="font-size: 22px;">Proposta Equipamentos e Acessórios</span>
+                                                <span style="font-size: 22px;">Proposta Comercial {!quoteData.recordType}</span>
                                             </td>
                                             <td class="nr-pedido flex-col">
                                                 <span class="lb-status">Emissão: </span>
@@ -655,36 +732,24 @@
                     <table class="tb-dados">
                         <tr>
                             <td width="50%">
+                                <span class="lb">Data de Criação:</span>
+                                <span class="valor">{!quoteData.createdDate}</span>
+                            </td>
+                            <td width="50%">
+                                <span class="lb">Data de Validade:</span>
+                                <span class="valor">{!quoteData.expirationDate}</span>
+                            </td>
+                        </tr>
+                    </table>
+                    <table class="tb-dados">
+                        <tr>
+                            <td width="50%">
                                 <span class="lb">Cliente:</span>
                                 <span class="valor">{!quoteData.accountName}</span>
                             </td>
                             <td width="50%">
-                                <span class="lb">Endereço de Entrega:</span>
+                                <span class="lb">Endereço Cliente:</span>
                                 <span class="valor">{!quoteData.addressDelivery}</span>
-                            </td>
-                        </tr>
-                    </table>
-                    <table class="tb-dados">
-                        <tr>
-                            <td width="50%">
-                                <span class="lb">Prazo de garantia (Meses):</span>
-                                <span class="valor">{!quoteData.prazoGarantia}</span>
-                            </td>
-                            <td width="50%">
-                                <span class="lb">Prazo de Entrega (Dias):</span>
-                                <span class="valor">{!quoteData.prazoEntrega}</span>
-                            </td>
-                        </tr>
-                    </table>
-                    <table class="tb-dados">
-                        <tr>
-                            <td width="50%">
-                                <span class="lb">Instalação:</span>
-                                <span class="valor">{!quoteData.instalacao}</span>
-                            </td>
-                            <td width="50%">
-                                <span class="lb">Frete:</span>
-                                <span class="valor">{!quoteData.frete}</span>
                             </td>
                         </tr>
                     </table>
@@ -694,11 +759,15 @@
                                 <span class="lb">Emitido por:</span>
                                 <span class="valor">{!quoteData.createdBy}</span>
                             </td>
+                            <td width="50%">
+                                <span class="lb">Emitido por:</span>
+                                <span class="valor">{!quoteData.usEmail}</span>
+                            </td>
                         </tr>
                     </table>
                 </td>
             </tr>
-            <tr class="new-page">
+            <!-- <tr class="new-page">
                 <td style="padding: 0;">
                     <table class="tb-dados mb-1">
                         <tr class="no-border flex-end">
@@ -711,7 +780,7 @@
                         </tr>
                     </table>
                 </td>
-            </tr>
+            </tr> -->
         <apex:repeat value="{!quoteData.itemList}" var="item" >
 
                 <tr class="html2pdf__page-break">
@@ -1079,34 +1148,75 @@
                 </td>
             </tr>
         </apex:outputPanel>
+        <tr>
+            <td class="td-sub-title bg-light color-border-lv2">
+                <span>&rsaquo;</span> CONDIÇÕES COMERCIAIS
+            </td>
+        </tr>
+        <tr>
+            <td style="padding: 0px 15px;">
+                <table class="tb-dados">
+                    <tr>
+                        <td width="50%">
+                            <span class="lb">Prazo de Entrega:</span>
+                            <span class="valor">{!quoteData.prazoEntrega} (Dias)</span>
+                        </td>
+                        <td width="50%">
+                            <span class="lb">Prazo de Garantia:</span>
+                            <span class="valor">{!quoteData.prazoGarantia} (Meses)</span>
+                        </td>
+                    </tr>
+                </table>
+                <table class="tb-dados">
+                    <tr>
+                        <td width="50%">
+                            <span class="lb">Instalação:</span>
+                            <span class="valor">{!quoteData.instalacao}</span>
+                        </td>
+                        <td width="50%">
+                            <span class="lb">Condição de Pagamento:</span>
+                            <span class="valor">{!quoteData.condicao}</span>
+                        </td>
+                    </tr>
+                </table>
+                <table class="tb-dados">
+                    <tr>
+                        <td width="50%">
+                            <span class="lb">Frete:</span>
+                            <span class="valor">{!quoteData.frete}</span>
+                        </td>
+                        <td width="50%">
+                            <span class="lb">Endereço de Entrega:</span>
+                            <span class="valor">Conforme Incoterm utilizado nesta proposta</span>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr class="new-page">
+            <td style="padding: 0;">
+                <table class="tb-dados mb-1">
+                    <tr class="no-border flex-end">
+                        <td width="360" class="text-right">
+                            <div class="box-total">
+                                <span class="lb">Valor Total da Proposta:</span>
+                                <span class="valor total">R$ {!quoteData.totalPrice}</span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
             <tr class="html2pdf__page-break">
                 <td class="">
                 </td>
             </tr>
             <tr>
                 <td class="td-sub-title bg-light color-border-lv2">
-                    <span>&rsaquo;</span> OBSERVAÇÕES
+                    <span>&rsaquo;</span> TERMOS E CONDIÇÕES GERAIS
                 </td>
             </tr>
-        
-            <tr>
-                <td style="padding: 0px 15px;">
-                    <p style="text-align: center;">
-                        <strong style="font-size: 7pt;">TERMOS E CONDIÇÕES GERAIS</strong>
-                    </p>
-                    <p style="text-align: justify;">
-                        <span style="font-size: 7pt;">A STERIS é uma fornecedora líder global de produtos e serviços que apoiam o atendimento ao paciente com ênfase na prevenção
-                        de infecções. Ajudamos nossos clientes a criar um mundo mais saudável e seguro, fornecendo produtos e serviços inovadores
-                        para a saúde. Fundada como Innovative Medical Technologies em Ohio em 1985, a empresa foi renomeada para STERIS em 1987.
-                        No entanto, algumas das empresas que foram adquiridas e integradas à STERIS, principalmente a American Sterilizer Company,
-                        têm históricos operacionais muito mais longos. Temos aproximadamente 16.000 associados em todo o mundo e operamos em mais
-                        de 100 países. A STERIS oferece aos clientes uma combinação única de produtos inovadores de equipamentos de capital, como
-                        esterilizadores e lavadores, mesas cirúrgicas, luzes e sistemas de gerenciamento de equipamentos e soluções de conectividade,
-                        como integração de sala de cirurgia; produtos consumíveis como detergentes e acessórios para endoscopia gastrointestinal,
-                        outros produtos e serviços, incluindo instalação e manutenção de equipamentos.</span>
-                    </p>
-                </td>
-            </tr>
+            <apex:outputText value="{!contentDocs}" escape="false" />
         </table>
         </div>
     </div>

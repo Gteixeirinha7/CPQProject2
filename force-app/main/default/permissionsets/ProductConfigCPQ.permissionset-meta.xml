@@ -326,6 +326,14 @@
         <enabled>true</enabled>
     </pageAccesses>
     <tabSettings>
+        <tab>CriarKitAcessorios</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
+        <tab>CriarRecursoProduto</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <tabSettings>
         <tab>EstruturaProduto__c</tab>
         <visibility>Visible</visibility>
     </tabSettings>
