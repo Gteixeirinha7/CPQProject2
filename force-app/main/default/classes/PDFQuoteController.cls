@@ -7,7 +7,8 @@ public with sharing class PDFQuoteController {
 		this.quoteId = ApexPages.currentPage().getParameters().get('Id');
 		Quote currentQuote = getQuote(quoteId);
 		this.quoteData = new QuoteData(currentQuote);
-		this.contentDocs = this.quoteData.currencyIsos == 'USD' ? this.getTermsUSD() : this.getTermsBRL(); 
+		// this.contentDocs = this.quoteData.currencyIsos == 'USD' ? this.getTermsUSD() : this.getTermsBRL(); 
+		this.contentDocs = '<tr ><td class="fontSizes">TERMOS E CONDIÇÕES DE VENDA</td></tr>';
 	}
 	public String getTermsUSD(){
 		String returnVal = '';
@@ -561,15 +562,9 @@ public with sharing class PDFQuoteController {
 
 		for (Quote retrievedQuote : [
 			SELECT Id,
-					Opportunity.RecordTypeId,
 					CurrencyIsoCode,
-					Opportunity.RecordType.Name,
 				   	Name,
-				   	Prazo_de_Entrega__c,
-					Prazo_de_Garantia__c,
-					Instalacao__c,
 				   Account.Name,
-				   Condi_o_Pagamento__c,
 				   Account.ShippingStreet,
 				   CreatedDate,
 				   ExpirationDate,
@@ -579,8 +574,6 @@ public with sharing class PDFQuoteController {
 				   Contact.Name,
 				   Contact.Phone,
 				   Contact.Account.Name,
-				   OP_QT_Identif__c,
-				   Frete__c,
 					TotalPrice,
 					Discount,
 				   (
@@ -730,12 +723,12 @@ public with sharing class PDFQuoteController {
             User us = [SELECT id, NAme, Email FROM USER WHERE ID = : UserInfo.getUserId() LIMIT 1];
 
 			this.name = currenctQuote.Name;
-			this.recordType = currenctQuote.CurrencyIsoCode == 'USD' ? ' para Importação Direta' : '';
+			this.recordType = ' para Distribuição Direta';
 			this.currencyIsos = currenctQuote.CurrencyIsoCode;
 			this.accountName = currenctQuote.Account.Name;
 			this.shippingStreet = currenctQuote.Account.ShippingStreet;
 			this.createdDate = currenctQuote.CreatedDate.format('dd/MM/yyyy');
-			this.condicao = currenctQuote.Condi_o_Pagamento__c;
+			this.condicao = '30/60/90 DDL';
 			this.expirationDate = this.formatDate(currenctQuote.expirationDate);
 			this.shippingCity = currenctQuote.Account.ShippingCity;
 			this.shippingState = currenctQuote.Account.ShippingState;
@@ -745,20 +738,20 @@ public with sharing class PDFQuoteController {
 			this.contactAccountName = currenctQuote.Contact.Account.Name;
 
 			this.today = DateTime.now().format('dd/MM/yyyy');
-			this.proposal = currenctQuote.OP_QT_Identif__c.contains('ID PROPOSTA:') ? currenctQuote.OP_QT_Identif__c.replace('ID PROPOSTA:', '') : currenctQuote.OP_QT_Identif__c;
-			this.freight = currenctQuote.Frete__c;
+			this.proposal = '#1412812';
+			this.freight = '1213';
 			this.totalPrice = currenctQuote.TotalPrice == null ? '' : convertToBRL(currenctQuote.TotalPrice);
 			this.discount = currenctQuote.Discount == null ? '' : convertToBRL(currenctQuote.Discount * 100);
 
 			
 			this.accountAddress = '';
-            this.prazoEntrega = currenctQuote.Prazo_de_Entrega__c == null ? '' : String.valueOf(currenctQuote.Prazo_de_Entrega__c);
-            this.prazoGarantia = currenctQuote.Prazo_de_Garantia__c == null ? '' : String.valueOf(currenctQuote.Prazo_de_Garantia__c);
-            this.instalacao = currenctQuote.Instalacao__c;
-            this.frete = currenctQuote.Frete__c;
-			this.addressDelivery = currenctQuote.account.ShippingStreet +', '+currenctQuote.account.ShippingCity +', '+currenctQuote.account.ShippingPostalCode;
-			this.createdBy = us.Name;
-			this.usEmail = us.Email;
+            this.prazoEntrega = '22 Dias';
+            this.prazoGarantia = '21 Dias';
+            this.instalacao = 'Instalação Obrigatoria';
+            this.frete = this.freight;
+			this.addressDelivery = 'Rua antonio camargo, 133'; //currenctQuote.account.ShippingStreet +', '+currenctQuote.account.ShippingCity +', '+currenctQuote.account.ShippingPostalCode;
+			this.createdBy = 'Usuario do Sistema';
+			this.usEmail = 'user@user.com';
 
 			this.fillQuoteItemList(currenctQuote);
 		}

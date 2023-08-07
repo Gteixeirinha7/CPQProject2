@@ -373,8 +373,6 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 		return new SaveResponse();
 	}
 	public static void  saveLineItemsDML() {
-		QuoteTriggerHandler.disableTrigger();
-		QuoteLineItemHandler.disableTrigger();
 		if (!itemKeyToLineItemMap.isEmpty()) getDeleteLineItem(itemKeyToLineItemMap.values());
 		if (!insertQuoteLineItemList.isEmpty()) insert insertQuoteLineItemList;
 		if (!updateQuoteLineItemList.isEmpty()) update updateQuoteLineItemList;

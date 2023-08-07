@@ -611,18 +611,18 @@
                         <tbody>
                             <tr>
                                 <td width="250" class="text-center" style="padding-bottom: 0;font-size: 12pt;">
-                                    <apex:image value="{!URLFOR($Resource.PDFLOGO)}" width="370" height="80" style="padding-bottom: 10px;" />
+                                    <apex:image value="{!URLFOR($Resource.PDFLOGO)}" width="350" height="180" style="padding-bottom: 10px;" />
                                     <span>{!($Label.PDFBaseURL)}</span>
                                 </td>
                                 <td class="td-title" style="padding-bottom: 0;font-size: 12pt;">
                                     <p>
-                                        <strong>STERIS BRASIL</strong>
+                                        <strong>Empresa Ficticia BRASIL</strong>
                                     </p>
-                                    <p>Av. Bem-te-vi, 77 - 3 andar</p>
-                                    <p>SÃO PAULO | CEP: 04524-030</p>
-                                    <p>CNPJ: 07.374.508/0001-07 | IE: 15/04/2005</p>
+                                    <p>Av das Naçoes , 177 - 31 andar</p>
+                                    <p>SÃO PAULO | CEP: 09872-010</p>
+                                    <p>CNPJ: 17.984.598/0001-17 | IE: 15/04/2005</p>
                                     <p>Fone:
-                                        <strong>(11) 2149-1726</strong>
+                                        <strong>(11) 4531-1556</strong>
                                     </p>
                                 </td>
                             </tr>
@@ -639,14 +639,14 @@
             <tr>
                 <td>
                     <p style="text-align: justify;">
-                        <span class="fontSizes15">Apresentação Steris</span>
+                        <span class="fontSizes15">Apresentação Empresa Ficticia</span>
                     </p>
                 </td>
             </tr>    
             <tr>
                 <td>
                     <p style="text-align: justify;">
-                        <span class="fontSizes15">A STERIS é uma fornecedora líder global de produtos e serviços que apoiam o atendimento ao paciente com ênfase na prevenção
+                        <span class="fontSizes15">A Empresa Ficticia é uma fornecedora líder global de produtos e serviços que apoiam o atendimento ao paciente com ênfase na prevenção
                         de infecções. Ajudamos nossos clientes a criar um mundo mais saudável e seguro, fornecendo produtos e serviços inovadores
                         para a saúde.</span>
                     </p>
@@ -655,8 +655,8 @@
             <tr>
                 <td>
                     <p style="text-align: justify;">
-                        <span class="fontSizes15">Fundada como Innovative Medical Technologies em Ohio em 1985, a empresa foi renomeada para STERIS em 1987. No entanto, algumas
-                        das empresas que foram adquiridas e integradas à STERIS, principalmente a American Sterilizer Company, têm históricos operacionais
+                        <span class="fontSizes15">Fundada como Empresa Ficticia em 1985, a empresa foi renomeada para Empresa Ficticia em 1987. No entanto, algumas
+                        das empresas que foram adquiridas e integradas à Empresa Ficticia, têm históricos operacionais
                         muito mais longos. Temos aproximadamente 16.000 associados em todo o mundo e operamos em mais de 100 países.</span>
                     </p>
                 </td>
@@ -664,10 +664,10 @@
             <tr>
                 <td>
                     <p style="text-align: justify;">
-                        <span class="fontSizes15">A STERIS oferece aos clientes uma combinação única de produtos inovadores de equipamentos de capital, como esterilizadores
-                        e lavadores, mesas cirúrgicas, luzes e sistemas de gerenciamento de equipamentos e soluções de conectividade, como integração
+                        <span class="fontSizes15">A Empresa Ficticia oferece aos clientes uma combinação única de produtos inovadores de maquinas de capital, como esterilizadores
+                        e lavadores, mesas cirúrgicas, luzes e sistemas de gerenciamento de maquinas e soluções de conectividade, como integração
                         de sala de cirurgia; produtos consumíveis como detergentes e acessórios para endoscopia gastrointestinal, outros produtos
-                        e serviços, incluindo instalação e manutenção de equipamentos.</span>
+                        e serviços, incluindo instalação e manutenção de maquinas.</span>
                     </p>
                 </td>
             </tr>
@@ -679,17 +679,19 @@
                         <tbody>
                             <tr>
                                 <td width="250" class="text-center" style="padding-bottom: 0;">
-                                    <apex:image value="{!URLFOR($Resource.PDFLOGO)}" width="370" height="80" style="padding-bottom: 10px;"/>
+                                    <apex:image value="{!URLFOR($Resource.PDFLOGO)}" width="350" height="180" style="padding-bottom: 10px;"/>
                                     <span>{!($Label.PDFBaseURL)}</span>
                                 </td>
                                 <td class="td-title" style="padding-bottom: 0;">
                                     <p>
-                                        <strong>STERIS BRASIL</strong>
+                                        <strong>Empresa Ficticia BRASIL</strong>
                                     </p>
-                                    <p>Av. Bem-te-vi, 77 - 3 andar</p>
-                                    <p>SÃO PAULO | CEP: 04524-030</p>
-                                    <p>CNPJ: 07.374.508/0001-07 | IE: 15/04/2005</p>
-                                    <p>Fone: <strong>(11) 2149-1726</strong></p>
+                                    <p>Av das Naçoes , 177 - 31 andar</p>
+                                    <p>SÃO PAULO | CEP: 09872-010</p>
+                                    <p>CNPJ: 17.984.598/0001-17 | IE: 15/04/2005</p>
+                                    <p>Fone:
+                                        <strong>(11) 4531-1556</strong>
+                                    </p>
 
                                     <table class="td-border-top no-padding py-2">
                                         <tr class="space-between">
@@ -826,11 +828,11 @@
                             <tr class="new-page">
                                 <td width="40%" class="td-sub-title bg-light color-border-lv2">
                                     <!-- SUB-CABEÇALHO -->
-                                    <span>&rsaquo;</span> EQUIPAMENTO
+                                    <span>&rsaquo;</span> MAQUINA
                                     <!-- /SUB-CABEÇALHO -->
                                 </td>
                                 <td width="60%" class="td-sub-title bg-light color-border-lv2 text-right">
-                                    <span class="valor">SubTotal Equipamento: {!item.totalPriceEquip}</span>
+                                    <span class="valor">SubTotal Maquina: {!item.totalPriceEquip}</span>
                                 </td>
                             </tr>
                         </table>

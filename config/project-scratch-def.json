@@ -1,13 +1,45 @@
 {
-  "orgName": "Demo company",
+  "orgName": "CPQ - SF",
   "edition": "Developer",
-  "features": ["EnableSetPasswordInApi"],
+  "language": "pt_BR",
+  "features": ["Communities", "AdditionalFieldHistory:40", "Entitlements"],
   "settings": {
+    "languageSettings": {
+      "enableTranslationWorkbench": true,
+      "enableEndUserLanguages": true
+    },
     "lightningExperienceSettings": {
       "enableS1DesktopEnabled": true
     },
-    "mobileSettings": {
-      "enableS1EncryptedStoragePref2": false
+    "apexSettings": {
+      "enableApexApprovalLockUnlock": true
+    },
+    "enhancedNotesSettings": {
+      "enableEnhancedNotes": true
+    },
+    "quoteSettings": {
+      "enableQuote": true
+    },
+    "accountSettings": {
+      "enableAccountTeams": true
+    },
+    "nameSettings": {
+      "enableMiddleName": true
+    },
+    "entitlementSettings": {
+      "enableEntitlements": true
+    },
+    "chatterSettings": {
+      "enableChatter": true
+    },
+    "territory2Settings": {
+      "enableTerritoryManagement2": true
+    },
+    "userManagementSettings": {
+      "permsetsInFieldCreation": true
+    },
+    "currencySettings": {
+      "enableMultiCurrency": true
     }
   }
 }
