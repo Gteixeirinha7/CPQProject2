@@ -39,7 +39,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	filterListProducts = [
 		{
 			selected : true,
-			label : "Produto",			
+			label : "Nome do Produto",			
 			filter : "",
 			value : "name"
 		},
@@ -47,7 +47,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 			selected : false,
 			label : "Código do Produto",			
 			filter : "",
-			value : "productCode"
+			value : "internalProdCode"
 		}
 	]
 	@track
@@ -189,17 +189,23 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		return this.filterProductList(Object.values(this.productMap).filter(item => item.isShowNewStructure && !item.showCheckout));
 	}
 	get checkoutProducts() {	
-		return this.filterProductList(Object.values(this.productMap).filter(item => item.showCheckout));
+		return Object.values(this.productMap).filter(item => item.showCheckout);
 	}
 
 	filterProductList(context){
+		var objs = [];
+		try{
 		var filter = this.filterListProducts.find(filters => filters.selected);
-		return context.filter(function(item){
+		objs =  context.filter(function(item){
 			if(filter.filter)
-				return item[filter.value].toLocaleLowerCase().includes(filter.filter.toLocaleLowerCase());
+				return item[filter.value]?.toLocaleLowerCase().includes(filter.filter?.toLocaleLowerCase());
 			else
 				return true;
 		}.bind(this), {filter});
+	}catch(ex){
+		debugger;
+	}
+		return objs;
 	}
 
 	@wire(CurrentPageReference)
@@ -270,6 +276,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		this.filterListProducts.forEach(function(item){
 			if(item.selected) item.filter = filter;
 		}, {value, filter});
+		this.getFilterProducts();
 	}
 
 	selectFilterComponent(event){
@@ -284,6 +291,20 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		this.filterList.forEach(function(item){
 			if(item.selected) item.filter = filter;
 		}, {value, filter});
+	}
+
+	getFilterValue(){
+		return this.filterListProducts.find(item => item.selected).filter;
+	}
+
+	getFilterProducts(){		
+		this.productMap = JSON.parse(JSON.stringify(this.productMap));
+		this.structureMap = JSON.parse(JSON.stringify(this.structureMap));
+		this.isLoading = true;
+		getProducts({objId: this.quoteId, productCode: this.getFilterValue(), quantity: this.defaultQuantitySearch, structureId: this.currentTab}).then(resolve => {
+			this.updateProductsMap(resolve);
+			this.isLoading = false;
+		});
 	}
 
 	showComponentTab(event){

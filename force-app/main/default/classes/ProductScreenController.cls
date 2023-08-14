@@ -715,12 +715,13 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 		String q = 'SELECT Id, Name, ExternalId__c, ProductCode, Imagem_URL__c, KitAcessorios__c, EstruturaProduto__c FROM Product2 WHERE IsActive = true ';
 
 		if(structureId == 'Pronta'){
-			q += ' AND EstruturaProduto__c != null';
+			q += ' AND EstruturaProduto__c != null ';
 		}else if(structureId == 'Excecao' || structureId == 'SingleProduct' || structureId == 'Estrutura' || structureId == 'Carrinho'){
 			q += ' AND EstruturaProduto__c = null ';
 		}else if(structureId != null){
-			q += 'AND Id IN :productIdSet AND EstruturaProduto__c = :structureId ';
+			q += ' AND Id IN :productIdSet AND EstruturaProduto__c = :structureId ';
 		}
+		q += ' AND (Product2.Name LIKE :searchValue OR Product2.ProductCode LIKE :searchValue OR Product2.ExternalId__c LIKE :searchValue) ';
 		q += ' ORDER BY Name';
 		q += ' LIMIT :quantity';
 
