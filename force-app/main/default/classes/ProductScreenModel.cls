@@ -175,9 +175,10 @@ public abstract class ProductScreenModel {
 		@AuraEnabled public String discountType {get; set;}
 
 		@AuraEnabled public List<AccessoryData> accessoryList {get; set;}
+		@AuraEnabled public List<ComboData> comboList {get; set;}
 
 		public GroupAccessoryData() {}
-		public GroupAccessoryData(GrupoAcessorios__c currentGroup) {
+		public GroupAccessoryData(GrupoAcessorios__c currentGroup, Map<Id, TipoAcessorios__c[]> comboMap) {
 			this.id = currentGroup.Id;
 			this.name = currentGroup.Name;
 			this.nameCompleted = currentGroup.Name + ' (' + currentGroup.Tipo__c + ')';
@@ -200,14 +201,47 @@ public abstract class ProductScreenModel {
 				)
 			);
 
-			this.accessoryList = new List<AccessoryData>();
+			Map<Id, AccessoryData> acessoryMap = new Map<Id, AccessoryData>();
 
 			for (TipoAcessorios__c currentAccessory : currentGroup.TipoAcessorios__r) {
-				this.accessoryList.add(new AccessoryData(currentAccessory));
+				acessoryMap.put(currentAccessory.Id, new AccessoryData(currentAccessory).isAcessory());
 				if(currentAccessory.AcessorioPadrao__c){
 					this.isSelected = true;
 				}
 			}
+			this.comboList = new List<ComboData>();
+			for (ComboAcessorio__c combo : currentGroup.Combos__r) {
+				
+				if(!comboMap.containsKey(combo.Id)) continue;
+
+				ComboData comboDatas = new ComboData(combo);
+				for (TipoAcessorios__c currentAccessory : comboMap.get(combo.Id)) {
+					currentAccessory.GrupoAcessorio__c = combo.GrupoAcessorio__c;
+					AccessoryData accessory = (acessoryMap.containsKey(currentAccessory.Id) ? acessoryMap.get(currentAccessory.Id) : new AccessoryData(currentAccessory));
+					acessoryMap.put(currentAccessory.Id, accessory.isCombos());
+					comboDatas.addAcessory(accessory);
+				}
+				this.comboList.add(comboDatas);
+			}
+
+			this.accessoryList = acessoryMap.values();
+		}
+	}
+
+	public class ComboData{
+		@AuraEnabled public String id {get; set;}
+		@AuraEnabled public String name {get; set;}
+		@AuraEnabled public Boolean isSelected {get; set;}
+		@AuraEnabled public List<AccessoryData> accessoryList {get; set;}
+		public ComboData() {}
+		public ComboData(ComboAcessorio__c combo) {
+			this.id         = combo.Id;
+			this.name       = combo.Name;
+			this.isSelected = false;
+			this.accessoryList = new List<AccessoryData>();
+		}
+		public void addAcessory(AccessoryData accessory){
+			this.accessoryList.add(accessory);
 		}
 	}
 
@@ -234,8 +268,24 @@ public abstract class ProductScreenModel {
 		@AuraEnabled public String discountType {get; set;}
 		@AuraEnabled public Boolean isShowProduct {get; set;}
 
-		public AccessoryData() {}
+		@AuraEnabled public Boolean isSingleAcessory {get; set;}
+		@AuraEnabled public Boolean isCombo {get; set;}
+
+		public AccessoryData() {
+			this.isSingleAcessory = false;
+			this.isCombo = false;	
+		}
+		public AccessoryData isCombos(){
+			this.isCombo = true;
+			this.isSingleAcessory = false;
+			return this;
+		}
+		public AccessoryData isAcessory(){
+			this.isSingleAcessory = true;
+			return this;
+		}
 		public AccessoryData(TipoAcessorios__c currentAccessory) {
+			this();
 			this.id = currentAccessory.Id;
 			this.name = currentAccessory.Produto__r.Name;
 			this.prodCode = currentAccessory.Produto__r.ProductCode != null ? currentAccessory.Produto__r.ProductCode : currentAccessory.Produto__r.ExternalId__c;

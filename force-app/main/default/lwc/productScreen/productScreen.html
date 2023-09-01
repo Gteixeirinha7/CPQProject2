@@ -59,7 +59,19 @@
 											<lightning-layout multiple-rows horizontal-align="center">
 												<template if:true={group.isShowGroup} >
 													<template if:true={group.isListing}>
-														<template for:each={group.accessoryList} for:item="accessory">								
+														<template for:each={group.comboList} for:item="combo">								
+															<lightning-layout-item key={combo.id} class="slds-var-p-around_x-small" size="12" medium-device-size="4" large-device-size="4" >							
+																	<c-product-component-acessory-combo
+																	combo={combo}
+																	onhandleproductdataconfig={handleAcessoryDataConfig}
+																	onselectconfig={handlerSelectAccessory}
+																	onshowcombo={handlerShowCombo}
+																	isconfig={defaultTrue}>
+																</c-product-component-acessory-combo>
+															</lightning-layout-item>
+														</template>
+														<template for:each={group.accessoryList} for:item="accessory">	
+															<template if:true={accessory.isSingleAcessory} >		
 															<lightning-layout-item key={accessory.id} class="slds-var-p-around_x-small" size="12" medium-device-size="4" large-device-size="4" >							
 																	<c-product-component-accessory
 																	product={accessory}
@@ -68,10 +80,11 @@
 																	isconfig={defaultTrue}>
 																</c-product-component-accessory>
 															</lightning-layout-item>
+															</template>
 														</template>
 													</template>
 													<template if:false={group.isListing}>
-														<div key={group.id} class="container__accessory-item">
+														<div class="container__accessory-item">
 															<p> <b>{group.nameCompleted}:</b> </p>
 															<p if:true={group.isNA}> ESTE ACESSÓRIO NÃO SE APLICA A MONTAGEM </p>
 															<p if:true={group.isIncluded}> Incluso </p>
