@@ -1,0 +1,51 @@
+<!-- sldsValidatorIgnore -->
+<template>
+	<lightning-layout >
+		<lightning-layout-item class="slds-var-p-around_x-small" size="12">
+			<div class="swiper-slide">
+				<a class="common-catalog-item common-catalog-item--v1"
+					style="display: flex;flex-direction: row;justify-content: center;align-items: stretch; padding: 0px;">
+					<lightning-layout multiple-rows horizontal-align="spread" style="height: 100%;width:100%; background-color: rgb(249, 249, 249);">		
+						<lightning-layout-item size="12" style="background-color: white">
+							<lightning-layout multiple-rows horizontal-align="spread" style="padding: 16px;">
+								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12"
+									medium-device-size="12" large-device-size="12" style="display: flex;justify-content: space-between;">
+									<div >
+										<h2 style="font-size: 18px; font-weight: bold;">Combo: {combo.name}</h2>
+									</div>
+								</lightning-layout-item>
+							</lightning-layout>
+						</lightning-layout-item>
+						<lightning-layout-item size="12" medium-device-size="2" large-device-size="12" style="height: 100%">
+							<lightning-layout multiple-rows horizontal-align="spread"
+								style="border-top: 1px dashed lightgrey;background-color: #F9F9F9; padding: 16px; height: 100%">
+								<lightning-layout-item class="slds-var-p-horizontal_xx-small" size="12" medium-device-size="12" large-device-size="12">
+                                    <ul class="slds-has-dividers_around slds-has-block-links_space">
+									    <template for:each={combo.accessoryList} for:item="accessory">	
+                                            <li key={accessory.id} class="slds-item">
+                                              <a href="#">{accessory.internalProdCode} - {accessory.name} <lightning-formatted-number class="slds-var-p-left_xxx-small"
+													value={accessory.listPrice} format-style="currency"
+													currency-code="BRL"
+													maximum-fraction-digits="2"></lightning-formatted-number></a>
+                                            </li>
+                                        </template>
+                                    </ul>
+								</lightning-layout-item>                                
+								<lightning-layout-item if:false={combo.isSelected}
+									class="slds-var-m-top_small container__buttons" size="12">
+									<lightning-button label="Adicionar" variant="brand" onclick={onAddException}>
+									</lightning-button>
+								</lightning-layout-item>
+								<lightning-layout-item if:true={combo.isSelected}
+									class="slds-var-m-top_small container__buttons" size="12">
+									<lightning-button label="Remover" variant="destructive" onclick={onRemoveException}>
+									</lightning-button>
+								</lightning-layout-item>
+							</lightning-layout>
+						</lightning-layout-item>
+					</lightning-layout>
+				</a>
+			</div>
+		</lightning-layout-item>
+	</lightning-layout>
+</template>

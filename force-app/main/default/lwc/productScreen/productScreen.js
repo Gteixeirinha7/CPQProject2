@@ -39,7 +39,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	filterListProducts = [
 		{
 			selected : true,
-			label : "Nome do Produto",			
+			label : "Produto",			
 			filter : "",
 			value : "name"
 		},
@@ -961,6 +961,23 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		}
 	}
 
+	handlerShowCombo(event) {
+		const { id, groupId } = event.detail;
+
+		let groupAccessory = this.currentProductConfig.groupAccessoryList.find(group => group.id === groupId);
+
+		if (groupAccessory.isNotCurrentGroup) return;
+
+		groupAccessory.comboList.forEach(item => {
+			if (item.id === id) {
+				item.isSelected = !item.isSelected; 
+			}
+
+			if (item.isSelected) {
+				groupAccessory.isSelected = true;
+			}
+		});
+	}
 	handlerSelectAccessory(event) {
 		const { id, groupId } = event.detail;
 		// const { id, groupId } = event.target.dataset;

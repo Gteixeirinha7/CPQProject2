@@ -212,6 +212,7 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 	public static void fillKitConfigData(Set<Id> kitIdSet, Map<Id, Set<Id>> kitIdToProductIdSetMap, Map<Id, ProductData> productDataMap, String objId) {
 		Map<String, List<GroupAccessoryData>> productIdToGroupAccessories = new Map<String, List<GroupAccessoryData>>();
 		Map<Id, PricebookEntry> productIdToPriceMap = new Map<Id, PricebookEntry>();
+		Map<Id, TipoAcessorios__c[]> comboMap = getpAccessoriesByComboKitIdSet(kitIdSet);
 
 		for (GrupoAcessorios__c retrievedGroup : getGroupAccessoriesByKitIdSet(kitIdSet)) {
 			Set<Id> productIdSet = kitIdToProductIdSetMap.get(retrievedGroup.KitAcessorios__c);
@@ -220,7 +221,7 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 				ProductData currentProduct = productDataMap.get(productId);
 
 				if (currentProduct != null) {
-					currentProduct.groupAccessoryList.add(new GroupAccessoryData(retrievedGroup));
+					currentProduct.groupAccessoryList.add(new GroupAccessoryData(retrievedGroup, comboMap));
 				}
 
 				for (TipoAcessorios__c retrievedAccessory : retrievedGroup.TipoAcessorios__r) {
@@ -748,6 +749,12 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 						   Produto__r.ExternalId__c
 					  FROM TipoAcessorios__r
 					 WHERE Ativo__c = true
+				   ),
+				   (
+					SELECT Id,
+						   Name,
+						   GrupoAcessorio__c
+					  FROM Combos__r
 				   )
 			  FROM GrupoAcessorios__c
 			 WHERE KitAcessorios__c IN :kitIdSet
@@ -755,6 +762,18 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 			   AND Ativo__c = true
 			 ORDER BY OrdemExibicao__c
 		];
+	}
+	public static Map<Id, TipoAcessorios__c[]> getpAccessoriesByComboKitIdSet(Set<Id> kitIdSet) {
+		Map<Id, TipoAcessorios__c[]> accessoryComboMap = new Map<Id, TipoAcessorios__c[]>();
+		for(TipoAcessorios__c types : [SELECT Id, Name, ComboAcessorios__c,GrupoAcessorio__c, AcessorioPadrao__c, QuantidadeSugerida__c, Produto__c, Produto__r.Name, Produto__r.ProductCode, Produto__r.ExternalId__c 
+										FROM TipoAcessorios__c 
+										WHERE ComboAcessorios__r.GrupoAcessorio__r.KitAcessorios__c IN : kitIdSet]){
+			if(!accessoryComboMap.containsKey(types.ComboAcessorios__c)){
+				accessoryComboMap.put(types.ComboAcessorios__c, new List<TipoAcessorios__c>());
+			}
+			accessoryComboMap.get(types.ComboAcessorios__c).add(types);
+		}
+		return accessoryComboMap;
 	}
 
 	public static List<Product2> getProductList(String structureId, String currentExternalId) {
