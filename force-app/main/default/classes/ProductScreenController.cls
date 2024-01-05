@@ -576,6 +576,7 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 				   CodigoInterno__c
 			  FROM EstruturaProduto__c
 			 WHERE Ativo__c = true
+			 ORDER BY Name ASC
 			 LIMIT 10000
 		]);
 	}
@@ -658,6 +659,7 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 			  FROM PricebookEntry
 			 WHERE Pricebook2Id = :pricebook2Id
 			   AND Product2Id IN :product2IdSet
+			   AND IsActive = true
 			   AND UnitPrice != 0
 			   AND CurrencyIsoCode = :currencyIsoCode
 		]) {
@@ -749,12 +751,14 @@ public with sharing class ProductScreenController extends ProductScreenModel{
 						   Produto__r.ExternalId__c
 					  FROM TipoAcessorios__r
 					 WHERE Ativo__c = true
+					 ORDER BY Name ASC
 				   ),
 				   (
 					SELECT Id,
 						   Name,
 						   GrupoAcessorio__c
 					  FROM Combos__r
+					 ORDER BY Name ASC
 				   )
 			  FROM GrupoAcessorios__c
 			 WHERE KitAcessorios__c IN :kitIdSet

@@ -26,7 +26,7 @@
 					<h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Configurar Kit</h2>
 				</header>
 
-				<div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+				<div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1" style="height: 700px;">
 					
 					<lightning-layout multiple-rows horizontal-align="center">
 						<lightning-layout-item class="slds-var-m-top_medium slds-var-p-horizontal_small" size="12" >
@@ -71,7 +71,7 @@
 															</lightning-layout-item>
 														</template>
 														<template for:each={group.accessoryList} for:item="accessory">	
-															<template if:true={accessory.isSingleAcessory} >		
+															<template if:false={accessory.isCombo} >		
 															<lightning-layout-item key={accessory.id} class="slds-var-p-around_x-small" size="12" medium-device-size="4" large-device-size="4" >							
 																	<c-product-component-accessory
 																	product={accessory}
@@ -273,7 +273,7 @@
 			      <div class="slds-page-header__controls">
 			        <div class="slds-page-header__control">
 			          <lightning-button-group>
-			            <lightning-button label="Inicio" onclick={handleNewStructure} icon-name="utility:home" ></lightning-button>
+			            <lightning-button label="Inicio" onclick={handleNewStructure} data-component='Estrutura' icon-name="utility:home" ></lightning-button>
 			            <lightning-button if:true={isShowResources} label="Buscar" icon-name="utility:search" variant="brand" onclick={handleSearchProductStructure} disabled={isShowProducts}></lightning-button>
 			            <lightning-button if:true={showCarrinho}  label="Concluir" variant="brand" onclick={handleSaveProducts}></lightning-button>
 			          </lightning-button-group>
@@ -359,7 +359,7 @@
 			    </div>
 			  </div>
 			  	<template if:true={showEstrutura}>
-					<lightning-layout multiple-rows horizontal-align="space" style="width: 100%;">
+					<lightning-layout multiple-rows horizontal-align="space" style="width: 100%;justify-content: flex-start;">
 						<lightning-layout-item
 							class="slds-var-m-vertical_xx-small slds-var-p-horizontal_x-small"
 							size="12" style="text-align: center;font-size: 16px;font-weight: bold;"
@@ -367,7 +367,7 @@
 							<c-global-search-product-screen filter-list={filterList} onselectfilter={selectFilterComponent} onhandlefilter={handlefilterComponent}></c-global-search-product-screen>
 						</lightning-layout-item>
 						<template for:each={structures} for:item="structure">
-							<lightning-layout-item key={structure.Id} class="slds-var-p-around_xx-small container__cart-structure" size="2" medium-device-size="2" small-device-size="4">
+							<lightning-layout-item key={structure.Id} style="justify-content: flex-start;" class="slds-var-p-around_xx-small container__cart-structure" size="2" medium-device-size="2" small-device-size="4">
 								<c-structure-component 
 									structure={structure}
 									onhandlestructure={handleStructure}>

@@ -1,15 +1,15 @@
 <template>
     <div class="swiper-slide">
-	    <a class="common-catalog-item common-catalog-item--v1"  data-id={structure.Id} onclick={handleSelectStructure}>
-	        <div class="common-catalog-item__container-image">
-                <template if:true={structure.showIcon}>
+	    <a style="height: 350px" class="common-catalog-item common-catalog-item--v1"  data-id={structure.Id} onclick={handleSelectStructure}>
+	        <div class="common-catalog-item__container-image" style={styleImg}>
+                <!-- <template if:true={structure.showIcon}>
 					<div style="display: flex;flex-direction: column;align-items: center;justify-content: center;">
 			        	<lightning-icon icon-name="standard:custom" size="large"></lightning-icon>
 					</div>
                 </template>
                 <template if:false={structure.showIcon}>
-	                <img class="common-catalog-item__merchant-image" src={structure.ImagemProduto__c}  style="max-height: 200px">
-                </template>
+	                <img class="common-catalog-item__merchant-image commom-image" src={structure.ImagemProduto__c}>
+                </template> -->
 	        </div>
 	        <div class="common-catalog-item__info">
 	            <h2 class="common-catalog-item__name">{structure.Name}</h2>

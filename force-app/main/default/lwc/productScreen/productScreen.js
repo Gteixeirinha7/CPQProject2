@@ -715,10 +715,11 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		// }
 		this.handleSelectStructure(event.detail.structure.Id);
 	}
-	handleNewStructure() {
+	handleNewStructure(event) {
 		this.isShowStructures = true;
 		this.isShowResources = false;
 		this.isShowProducts = false;
+		this.showComponentTab(event);
 		// this.clearAll();
 		// this.productMap.forEach(item => item.showSelectedStructure = false);
 	}
@@ -739,7 +740,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 
 	onClickSeeMoreProduct(){
 		this.isLoading = true;
-		getProducts({objId: this.quoteId, quantity: this.prodcutMap.length + this.defaultQuantitySearch, structureId: this.currentTab})
+		getProducts({objId: this.quoteId, quantity: Object.values(this.productMap).length + this.defaultQuantitySearch, structureId: this.currentTab})
 		.then(resolve => {
 			this.isLoading = false;
 			this.updateProductsMap(resolve);
@@ -932,7 +933,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 		let errorMessage = '';
 		let selectedLength = groupAccessory.accessoryList.filter(item => item.isSelected).length;
 
-		if (groupAccessory.isRequired && groupAccessory.isListing && selectedLength != groupAccessory.minQuantity) {
+		if (groupAccessory.isRequired && groupAccessory.isListing && selectedLength < groupAccessory.minQuantity) {
 			errorMessage = groupAccessory.name + ' precisa selecionar ' + groupAccessory.minQuantity + ' acessório(s).';
 
 			if (selectedLength < groupAccessory.minQuantity) {
@@ -1053,7 +1054,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 			if (!hasError) {
 				let selectedLength = group.accessoryList.filter(item => item.isSelected).length;
 
-				if (group.isRequired && group.isListing && selectedLength != group.minQuantity) {
+				if (group.isRequired && group.isListing && selectedLength < group.minQuantity) {
 					errorMessage = group.name + ' precisa selecionar ' + group.minQuantity + ' acessório(s).';
 
 					if (selectedLength < group.minQuantity) {
@@ -1108,7 +1109,7 @@ export default class ProductScreen extends NavigationMixin(LightningElement) {
 	handleCheckoutProductData(event) {
 		const { name, value, dataset } = event.target;
 
-		let productData = this.prodcutMap[dataset.id];
+		let productData = this.productMap[dataset.id];
 
 		if (!value || (name !== 'discountType' && value < 0)) {
 			productData.price = 0;

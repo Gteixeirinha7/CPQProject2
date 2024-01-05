@@ -6,6 +6,9 @@ import FORM_FACTOR from '@salesforce/client/formFactor';
 export default class StructureComponent extends LightningElement {
     @api disabledClick = false;
     @api structure;
+	get styleImg(){
+		return 'background-image: url('+this.structure.ImagemProduto__c+');'
+	}
     
     handleSelectStructure(){
         if(this.disabledClick) return;
